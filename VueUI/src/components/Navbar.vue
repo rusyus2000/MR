@@ -1,36 +1,37 @@
-<template>
-  <nav class="navbar navbar-light bg-white shadow-sm">
-    <div class="container-fluid">
-      <div class="d-flex align-items-center">
-        <img src="/light-logo.svg" alt="Sutter Health Logo" class="me-3" style="width: 200px; height: 40px;" />
-        <a class="navbar-brand text-teal" href="#">Sutter Health</a>
-        <span class="navbar-text text-teal">Sutter Analytics Marketplace</span>
-      </div>
-      <div class="d-flex align-items-center">
-        <a href="#" class="text-dark me-3">My Library</a>
-        <a href="#" class="text-dark me-3">My Requests</a>
-        <img src="../assets/user.jpg" alt="User Profile" class="rounded-circle" style="width: 40px; height: 40px;" />
-      </div>
-    </div>
-  </nav>
-</template>
 
-<script>
-export default {
-  name: 'Navbar',
-};
-</script>
+    <template>
+        <nav class="navbar navbar-light bg-white shadow-sm">
+            <div class="container-fluid">
+                <div class="d-flex align-items-center">
+                    <img src="/light-logo.svg" alt="Sutter Health Logo" class="me-3" style="width: 200px; height: 40px;" />
+                    <a class="navbar-brand text-teal" href="#">Sutter Health</a>
+                    <span class="navbar-text text-teal">Sutter Analytics Marketplace</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <a href="#" class="text-dark me-3">My Library</a>
+                    <a href="#" class="text-dark me-3">My Requests</a>
+                    <img src="../assets/user.jpg" alt="User Profile" class="rounded-circle" style="width: 40px; height: 40px;" />
+                </div>
+            </div>
+        </nav>
+    </template>
 
-<style scoped>
-.navbar-brand,
-.navbar-text {
-  font-size: 1.1rem; /* Slightly larger font to match the logo */
-}
+    <script>
+        export default {
+            name: 'Navbar',
+        };
+    </script>
 
-.navbar {
-  padding: 10px 20px;
-  height: 70px;
-  display: flex;
-  align-items: center;
-}
-</style>
+    <style scoped>
+        .navbar-brand,
+        .navbar-text {
+            font-size: 1.1rem; /* Slightly larger font to match the logo */
+        }
+
+        .navbar {
+            padding: 10px 20px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+        }
+    </style>

@@ -1,15 +1,16 @@
-<template>
-  <div id="app">
-    <router-view />
-  </div>
-</template>
 
-<script>
-export default {
-  name: 'App',
-};
-</script>
+    <template>
+        <div id="app">
+            <router-view />
+        </div>
+    </template>
 
-<style>
-@import './styles.css';
-</style>
+    <script>
+        export default {
+            name: 'App',
+        };
+    </script>
+
+    <style>
+        @import './styles.css';
+    </style>

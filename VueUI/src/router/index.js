@@ -1,3 +1,4 @@
+
 import { createRouter, createWebHistory } from 'vue-router';
 import Dashboard from '../views/Dashboard.vue';
 import DomainItems from '../views/DomainItems.vue';
@@ -21,4 +22,6 @@ const router = createRouter({
   routes,
 });
 
-export default router;
+    export default router;
+
+
