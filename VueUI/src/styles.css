@@ -1,0 +1,42 @@
+/* Custom styles to match the design */
+
+/* Teal color used in the design */
+.text-teal {
+  color: #00A89E;
+}
+
+/* Search Bar */
+.input-group .form-control {
+  border-radius: 0 20px 20px 0 !important;
+}
+
+.input-group-text {
+  border-radius: 20px 0 0 20px !important;
+}
+
+/* Navbar */
+.navbar {
+  padding: 10px 20px;
+}
+
+/* Ensure the page takes up full height */
+html, body, #app {
+  height: 100%;
+  margin: 0;
+}
+
+/* Remove global height from container-fluid */
+.container-fluid {
+  /* Removed: height: calc(100vh - 260px); */
+  /* Removed: overflow-y: auto; */
+}
+
+/* Ensure links are clickable */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+a:hover {
+  color: inherit;
+}

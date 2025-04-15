@@ -1,0 +1,91 @@
+## Ignore Visual Studio temporary files, build results, and
+## user-specific files
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+*.log
+
+# VS folders
+.vscode/
+.vs/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Mono auto generated files
+mono_crash.*
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Rider and JetBrains IDEs
+.idea/
+
+# NuGet Packages
+*.nupkg
+packages/
+*.snupkg
+
+# dotCover
+*.dotCover
+
+# Others
+*.dbmdl
+*.bak
+*.Backup
+*.cache
+*.tmp
+*.pdb
+
+# Publish
+.publish/
+*.publishsettings
+
+# Azure WebJobs
+app_data/jobs/continuous/*
+app_data/jobs/triggered/*
+
+# Web config transforms
+web.*.config
+app.*.config
+
+# Logs and diagnostic
+*.log
+*.tlog
+
+# Dotnet CLI
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Dotnet generated files
+*.deps.json
+*.runtimeconfig.json
+*.runtimeconfig.dev.json
+
+# Entity Framework
+Migrations/
+
+# Tye
+.tye/
+
+# Optional: Ignore test results
+TestResults/
+*.trx
+*.coverage
+
+# Optional: Ignore ReSharper files
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# Optional: Ignore local secrets
+secrets.json
