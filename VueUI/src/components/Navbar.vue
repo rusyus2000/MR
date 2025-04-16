@@ -4,7 +4,6 @@
             <div class="container-fluid">
                 <div class="d-flex align-items-center">
                     <img src="/light-logo.svg" alt="Sutter Health Logo" class="me-3" style="width: 200px; height: 40px;" />
-                    <a class="navbar-brand text-teal" href="#">Sutter Health</a>
                     <span class="navbar-text text-teal">Sutter Analytics Marketplace</span>
                 </div>
                 <div class="d-flex align-items-center">
@@ -25,7 +24,7 @@
     <style scoped>
         .navbar-brand,
         .navbar-text {
-            font-size: 1.1rem; /* Slightly larger font to match the logo */
+            font-size: 1.5rem; /* Slightly larger font to match the logo */
         }
 
         .navbar {

@@ -5,10 +5,12 @@
         <div class="content-area">
             <div class="row">
                 <div class="col-md-3">
-                    <FilterSidebar :current-domain="domainNameFormatted" @update:filters="updateFilters" />
+                    <FilterSidebar :current-domain="domainNameFormatted"
+                                   :items="items"
+                                   @update:filters="updateFilters" />
                 </div>
                 <div class="col-md-9">
-                    <ItemGrid :filters="selectedFilters" />
+                    <ItemGrid :filters="selectedFilters" :items="items" />
                 </div>
             </div>
         </div>
@@ -20,6 +22,7 @@
     import HeroSection from '../components/HeroSection.vue';
     import FilterSidebar from '../components/FilterSidebar.vue';
     import ItemGrid from '../components/ItemGrid.vue';
+    import itemsData from '../data/itemsData.js';
 
     export default {
         name: 'DomainItems',
@@ -40,11 +43,12 @@
                 selectedFilters: {
                     assetTypes: [],
                     privacy: { phi: false },
-                    domains: [], // Remove pre-initialization; FilterSidebar will handle this
+                    domains: [],
                     divisions: [],
                     serviceLines: [],
                     dataSources: [],
                 },
+                items: itemsData,
             };
         },
         computed: {

@@ -6,23 +6,31 @@
         </div>
 
         <!-- Asset Type -->
-        <div class="mb-4">
+        <div class="filter-category">
             <h6>Asset Type</h6>
-            <div v-for="type in assetTypes" :key="type.name" class="form-check">
+            <div v-for="(type, index) in assetTypes"
+                 :key="type.name"
+                 class="form-check"
+                 v-show="assetTypesShowAll || index < 5">
                 <input class="form-check-input"
                        type="checkbox"
                        :id="type.name"
                        v-model="type.checked"
                        @change="emitFilters" />
                 <label class="form-check-label" :for="type.name">
-                    {{ type.name }} ({{ type.count }})
+                    {{ type.name }} ({{ getCount('assetType', type.name) }})
                 </label>
             </div>
-            <a href="#" class="text-teal small">Show more</a>
+            <a v-if="assetTypes.length > 5"
+               href="#"
+               class="text-teal small"
+               @click.prevent="assetTypesShowAll = !assetTypesShowAll">
+                {{ assetTypesShowAll ? 'Show less' : 'Show more' }}
+            </a>
         </div>
 
         <!-- Privacy -->
-        <div class="mb-4">
+        <div class="filter-category">
             <h6>Privacy</h6>
             <div class="form-check">
                 <input class="form-check-input"
@@ -31,73 +39,105 @@
                        v-model="filters.privacy.phi"
                        @change="emitFilters" />
                 <label class="form-check-label" for="phi">
-                    PHI (3)
+                    PHI ({{ getCount('privacy', 'phi') }})
                 </label>
             </div>
         </div>
 
         <!-- Domain -->
-        <div class="mb-4">
+        <div class="filter-category">
             <h6>Domain</h6>
-            <div v-for="domain in domains" :key="domain.name" class="form-check">
+            <div v-for="(domain, index) in domains"
+                 :key="domain.name"
+                 class="form-check"
+                 v-show="domainsShowAll || index < 5">
                 <input class="form-check-input"
                        type="checkbox"
                        :id="domain.name"
                        v-model="domain.checked"
                        @change="emitFilters" />
                 <label class="form-check-label" :for="domain.name">
-                    {{ domain.name }} ({{ domain.count }})
+                    {{ domain.name }} ({{ getCount('domain', domain.name) }})
                 </label>
             </div>
-            <a href="#" class="text-teal small">Show more</a>
+            <a v-if="domains.length > 5"
+               href="#"
+               class="text-teal small"
+               @click.prevent="domainsShowAll = !domainsShowAll">
+                {{ domainsShowAll ? 'Show less' : 'Show more' }}
+            </a>
         </div>
 
         <!-- Division -->
-        <div class="mb-4">
+        <div class="filter-category">
             <h6>Division</h6>
-            <div v-for="division in divisions" :key="division.name" class="form-check">
+            <div v-for="(division, index) in divisions"
+                 :key="division.name"
+                 class="form-check"
+                 v-show="divisionsShowAll || index < 5">
                 <input class="form-check-input"
                        type="checkbox"
                        :id="division.name"
                        v-model="division.checked"
                        @change="emitFilters" />
                 <label class="form-check-label" :for="division.name">
-                    {{ division.name }} ({{ division.count }})
+                    {{ division.name }} ({{ getCount('division', division.name) }})
                 </label>
             </div>
-            <a href="#" class="text-teal small">Show more</a>
+            <a v-if="divisions.length > 5"
+               href="#"
+               class="text-teal small"
+               @click.prevent="divisionsShowAll = !divisionsShowAll">
+                {{ divisionsShowAll ? 'Show less' : 'Show more' }}
+            </a>
         </div>
 
         <!-- Service Line -->
-        <div class="mb-4">
+        <div class="filter-category">
             <h6>Service Line</h6>
-            <div v-for="line in serviceLines" :key="line.name" class="form-check">
+            <div v-for="(line, index) in serviceLines"
+                 :key="line.name"
+                 class="form-check"
+                 v-show="serviceLinesShowAll || index < 5">
                 <input class="form-check-input"
                        type="checkbox"
                        :id="line.name"
                        v-model="line.checked"
                        @change="emitFilters" />
                 <label class="form-check-label" :for="line.name">
-                    {{ line.name }} ({{ line.count }})
+                    {{ line.name }} ({{ getCount('serviceLine', line.name) }})
                 </label>
             </div>
-            <a href="#" class="text-teal small">Show more</a>
+            <a v-if="serviceLines.length > 5"
+               href="#"
+               class="text-teal small"
+               @click.prevent="serviceLinesShowAll = !serviceLinesShowAll">
+                {{ serviceLinesShowAll ? 'Show less' : 'Show more' }}
+            </a>
         </div>
 
         <!-- Data Source -->
-        <div class="mb-4">
+        <div class="filter-category">
             <h6>Data Source</h6>
-            <div v-for="source in dataSources" :key="source.name" class="form-check">
+            <div v-for="(source, index) in dataSources"
+                 :key="source.name"
+                 class="form-check"
+                 v-show="dataSourcesShowAll || index < 5">
                 <input class="form-check-input"
                        type="checkbox"
                        :id="source.name"
                        v-model="source.checked"
                        @change="emitFilters" />
                 <label class="form-check-label" :for="source.name">
-                    {{ source.name }} ({{ source.count }})
+                    {{ source.name }} ({{ getCount('dataSource', source.name) }})
                 </label>
             </div>
-            <a href="#" class="text-teal small">Show more</a>
+            <a v-if="dataSources.length > 5"
+               href="#"
+               class="text-teal small"
+               @click.prevent="dataSourcesShowAll = !dataSourcesShowAll">
+                {{ dataSourcesShowAll ? 'Show less' : 'Show more' }}
+            </a>
         </div>
     </div>
 </template>
@@ -110,13 +150,19 @@
                 type: String,
                 default: '',
             },
+            items: {
+                type: Array,
+                default: () => [],
+            },
         },
         data() {
             return {
                 assetTypes: [
-                    { name: 'Dashboard', count: 8, checked: false },
-                    { name: 'Application', count: 1, checked: false },
-                    { name: 'Data Model', count: 1, checked: false },
+                    { name: 'Dashboard', checked: false },
+                    { name: 'Application', checked: false },
+                    { name: 'Data Model', checked: false },
+                    { name: 'Report', checked: false },
+                    { name: 'Featured', checked: false },
                 ],
                 filters: {
                     privacy: {
@@ -124,34 +170,39 @@
                     },
                 },
                 domains: [
-                    { name: 'Strategy', count: 1, checked: false },
-                    { name: 'Access to Care', count: 20, checked: false },
-                    { name: 'Quality', count: 17, checked: false },
-                    { name: 'People & Workforce', count: 16, checked: false },
+                    { name: 'Strategy', checked: false },
+                    { name: 'Access to Care', checked: false },
+                    { name: 'Quality', checked: false },
+                    { name: 'People & Workforce', checked: false },
                 ],
                 divisions: [
-                    { name: 'Greater Central Valley', count: 20, checked: false },
-                    { name: 'Greater East Bay', count: 20, checked: false },
-                    { name: 'Greater Sacramento', count: 20, checked: false },
-                    { name: 'Greater San Francisco', count: 20, checked: false },
+                    { name: 'Greater Central Valley', checked: false },
+                    { name: 'Greater East Bay', checked: false },
+                    { name: 'Greater Sacramento', checked: false },
+                    { name: 'Greater San Francisco', checked: false },
                 ],
                 serviceLines: [
-                    { name: 'Behavioral Health', count: 2, checked: false },
-                    { name: 'Cardiology', count: 2, checked: false },
-                    { name: 'Hospital', count: 2, checked: false },
-                    { name: 'Oncology', count: 2, checked: false },
-                    { name: 'Primary Care', count: 2, checked: false },
+                    { name: 'Behavioral Health', checked: false },
+                    { name: 'Cardiology', checked: false },
+                    { name: 'Hospital', checked: false },
+                    { name: 'Oncology', checked: false },
+                    { name: 'Primary Care', checked: false },
+                    { name: 'Orthopedics', checked: false },
                 ],
                 dataSources: [
-                    { name: 'Power BI', count: 14, checked: false },
-                    { name: 'Epic', count: 3, checked: false },
-                    { name: 'Tableau', count: 2, checked: false },
-                    { name: 'Web-Based', count: 1, checked: false },
+                    { name: 'Power BI', checked: false },
+                    { name: 'Epic', checked: false },
+                    { name: 'Tableau', checked: false },
+                    { name: 'Web-Based', checked: false },
                 ],
+                assetTypesShowAll: false,
+                domainsShowAll: false,
+                divisionsShowAll: false,
+                serviceLinesShowAll: false,
+                dataSourcesShowAll: false,
             };
         },
         created() {
-            // Pre-check the current domain
             if (this.currentDomain) {
                 const domain = this.domains.find(d => d.name.toLowerCase() === this.currentDomain.toLowerCase());
                 if (domain) {
@@ -159,13 +210,37 @@
                 } else {
                     this.domains.push({
                         name: this.currentDomain,
-                        count: 0, // Adjust count as needed
                         checked: true,
                     });
                 }
             }
-            // Emit initial filters on page load
             this.emitFilters();
+        },
+        computed: {
+            getCount() {
+                return (filterType, value) => {
+                    if (!this.items || !Array.isArray(this.items)) return 0;
+                    return this.items.filter(item => {
+                        if (!item) return false;
+                        switch (filterType) {
+                            case 'assetType':
+                                return item.assetTypes.includes(value);
+                            case 'privacy':
+                                return value === 'phi' && item.privacy?.phi;
+                            case 'domain':
+                                return item.domain === value;
+                            case 'division':
+                                return item.division === value;
+                            case 'serviceLine':
+                                return item.serviceLine === value;
+                            case 'dataSource':
+                                return item.dataSource === value;
+                            default:
+                                return false;
+                        }
+                    }).length;
+                };
+            },
         },
         methods: {
             emitFilters() {
@@ -180,21 +255,14 @@
                 this.$emit('update:filters', filters);
             },
             clearAll() {
-                // Reset asset types
                 this.assetTypes.forEach(type => (type.checked = false));
-                // Reset privacy
                 this.filters.privacy.phi = false;
-                // Reset domains, but keep the current domain checked
                 this.domains.forEach(domain => {
                     domain.checked = this.currentDomain ? domain.name.toLowerCase() === this.currentDomain.toLowerCase() : false;
                 });
-                // Reset divisions
                 this.divisions.forEach(division => (division.checked = false));
-                // Reset service lines
                 this.serviceLines.forEach(line => (line.checked = false));
-                // Reset data sources
                 this.dataSources.forEach(source => (source.checked = false));
-                // Emit the updated filters
                 this.emitFilters();
             },
         },
@@ -203,9 +271,18 @@
 
 <style scoped>
     .filter-sidebar {
-        padding: 20px;
+        padding: 15px;
         border-right: 1px solid #e0e0e0;
         height: 100%;
+        width: fit-content;
+        max-width: 220px;
+    }
+
+    .filter-category {
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 10px;
     }
 
     h5 {
@@ -216,11 +293,11 @@
     h6 {
         font-size: 1rem;
         font-weight: 500;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
     }
 
     .form-check {
-        margin-bottom: 5px;
+        margin-bottom: 2px;
     }
 
     .form-check-input {
