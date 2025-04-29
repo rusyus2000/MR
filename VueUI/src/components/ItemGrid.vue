@@ -1,7 +1,9 @@
 <template>
     <div class="item-grid">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <span class="text-muted">Showing {{ paginatedItems.length }} of {{ filteredItems.length }} of {{ items.length }} results</span>
+            <span class="text-muted">
+                Showing {{ paginatedItems.length }} of {{ filteredItems.length }} of {{ items.length }} results
+            </span>
             <div class="d-flex align-items-center">
                 <label for="sortBy" class="me-2">Sort by:</label>
                 <select id="sortBy" class="form-select form-select-sm" v-model="sortBy">
@@ -18,17 +20,17 @@
         </div>
 
         <div class="row row-cols-1 row-cols-md-3 g-4">
-            <div class="col" v-for="(item, index) in paginatedItems" :key="index">
-                <DomainCard :title="item.title"
-                            :description="item.description"
-                            :asset-types="item.assetTypes"
-                            :show-asset-type="true"
-                            :show-request-access="true"
-                            :has-access="item.hasAccess" />
+            <div class="col" v-for="item in paginatedItems" :key="item.id">
+                <ItemTile :id="item.id"
+                          :url="item.url"
+                          :title="item.title"
+                          :description="item.description"
+                          :asset-types="item.assetTypes"
+                          :show-request-access="true"
+                          :has-access="item.hasAccess" />
             </div>
         </div>
 
-        <!-- Pagination -->
         <div class="d-flex justify-content-between align-items-center mt-4">
             <div class="d-flex align-items-center">
                 <label for="itemsPerPage" class="me-2">Items per page</label>
@@ -54,13 +56,11 @@
 </template>
 
 <script>
-    import DomainCard from './DomainCard.vue';
+    import ItemTile from '../components/ItemTile.vue';
 
     export default {
         name: 'ItemGrid',
-        components: {
-            DomainCard,
-        },
+        components: { ItemTile },
         props: {
             filters: {
                 type: Object,
@@ -70,57 +70,33 @@
                     domains: [],
                     divisions: [],
                     serviceLines: [],
-                    dataSources: [],
-                }),
+                    dataSources: []
+                })
             },
             items: {
                 type: Array,
-                default: () => [],
-            },
+                default: () => []
+            }
         },
         data() {
             return {
                 sortBy: 'Most Relevant',
                 itemsPerPage: 15,
-                currentPage: 1,
+                currentPage: 1
             };
         },
         computed: {
             filteredItems() {
                 return this.items.filter(item => {
-                    // Asset Type Filter
                     if (this.filters.assetTypes.length > 0) {
-                        const matchesAssetType = this.filters.assetTypes.some(type =>
-                            item.assetTypes.includes(type)
-                        );
-                        if (!matchesAssetType) return false;
+                        const match = this.filters.assetTypes.some(type => item.assetTypes.includes(type));
+                        if (!match) return false;
                     }
-
-                    // Privacy Filter (PHI)
-                    if (this.filters.privacy.phi) {
-                        if (!item.privacy.phi) return false;
-                    }
-
-                    // Domain Filter
-                    if (this.filters.domains.length > 0) {
-                        if (!this.filters.domains.includes(item.domain)) return false;
-                    }
-
-                    // Division Filter
-                    if (this.filters.divisions.length > 0) {
-                        if (!this.filters.divisions.includes(item.division)) return false;
-                    }
-
-                    // Service Line Filter
-                    if (this.filters.serviceLines.length > 0) {
-                        if (!this.filters.serviceLines.includes(item.serviceLine)) return false;
-                    }
-
-                    // Data Source Filter
-                    if (this.filters.dataSources.length > 0) {
-                        if (!this.filters.dataSources.includes(item.dataSource)) return false;
-                    }
-
+                    if (this.filters.privacy.phi && !item.privacy.phi) return false;
+                    if (this.filters.domains.length > 0 && !this.filters.domains.includes(item.domain)) return false;
+                    if (this.filters.divisions.length > 0 && !this.filters.divisions.includes(item.division)) return false;
+                    if (this.filters.serviceLines.length > 0 && !this.filters.serviceLines.includes(item.serviceLine)) return false;
+                    if (this.filters.dataSources.length > 0 && !this.filters.dataSources.includes(item.dataSource)) return false;
                     return true;
                 });
             },
@@ -128,21 +104,19 @@
                 return Math.ceil(this.filteredItems.length / this.itemsPerPage);
             },
             paginatedItems() {
-                const start = (this.currentPage - 1) * this.itemsPerPage;
-                const end = start + this.itemsPerPage;
-                let sortedItems = this.filteredItems;
+                let list = this.filteredItems;
                 if (this.sortBy === 'Alphabetical') {
-                    sortedItems = [...this.filteredItems].sort((a, b) => a.title.localeCompare(b.title));
+                    list = [...list].sort((a, b) => a.title.localeCompare(b.title));
                 }
-                return sortedItems.slice(start, end);
-            },
+                const start = (this.currentPage - 1) * this.itemsPerPage;
+                return list.slice(start, start + this.itemsPerPage);
+            }
         },
         watch: {
             filteredItems() {
-                // Reset to the first page when filters change
                 this.currentPage = 1;
-            },
-        },
+            }
+        }
     };
 </script>
 
