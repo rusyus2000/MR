@@ -88,7 +88,7 @@
                href="#"
                class="text-teal small"
                @click.prevent="divisionsShowAll = !divisionsShowAll">
-                {{ divisionsShowAll ? 'Show less' : 'Show more' }}
+                {{ domainsShowAll ? 'Show less' : 'Show more' }}
             </a>
         </div>
 
@@ -170,10 +170,14 @@
                     },
                 },
                 domains: [
-                    { name: 'Strategy', checked: false },
                     { name: 'Access to Care', checked: false },
-                    { name: 'Quality', checked: false },
+                    { name: 'Clinical Operations', checked: false },
+                    { name: 'Finance', checked: false },
+                    { name: 'Patient Experience', checked: false },
                     { name: 'People & Workforce', checked: false },
+                    { name: 'Quality', checked: false },
+                    { name: 'Revenue Cycle', checked: false },
+                    { name: 'Service Lines', checked: false },
                 ],
                 divisions: [
                     { name: 'Greater Central Valley', checked: false },
@@ -271,18 +275,18 @@
 
 <style scoped>
     .filter-sidebar {
-        padding: 15px;
+        padding: 10px; /* Reduce padding to minimize space */
         border-right: 1px solid #e0e0e0;
         height: 100%;
-        width: fit-content;
-        max-width: 220px;
+        width: 100%; /* Ensure it takes full width of the column */
+        max-width: none; /* Remove max-width to fill the col-md-3 space */
     }
 
     .filter-category {
         border: 1px solid #e0e0e0;
         border-radius: 4px;
-        padding: 10px;
-        margin-bottom: 10px;
+        padding: 8px; /* Reduce padding inside filter categories */
+        margin-bottom: 8px;
     }
 
     h5 {
@@ -308,7 +312,7 @@
         font-size: 0.9rem;
     }
 
-    .text-teal {
+    .text-Teal {
         color: #00A89E;
     }
 </style>

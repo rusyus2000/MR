@@ -1,36 +1,61 @@
 <template>
-    <div class="item-grid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <!-- Header: count, sort, add asset -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="text-muted">
                 Showing {{ paginatedItems.length }} of {{ filteredItems.length }} of {{ items.length }} results
             </span>
             <div class="d-flex align-items-center">
-                <label for="sortBy" class="me-2">Sort by:</label>
-                <select id="sortBy" class="form-select form-select-sm" v-model="sortBy">
+                <label for="sortBy" class="me-2 mb-0">Sort by:</label>
+                <select id="sortBy" class="form-select form-select-sm me-3" v-model="sortBy" style="width: auto;">
                     <option>Most Relevant</option>
                     <option>Alphabetical</option>
                 </select>
-                <button class="btn btn-sm btn-outline-secondary ms-2">
-                    <i class="bi bi-grid"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-secondary ms-1">
-                    <i class="bi bi-list"></i>
-                </button>
+                <router-link to="/add-asset" class="btn btn-sm btn-success">
+                    <i class="bi bi-plus"></i> Add New Asset
+                </router-link>
             </div>
         </div>
 
-        <div class="row row-cols-1 row-cols-md-3 g-4">
+        <!-- View toggle controls -->
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-sm me-2"
+                    :class="{ 'btn-primary': viewMode==='grid', 'btn-outline-secondary': viewMode!=='grid' }"
+                    @click="viewMode='grid'"
+                    title="Grid View">
+                <i class="bi bi-grid"></i>
+            </button>
+            <button class="btn btn-sm"
+                    :class="{ 'btn-primary': viewMode==='list', 'btn-outline-secondary': viewMode!=='list' }"
+                    @click="viewMode='list'"
+                    title="List View">
+                <i class="bi bi-list"></i>
+            </button>
+        </div>
+
+        <!-- Grid View -->
+        <div v-if="viewMode==='grid'" class="row row-cols-1 row-cols-md-3 g-4">
             <div class="col" v-for="item in paginatedItems" :key="item.id">
                 <ItemTile :id="item.id"
                           :url="item.url"
                           :title="item.title"
                           :description="item.description"
-                          :asset-types="item.assetTypes"
-                          :show-request-access="true"
-                          :has-access="item.hasAccess" />
+                          :asset-types="item.assetTypes" />
             </div>
         </div>
 
+        <!-- List View -->
+        <div v-else class="list-view">
+            <ListItem v-for="item in paginatedItems"
+                      :key="item.id"
+                      :id="item.id"
+                      :url="item.url"
+                      :title="item.title"
+                      :description="item.description"
+                      :asset-types="item.assetTypes" />
+        </div>
+
+        <!-- Pagination Controls -->
         <div class="d-flex justify-content-between align-items-center mt-4">
             <div class="d-flex align-items-center">
                 <label for="itemsPerPage" class="me-2">Items per page</label>
@@ -41,13 +66,13 @@
                 </select>
             </div>
             <div class="text-muted">
-                {{ (currentPage - 1) * itemsPerPage + 1 }}-{{ Math.min(currentPage * itemsPerPage, filteredItems.length) }} of {{ filteredItems.length }}
+                {{ (currentPage-1)*itemsPerPage+1 }}-{{ Math.min(currentPage*itemsPerPage, filteredItems.length) }} of {{ filteredItems.length }}
             </div>
             <div>
-                <button class="btn btn-sm btn-outline-secondary me-1" :disabled="currentPage === 1" @click="currentPage--">
+                <button class="btn btn-sm btn-outline-secondary me-1" :disabled="currentPage===1" @click="currentPage--">
                     <i class="bi bi-chevron-left"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-secondary" :disabled="currentPage === totalPages" @click="currentPage++">
+                <button class="btn btn-sm btn-outline-secondary" :disabled="currentPage===totalPages" @click="currentPage++">
                     <i class="bi bi-chevron-right"></i>
                 </button>
             </div>
@@ -56,84 +81,58 @@
 </template>
 
 <script>
+    import { ref, computed, watch } from 'vue';
     import ItemTile from '../components/ItemTile.vue';
+    import ListItem from '../components/ListItem.vue';
 
     export default {
         name: 'ItemGrid',
-        components: { ItemTile },
+        components: { ItemTile, ListItem },
         props: {
-            filters: {
-                type: Object,
-                default: () => ({
-                    assetTypes: [],
-                    privacy: { phi: false },
-                    domains: [],
-                    divisions: [],
-                    serviceLines: [],
-                    dataSources: []
-                })
-            },
-            items: {
-                type: Array,
-                default: () => []
-            }
+            filters: { type: Object, default: () => ({ assetTypes: [], privacy: { phi: false }, domains: [], divisions: [], serviceLines: [], dataSources: [] }) },
+            items: { type: Array, default: () => [] }
         },
-        data() {
-            return {
-                sortBy: 'Most Relevant',
-                itemsPerPage: 15,
-                currentPage: 1
-            };
-        },
-        computed: {
-            filteredItems() {
-                return this.items.filter(item => {
-                    if (this.filters.assetTypes.length > 0) {
-                        const match = this.filters.assetTypes.some(type => item.assetTypes.includes(type));
-                        if (!match) return false;
-                    }
-                    if (this.filters.privacy.phi && !item.privacy.phi) return false;
-                    if (this.filters.domains.length > 0 && !this.filters.domains.includes(item.domain)) return false;
-                    if (this.filters.divisions.length > 0 && !this.filters.divisions.includes(item.division)) return false;
-                    if (this.filters.serviceLines.length > 0 && !this.filters.serviceLines.includes(item.serviceLine)) return false;
-                    if (this.filters.dataSources.length > 0 && !this.filters.dataSources.includes(item.dataSource)) return false;
+        setup(props) {
+            const viewMode = ref('grid');
+            const sortBy = ref('Most Relevant');
+            const itemsPerPage = ref(15);
+            const currentPage = ref(1);
+
+            const filteredItems = computed(() =>
+                props.items.filter(item => {
+                    if (props.filters.assetTypes.length && !props.filters.assetTypes.some(type => item.assetTypes.includes(type))) return false;
+                    if (props.filters.privacy.phi && !item.privacy.phi) return false;
+                    if (props.filters.domains.length && !props.filters.domains.includes(item.domain)) return false;
+                    if (props.filters.divisions.length && !props.filters.divisions.includes(item.division)) return false;
+                    if (props.filters.serviceLines.length && !props.filters.serviceLines.includes(item.serviceLine)) return false;
+                    if (props.filters.dataSources.length && !props.filters.dataSources.includes(item.dataSource)) return false;
                     return true;
-                });
-            },
-            totalPages() {
-                return Math.ceil(this.filteredItems.length / this.itemsPerPage);
-            },
-            paginatedItems() {
-                let list = this.filteredItems;
-                if (this.sortBy === 'Alphabetical') {
-                    list = [...list].sort((a, b) => a.title.localeCompare(b.title));
-                }
-                const start = (this.currentPage - 1) * this.itemsPerPage;
-                return list.slice(start, start + this.itemsPerPage);
-            }
-        },
-        watch: {
-            filteredItems() {
-                this.currentPage = 1;
-            }
+                })
+            );
+
+            const totalPages = computed(() => Math.ceil(filteredItems.value.length / itemsPerPage.value));
+
+            const paginatedItems = computed(() => {
+                let list = filteredItems.value;
+                if (sortBy.value === 'Alphabetical') list = [...list].sort((a, b) => a.title.localeCompare(b.title));
+                const start = (currentPage.value - 1) * itemsPerPage.value;
+                return list.slice(start, start + itemsPerPage.value);
+            });
+
+            watch(filteredItems, () => {
+                currentPage.value = 1;
+            });
+
+            return { viewMode, sortBy, itemsPerPage, currentPage, filteredItems, totalPages, paginatedItems };
         }
     };
 </script>
 
 <style scoped>
-    .item-grid {
-        padding: 20px;
-    }
-
-    .form-select-sm {
-        width: auto;
-    }
-
-    .btn-outline-secondary {
-        border-color: #e0e0e0;
-    }
-
-    .text-muted {
-        font-size: 0.9rem;
+    .list-view {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 0 5px;
     }
 </style>

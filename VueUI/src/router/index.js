@@ -1,7 +1,7 @@
-
 import { createRouter, createWebHistory } from 'vue-router';
 import Dashboard from '../views/Dashboard.vue';
 import DomainItems from '../views/DomainItems.vue';
+import AddAsset from '../views/AddAsset.vue'; // Add the new admin page
 
 const routes = [
     {
@@ -13,13 +13,18 @@ const routes = [
         path: '/domain/:domainName',
         name: 'DomainItems',
         component: DomainItems,
-        props: true, // Pass route params as props to the component
+        props: true,
     },
     {
         path: '/items/:id',
         name: 'ItemDetails',
         component: () => import('../views/ItemDetails.vue'),
         props: true
+    },
+    {
+        path: '/admin/add-asset',
+        name: 'AddAsset',
+        component: AddAsset
     }
 ];
 
@@ -29,5 +34,3 @@ const router = createRouter({
 });
 
 export default router;
-
-

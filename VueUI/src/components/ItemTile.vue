@@ -30,15 +30,6 @@
                 <h5 class="card-title mb-1">{{ title }}</h5>
                 <p class="card-text text-muted flex-grow-1 mb-0">{{ truncatedDescription }}</p>
             </router-link>
-
-            <!-- Request Access button aligned right -->
-            <div class="mt-auto d-flex">
-                <button v-if="showRequestAccess && !hasAccess"
-                        class="btn btn-sm btn-outline-teal ms-auto"
-                        @click.stop="handleRequestAccess">
-                    Request Access
-                </button>
-            </div>
         </div>
     </div>
 </template>
@@ -53,9 +44,7 @@
             url: { type: String, default: '' },
             title: { type: String, required: true },
             description: { type: String, required: true },
-            assetTypes: { type: Array, default: () => [] },
-            showRequestAccess: { type: Boolean, default: true },
-            hasAccess: { type: Boolean, default: false }
+            assetTypes: { type: Array, default: () => [] }
         },
         computed: {
             truncatedDescription() {
@@ -66,9 +55,6 @@
             }
         },
         methods: {
-            handleRequestAccess() {
-                console.log(`Requesting access for ${this.title}`);
-            },
             getBadgeClass(assetType) {
                 const colorMap = {
                     Dashboard: 'bg-dashboard',
@@ -92,10 +78,6 @@
 
     .shadow-custom {
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 6px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .nav-icons {
-        padding: 0.5rem;
     }
 
     .asset-types .badge {
@@ -146,14 +128,4 @@
         font-size: 0.9rem;
         line-height: 1.4;
     }
-
-    .btn-outline-teal {
-        border-color: #00A89E;
-        color: #00A89E;
-    }
-
-        .btn-outline-teal:hover {
-            background-color: #00A89E;
-            color: white;
-        }
 </style>

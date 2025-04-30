@@ -3,15 +3,14 @@
         <Navbar />
         <HeroSection :domain="domainNameFormatted" />
         <div class="content-area">
-            <div class="row">
-                <div class="col-md-3">
-                    <FilterSidebar :current-domain="domainNameFormatted"
-                                   :items="items"
-                                   @update:filters="updateFilters" />
-                </div>
-                <div class="col-md-9">
-                    <ItemGrid :filters="selectedFilters" :items="items" />
-                </div>
+            <div class="filter-col">
+                <FilterSidebar :current-domain="domainNameFormatted"
+                               :items="items"
+                               @update:filters="updateFilters" />
+            </div>
+            <div class="asset-col">
+                <ItemGrid :filters="selectedFilters"
+                          :items="items" />
             </div>
         </div>
     </div>
@@ -26,17 +25,9 @@
 
     export default {
         name: 'DomainItems',
-        components: {
-            Navbar,
-            HeroSection,
-            FilterSidebar,
-            ItemGrid,
-        },
+        components: { Navbar, HeroSection, FilterSidebar, ItemGrid },
         props: {
-            domainName: {
-                type: String,
-                required: true,
-            },
+            domainName: { type: String, required: true }
         },
         data() {
             return {
@@ -46,9 +37,9 @@
                     domains: [],
                     divisions: [],
                     serviceLines: [],
-                    dataSources: [],
+                    dataSources: []
                 },
-                items: itemsData,
+                items: itemsData
             };
         },
         computed: {
@@ -56,24 +47,36 @@
                 return this.domainName
                     .replace(/-/g, ' ')
                     .replace(/\b\w/g, char => char.toUpperCase());
-            },
+            }
         },
         methods: {
             updateFilters(newFilters) {
                 this.selectedFilters = { ...newFilters };
-            },
-        },
+            }
+        }
     };
 </script>
 
 <style scoped>
     .content-area {
-        height: calc(100vh - 270px); /* Navbar (70px) + HeroSection (200px) */
-        overflow-y: auto;
+        display: flex;
+        align-items: flex-start;
         padding: 0 15px;
+        gap: 20px;
     }
 
-    .row {
-        height: 100%;
+    .filter-col {
+        flex: 0 0 220px;
     }
+
+    .asset-col {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+    }
+
+        .asset-col > * {
+            width: 100%;
+            max-width: 1000px;
+        }
 </style>
