@@ -12,5 +12,8 @@ namespace SutterAnalyticsApi.DTOs
         public string ServiceLine { get; set; }
         public string DataSource { get; set; }
         public bool PrivacyPhi { get; set; }
+
+        // New field
+        public DateTime DateAdded { get; set; }
     }
 }

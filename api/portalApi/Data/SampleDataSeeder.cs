@@ -1,3 +1,5 @@
+// Data/SampleDataSeeder.cs
+using System;
 using System.Linq;
 using SutterAnalyticsApi.Models;
 
@@ -49,23 +51,47 @@ namespace SutterAnalyticsApi.Data
                 new LookupValue { Type = "AssetType", Value = "Featured" },
             };
             _db.LookupValues.AddRange(lookups);
+            _db.SaveChanges();
 
-            // 2) Seed 25 sample items
+            // Reload lookupValues from DB so they have IDs
+            var allLookups = _db.LookupValues.ToList();
+
+            // 2) Seed 25 sample items with DateAdded descending
+            var now = DateTime.UtcNow;
             var samples = Enumerable.Range(1, 25).Select(i => new Item
             {
                 Id = i,
                 Title = $"Sample Asset {i}",
                 Description = $"This is a description for Sample Asset {i}. It covers multiple scenarios for testing.",
                 Url = $"https://example.com/resource/{i}",
-                AssetTypesCsv = i % 5 == 0 ? "Dashboard,Featured" : (i % 4 == 0 ? "Dashboard" : i % 3 == 0 ? "Report" : "Application"),
-                Domain = lookups.First(l => l.Type == "Domain" && l.Id % 4 + 1 == (i % 4) + 1).Value,
-                Division = lookups.First(l => l.Type == "Division" && l.Id % 4 + 5 == (i % 4) + 5).Value,
-                ServiceLine = lookups.First(l => l.Type == "ServiceLine" && l.Id % 6 + 9 == (i % 6) + 9).Value,
-                DataSource = lookups.First(l => l.Type == "DataSource" && l.Id % 4 + 13 == (i % 4) + 13).Value,
-                PrivacyPhi = (i % 2 == 0)
+                AssetTypesCsv = i % 5 == 0
+                    ? "Dashboard,Featured"
+                    : (i % 4 == 0
+                        ? "Dashboard"
+                        : i % 3 == 0
+                            ? "Report"
+                            : "Application"),
+                Domain = allLookups
+                             .First(l => l.Type == "Domain" &&
+                                         allLookups.IndexOf(l) % 4 == (i - 1) % 4)
+                             .Value,
+                Division = allLookups
+                               .First(l => l.Type == "Division" &&
+                                           allLookups.IndexOf(l) % 4 == (i - 1) % 4)
+                               .Value,
+                ServiceLine = allLookups
+                                  .First(l => l.Type == "ServiceLine" &&
+                                              allLookups.IndexOf(l) % 6 == (i - 1) % 6)
+                                  .Value,
+                DataSource = allLookups
+                                 .First(l => l.Type == "DataSource" &&
+                                             allLookups.IndexOf(l) % 4 == (i - 1) % 4)
+                                 .Value,
+                PrivacyPhi = (i % 2 == 0),
+                DateAdded = now.AddDays(-i)
             }).ToArray();
-            _db.Items.AddRange(samples);
 
+            _db.Items.AddRange(samples);
             _db.SaveChanges();
         }
     }

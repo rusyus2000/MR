@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -28,6 +29,9 @@ namespace SutterAnalyticsApi.Models
 
         // Privacy: PHI or not
         public bool PrivacyPhi { get; set; }
+
+        // When this asset was added
+        public DateTime DateAdded { get; set; }
 
         // Not mapped helper
         public List<string> AssetTypes

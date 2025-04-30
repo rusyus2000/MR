@@ -1,22 +1,17 @@
 <template>
-    <div class="my-4">
-        <!-- Header: count, sort, view toggles, add asset -->
+    <div class="item-grid-container my-4">
+        <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <!-- Left: Result count -->
             <span class="text-muted">
                 Showing {{ paginatedItems.length }} of {{ filteredItems.length }} of {{ items.length }} results
             </span>
-
-            <!-- Right: Controls -->
             <div class="d-flex align-items-center">
-                <!-- Sort -->
                 <label for="sortBy" class="me-2 mb-0">Sort by:</label>
                 <select id="sortBy" class="form-select form-select-sm me-3" v-model="sortBy" style="width: auto;">
                     <option>Most Relevant</option>
                     <option>Alphabetical</option>
                 </select>
 
-                <!-- View toggles -->
                 <button class="btn btn-sm me-2"
                         :class="{ 'btn-primary': viewMode==='grid', 'btn-outline-secondary': viewMode!=='grid' }"
                         @click="viewMode='grid'"
@@ -30,7 +25,6 @@
                     <i class="bi bi-list"></i>
                 </button>
 
-                <!-- Add New Asset icon-only button -->
                 <router-link :to="{ name: 'AddAsset' }" class="btn btn-sm add-asset-btn" title="Add New Asset">
                     <i class="bi bi-plus"></i>
                 </router-link>
@@ -38,18 +32,20 @@
         </div>
 
         <!-- Grid View -->
-        <div v-if="viewMode==='grid'" class="row row-cols-1 row-cols-md-3 g-4">
-            <div class="col" v-for="item in paginatedItems" :key="item.id">
-                <ItemTile :id="item.id"
-                          :url="item.url"
-                          :title="item.title"
-                          :description="item.description"
-                          :asset-types="item.assetTypes" />
+        <div v-if="viewMode==='grid'" class="grid-wrapper">
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                <div class="col" v-for="item in paginatedItems" :key="item.id">
+                    <ItemTile :id="item.id"
+                              :url="item.url"
+                              :title="item.title"
+                              :description="item.description"
+                              :asset-types="item.assetTypes" />
+                </div>
             </div>
         </div>
 
         <!-- List View -->
-        <div v-else class="list-view">
+        <div v-else class="list-wrapper">
             <ListItem v-for="item in paginatedItems"
                       :key="item.id"
                       :id="item.id"
@@ -59,9 +55,8 @@
                       :asset-types="item.assetTypes" />
         </div>
 
-        <!-- Pagination Controls -->
+        <!-- Pagination -->
         <div class="d-flex justify-content-between align-items-center mt-4">
-            <!-- Items per page selector -->
             <div class="d-flex align-items-center">
                 <label for="itemsPerPage" class="me-2">Items per page</label>
                 <select id="itemsPerPage" class="form-select form-select-sm" v-model="itemsPerPage" style="width: auto;">
@@ -70,11 +65,9 @@
                     <option>50</option>
                 </select>
             </div>
-            <!-- Page info -->
             <div class="text-muted">
                 {{ (currentPage-1)*itemsPerPage+1 }}-{{ Math.min(currentPage*itemsPerPage, filteredItems.length) }} of {{ filteredItems.length }}
             </div>
-            <!-- Pagination buttons -->
             <div>
                 <button class="btn btn-sm btn-outline-secondary me-1" :disabled="currentPage===1" @click="currentPage--">
                     <i class="bi bi-chevron-left"></i>
@@ -108,7 +101,7 @@
             const filteredItems = computed(() =>
                 props.items.filter(item => {
                     if (props.filters.assetTypes.length && !props.filters.assetTypes.some(type => item.assetTypes.includes(type))) return false;
-                    if (props.filters.privacy.phi && !item.privacy.phi) return false;
+                    if (props.filters.privacy.phi && !item.privacyPhi) return false;
                     if (props.filters.domains.length && !props.filters.domains.includes(item.domain)) return false;
                     if (props.filters.divisions.length && !props.filters.divisions.includes(item.division)) return false;
                     if (props.filters.serviceLines.length && !props.filters.serviceLines.includes(item.serviceLine)) return false;
@@ -118,6 +111,7 @@
             );
 
             const totalPages = computed(() => Math.ceil(filteredItems.value.length / itemsPerPage.value));
+
             const paginatedItems = computed(() => {
                 let list = filteredItems.value;
                 if (sortBy.value === 'Alphabetical') list = [...list].sort((a, b) => a.title.localeCompare(b.title));
@@ -125,7 +119,9 @@
                 return list.slice(start, start + itemsPerPage.value);
             });
 
-            watch(filteredItems, () => { currentPage.value = 1; });
+            watch(filteredItems, () => {
+                currentPage.value = 1;
+            });
 
             return { viewMode, sortBy, itemsPerPage, currentPage, filteredItems, totalPages, paginatedItems };
         }
@@ -133,6 +129,18 @@
 </script>
 
 <style scoped>
+    .item-grid-container {
+        margin: 1rem 0;
+    }
+
+    .grid-wrapper,
+    .list-wrapper {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Add Asset button styling */
     .add-asset-btn {
         background-color: #28a745 !important;
         border-color: #28a745 !important;
@@ -143,11 +151,4 @@
             background-color: #218838 !important;
             border-color: #1e7e34 !important;
         }
-
-    .list-view {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        padding: 0 5px;
-    }
 </style>
