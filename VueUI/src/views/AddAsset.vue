@@ -1,246 +1,160 @@
 <template>
     <div>
         <Navbar />
-        <div class="container mt-4">
-            <h2>Add New Asset</h2>
-            <form @submit.prevent="submitAsset" class="add-asset-form">
-                <!-- Title -->
-                <div class="mb-3">
-                    <label for="title" class="form-label">Title</label>
-                    <input type="text"
-                           class="form-control"
-                           id="title"
-                           v-model="newAsset.title"
-                           required />
-                </div>
+        <div class="container my-5 mb-5">
+            <div class="mx-auto" style="max-width: 60%;">
+                <div class="card shadow-custom">
+                    <div class="card-header">
+                        <h3>Add New Asset</h3>
+                    </div>
+                    <div class="card-body">
+                        <form @submit.prevent="submitForm">
+                            <!-- Full-width fields -->
+                            <div class="mb-3">
+                                <label for="title" class="form-label fw-bold">Title</label>
+                                <input v-model="form.title" type="text" id="title" class="form-control" required />
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label fw-bold">Description</label>
+                                <textarea v-model="form.description" id="description" class="form-control" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="url" class="form-label fw-bold">Resource URL</label>
+                                <input v-model="form.url" type="url" id="url" class="form-control" required />
+                            </div>
 
-                <!-- Description -->
-                <div class="mb-3">
-                    <label for="description" class="form-label">Description</label>
-                    <textarea class="form-control"
-                              id="description"
-                              v-model="newAsset.description"
-                              rows="3"
-                              required></textarea>
-                </div>
+                            <!-- Two-column grid -->
+                            <div class="row row-custom">
+                                <!-- Asset Types spans two rows -->
+                                <div class="col-md-6 asset-span-2 mb-3">
+                                    <label for="assetTypes" class="form-label fw-bold">Asset Types</label>
+                                    <select v-model="form.assetTypes" id="assetTypes" class="form-select w-100 asset-select" multiple>
+                                        <option>Dashboard</option>
+                                        <option>Application</option>
+                                        <option>Data Model</option>
+                                        <option>Report</option>
+                                        <option>Featured</option>
+                                    </select>
+                                </div>
+                                <!-- Domain -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="domain" class="form-label fw-bold">Domain</label>
+                                    <select v-model="form.domain" id="domain" class="form-select" required>
+                                        <option value="">Select domain</option>
+                                        <option>Strategy</option>
+                                        <option>Access to Care</option>
+                                        <option>Quality</option>
+                                        <option>People & Workforce</option>
+                                    </select>
+                                </div>
+                                <!-- Division -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="division" class="form-label fw-bold">Division</label>
+                                    <select v-model="form.division" id="division" class="form-select">
+                                        <option value="">Select division</option>
+                                        <option>Greater Central Valley</option>
+                                        <option>Greater East Bay</option>
+                                        <option>Greater Sacramento</option>
+                                        <option>Greater San Francisco</option>
+                                    </select>
+                                </div>
+                                <!-- Service Line -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="serviceLine" class="form-label fw-bold">Service Line</label>
+                                    <select v-model="form.serviceLine" id="serviceLine" class="form-select">
+                                        <option value="">Select service line</option>
+                                        <option>Behavioral Health</option>
+                                        <option>Cardiology</option>
+                                        <option>Hospital</option>
+                                        <option>Oncology</option>
+                                        <option>Primary Care</option>
+                                        <option>Orthopedics</option>
+                                    </select>
+                                </div>
+                                <!-- Data Source -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="dataSource" class="form-label fw-bold">Data Source</label>
+                                    <select v-model="form.dataSource" id="dataSource" class="form-select">
+                                        <option value="">Select data source</option>
+                                        <option>Power BI</option>
+                                        <option>Epic</option>
+                                        <option>Tableau</option>
+                                        <option>Web-Based</option>
+                                    </select>
+                                </div>
+                            </div>
 
-                <!-- URL -->
-                <div class="mb-3">
-                    <label for="url" class="form-label">URL</label>
-                    <input type="url"
-                           class="form-control"
-                           id="url"
-                           v-model="newAsset.url"
-                           required />
-                </div>
-
-                <!-- Asset Types -->
-                <div class="mb-3">
-                    <label class="form-label">Asset Types</label>
-                    <div class="form-check" v-for="type in assetTypeOptions" :key="type">
-                        <input class="form-check-input"
-                               type="checkbox"
-                               :id="`asset-type-${type}`"
-                               :value="type"
-                               v-model="newAsset.assetTypes" />
-                        <label class="form-check-label" :for="`asset-type-${type}`">
-                            {{ type }}
-                        </label>
+                            <!-- Actions -->
+                            <div class="d-flex justify-content-between mt-3">
+                                <button type="button" class="btn btn-secondary" @click="$router.back()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Asset</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-
-                <!-- Has Access -->
-                <div class="mb-3">
-                    <label class="form-label">Access</label>
-                    <div class="form-check">
-                        <input class="form-check-input"
-                               type="checkbox"
-                               id="hasAccess"
-                               v-model="newAsset.hasAccess" />
-                        <label class="form-check-label" for="hasAccess">
-                            Has Access
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Privacy (PHI) -->
-                <div class="mb-3">
-                    <label class="form-label">Privacy</label>
-                    <div class="form-check">
-                        <input class="form-check-input"
-                               type="checkbox"
-                               id="phi"
-                               v-model="newAsset.privacy.phi" />
-                        <label class="form-check-label" for="phi">
-                            Contains PHI
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Domain -->
-                <div class="mb-3">
-                    <label for="domain" class="form-label">Domain</label>
-                    <select class="form-select"
-                            id="domain"
-                            v-model="newAsset.domain"
-                            required>
-                        <option disabled value="">Select a domain</option>
-                        <option v-for="domain in domainOptions" :key="domain" :value="domain">
-                            {{ domain }}
-                        </option>
-                    </select>
-                </div>
-
-                <!-- Division -->
-                <div class="mb-3">
-                    <label for="division" class="form-label">Division</label>
-                    <select class="form-select"
-                            id="division"
-                            v-model="newAsset.division"
-                            required>
-                        <option disabled value="">Select a division</option>
-                        <option v-for="division in divisionOptions" :key="division" :value="division">
-                            {{ division }}
-                        </option>
-                    </select>
-                </div>
-
-                <!-- Service Line -->
-                <div class="mb-3">
-                    <label for="serviceLine" class="form-label">Service Line</label>
-                    <select class="form-select"
-                            id="serviceLine"
-                            v-model="newAsset.serviceLine"
-                            required>
-                        <option disabled value="">Select a service line</option>
-                        <option v-for="line in serviceLineOptions" :key="line" :value="line">
-                            {{ line }}
-                        </option>
-                    </select>
-                </div>
-
-                <!-- Data Source -->
-                <div class="mb-3">
-                    <label for="dataSource" class="form-label">Data Source</label>
-                    <select class="form-select"
-                            id="dataSource"
-                            v-model="newAsset.dataSource"
-                            required>
-                        <option disabled value="">Select a data source</option>
-                        <option v-for="source in dataSourceOptions" :key="source" :value="source">
-                            {{ source }}
-                        </option>
-                    </select>
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit" class="btn btn-primary">Add Asset</button>
-            </form>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
-import Navbar from '../components/Navbar.vue';
-import itemsData from '../data/itemsData.js';
-
-export default {
-    name: 'AddAsset',
-    components: { Navbar },
-    data() {
-        return {
-            newAsset: {
-                id: null,
-                title: '',
-                description: '',
-                url: '',
-                assetTypes: [],
-                hasAccess: false,
-                privacy: { phi: false },
-                domain: '',
-                division: '',
-                serviceLine: '',
-                dataSource: '',
-            },
-            assetTypeOptions: ['Dashboard', 'Application', 'Data Model', 'Report', 'Featured'],
-            domainOptions: [
-                'Access to Care',
-                'Clinical Operations',
-                'Finance',
-                'Patient Experience',
-                'People & Workforce',
-                'Quality',
-                'Revenue Cycle',
-                'Service Lines',
-            ],
-            divisionOptions: [
-                'Greater Central Valley',
-                'Greater East Bay',
-                'Greater Sacramento',
-                'Greater San Francisco',
-            ],
-            serviceLineOptions: [
-                'Behavioral Health',
-                'Cardiology',
-                'Hospital',
-                'Oncology',
-                'Primary Care',
-                'Orthopedics',
-            ],
-            dataSourceOptions: ['Power BI', 'Epic', 'Tableau', 'Web-Based'],
-        };
-    },
-    methods: {
-        submitAsset() {
-            // Generate a new ID (max ID + 1)
-            const newId = Math.max(...itemsData.map(item => item.id)) + 1;
-
-            // Create the new asset object
-            const asset = {
-                id: newId,
-                title: this.newAsset.title,
-                description: this.newAsset.description,
-                url: this.newAsset.url,
-                assetTypes: this.newAsset.assetTypes,
-                hasAccess: this.newAsset.hasAccess,
-                privacy: { phi: this.newAsset.privacy.phi },
-                domain: this.newAsset.domain,
-                division: this.newAsset.division,
-                serviceLine: this.newAsset.serviceLine,
-                dataSource: this.newAsset.dataSource,
+    import Navbar from '../components/Navbar.vue';
+    export default {
+        name: 'AddAsset',
+        components: { Navbar },
+        data() {
+            return {
+                form: {
+                    title: '',
+                    description: '',
+                    url: '',
+                    assetTypes: [],
+                    domain: '',
+                    division: '',
+                    serviceLine: '',
+                    dataSource: ''
+                }
             };
-
-            // Add the new asset to itemsData
-            itemsData.push(asset);
-
-            // Redirect back to the domain page (or home if no domain context)
-            this.$router.push('/domain/access-to-care'); // Adjust based on desired redirect
         },
-    },
-};
+        methods: {
+            submitForm() {
+                console.log('Form submitted', this.form);
+                this.$router.push({ name: 'Dashboard' });
+            }
+        }
+    };
 </script>
 
 <style scoped>
-    .add-asset-form {
-        max-width: 600px;
-        margin: 0 auto;
+    .asset-select {
+        min-height: 9rem; /* taller combobox for asset types */
+    }
+    /* Ensure all form controls in the two-column grid span full width */
+    .row-custom .form-select,
+    .row-custom .form-control {
+        width: 100%;
     }
 
-    .form-label {
-        font-weight: 500;
+    .row-custom > div {
+        width: 100%; /* ensure full width in grid */
     }
 
-    .form-check {
-        margin-bottom: 5px;
+    .shadow-custom {
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15),0 6px 6px rgba(0, 0, 0, 0.1);
     }
 
-    .btn-primary {
-        background-color: #007bff;
-        border-color: #007bff;
+    .card-header h3 {
+        margin: 0;
     }
 
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #004085;
-        }
+    .row-custom {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-auto-rows: min-content;
+        gap: 1rem;
+    }
+
+    .asset-span-2 {
+        grid-row: span 2;
+    }
 </style>

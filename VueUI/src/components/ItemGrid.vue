@@ -1,36 +1,40 @@
 <template>
-    <div>
-        <!-- Header: count, sort, add asset -->
+    <div class="my-4">
+        <!-- Header: count, sort, view toggles, add asset -->
         <div class="d-flex justify-content-between align-items-center mb-3">
+            <!-- Left: Result count -->
             <span class="text-muted">
                 Showing {{ paginatedItems.length }} of {{ filteredItems.length }} of {{ items.length }} results
             </span>
+
+            <!-- Right: Controls -->
             <div class="d-flex align-items-center">
+                <!-- Sort -->
                 <label for="sortBy" class="me-2 mb-0">Sort by:</label>
                 <select id="sortBy" class="form-select form-select-sm me-3" v-model="sortBy" style="width: auto;">
                     <option>Most Relevant</option>
                     <option>Alphabetical</option>
                 </select>
-                <router-link to="/add-asset" class="btn btn-sm btn-success">
-                    <i class="bi bi-plus"></i> Add New Asset
+
+                <!-- View toggles -->
+                <button class="btn btn-sm me-2"
+                        :class="{ 'btn-primary': viewMode==='grid', 'btn-outline-secondary': viewMode!=='grid' }"
+                        @click="viewMode='grid'"
+                        title="Grid View">
+                    <i class="bi bi-grid"></i>
+                </button>
+                <button class="btn btn-sm me-3"
+                        :class="{ 'btn-primary': viewMode==='list', 'btn-outline-secondary': viewMode!=='list' }"
+                        @click="viewMode='list'"
+                        title="List View">
+                    <i class="bi bi-list"></i>
+                </button>
+
+                <!-- Add New Asset icon-only button -->
+                <router-link :to="{ name: 'AddAsset' }" class="btn btn-sm add-asset-btn" title="Add New Asset">
+                    <i class="bi bi-plus"></i>
                 </router-link>
             </div>
-        </div>
-
-        <!-- View toggle controls -->
-        <div class="d-flex justify-content-end mb-3">
-            <button class="btn btn-sm me-2"
-                    :class="{ 'btn-primary': viewMode==='grid', 'btn-outline-secondary': viewMode!=='grid' }"
-                    @click="viewMode='grid'"
-                    title="Grid View">
-                <i class="bi bi-grid"></i>
-            </button>
-            <button class="btn btn-sm"
-                    :class="{ 'btn-primary': viewMode==='list', 'btn-outline-secondary': viewMode!=='list' }"
-                    @click="viewMode='list'"
-                    title="List View">
-                <i class="bi bi-list"></i>
-            </button>
         </div>
 
         <!-- Grid View -->
@@ -57,6 +61,7 @@
 
         <!-- Pagination Controls -->
         <div class="d-flex justify-content-between align-items-center mt-4">
+            <!-- Items per page selector -->
             <div class="d-flex align-items-center">
                 <label for="itemsPerPage" class="me-2">Items per page</label>
                 <select id="itemsPerPage" class="form-select form-select-sm" v-model="itemsPerPage" style="width: auto;">
@@ -65,9 +70,11 @@
                     <option>50</option>
                 </select>
             </div>
+            <!-- Page info -->
             <div class="text-muted">
                 {{ (currentPage-1)*itemsPerPage+1 }}-{{ Math.min(currentPage*itemsPerPage, filteredItems.length) }} of {{ filteredItems.length }}
             </div>
+            <!-- Pagination buttons -->
             <div>
                 <button class="btn btn-sm btn-outline-secondary me-1" :disabled="currentPage===1" @click="currentPage--">
                     <i class="bi bi-chevron-left"></i>
@@ -111,7 +118,6 @@
             );
 
             const totalPages = computed(() => Math.ceil(filteredItems.value.length / itemsPerPage.value));
-
             const paginatedItems = computed(() => {
                 let list = filteredItems.value;
                 if (sortBy.value === 'Alphabetical') list = [...list].sort((a, b) => a.title.localeCompare(b.title));
@@ -119,9 +125,7 @@
                 return list.slice(start, start + itemsPerPage.value);
             });
 
-            watch(filteredItems, () => {
-                currentPage.value = 1;
-            });
+            watch(filteredItems, () => { currentPage.value = 1; });
 
             return { viewMode, sortBy, itemsPerPage, currentPage, filteredItems, totalPages, paginatedItems };
         }
@@ -129,6 +133,17 @@
 </script>
 
 <style scoped>
+    .add-asset-btn {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
+        color: #fff !important;
+    }
+
+        .add-asset-btn:hover {
+            background-color: #218838 !important;
+            border-color: #1e7e34 !important;
+        }
+
     .list-view {
         display: flex;
         flex-direction: column;
