@@ -10,15 +10,10 @@
                 </span>
                 <input type="text"
                        class="form-control border-0 py-2"
-                       placeholder="Search by keyword, domain, asset type, etc..."
+                       placeholder="Search by keyword, domain, asset type, etc... (press Enter)"
                        :value="search"
                        @input="$emit('update:search', $event.target.value)"
                        @keyup.enter="$emit('search-submit', $event.target.value)" />
-            </div>
-            <div v-if="domain" class="mt-3">
-                <span class="badge bg-teal text-white">
-                    Domain: {{ domain }}
-                </span>
             </div>
         </div>
     </div>
@@ -28,10 +23,6 @@
     export default {
         name: 'HeroSection',
         props: {
-            domain: {
-                type: String,
-                default: '',
-            },
             search: {
                 type: String,
                 default: '',
@@ -50,9 +41,5 @@
         min-height: 200px;
         display: flex;
         align-items: center;
-    }
-
-    .badge.bg-teal {
-        background-color: #00A89E;
     }
 </style>

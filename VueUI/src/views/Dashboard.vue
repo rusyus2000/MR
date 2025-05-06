@@ -3,7 +3,11 @@
         <Navbar />
 
         <HeroSection v-model:search="searchTerm"
-                     @search-submit="runSearch" />
+                     :searching="searching"
+                     :searchExecuted="searchExecuted"
+                     :searchQuery="searchQuery"
+                     @search-submit="runSearch"
+                     @clear-search="clearSearch" />
 
         <div class="content-area d-flex my-4">
             <!-- Fixed 250px sidebar -->
@@ -14,9 +18,16 @@
 
             <!-- Asset grid/list -->
             <div class="asset-col">
+                <div v-if="searchExecuted" class="mb-3">
+                    <span class="search-tag badge d-inline-flex align-items-center">
+                        <span class="me-2">Search: <strong>{{ searchQuery }}</strong></span>
+                        <button @click="clearSearch" class="btn-close btn-close-sm" aria-label="Close"></button>
+                    </span>
+                </div>
                 <ItemGrid :filters="selectedFilters"
                           :items="items"
-                          :search-term="searchTerm" />
+                          :search-term="searchTerm"
+                          @refresh="loadItems" />
             </div>
         </div>
     </div>
@@ -37,35 +48,56 @@
             const allItems = ref([]);
             const items = ref([]);
             const searchTerm = ref('');
+            const searchQuery = ref('');
+            const searchExecuted = ref(false);
+            const searching = ref(false);
+
             const selectedFilters = ref({
                 assetTypes: [], privacy: { phi: false },
                 domains: [], divisions: [], serviceLines: [], dataSources: []
             });
 
-            // On mount, load full list and display it
+            const loadItems = async () => {
+                items.value = await fetchItems();
+                allItems.value = items.value;
+            };
+
             onMounted(async () => {
-                allItems.value = await fetchItems();
-                items.value = allItems.value;
+                loadItems();
             });
 
-            // Called when user presses Enter in the search box
             async function runSearch(q) {
-                items.value = await fetchItems({
-                    q,
-                    ...flattenFilters(selectedFilters.value)
-                });
+                if (!q.trim()) return;
+                searching.value = true;
+                try {
+                    const result = await fetchItems({
+                        q,
+                        ...flattenFilters(selectedFilters.value)
+                    });
+                    items.value = result;
+                    searchExecuted.value = true;
+                    searchQuery.value = q;
+                    searchTerm.value = '';
+                } finally {
+                    searching.value = false;
+                }
             }
 
-            // Called whenever filters change
+            function clearSearch() {
+                searchExecuted.value = false;
+                searchQuery.value = '';
+                searchTerm.value = '';
+                loadItems();
+            }
+
             async function runFilter(filters) {
                 selectedFilters.value = filters;
                 items.value = await fetchItems({
-                    q: searchTerm.value,
+                    q: searchQuery.value,
                     ...flattenFilters(filters)
                 });
             }
 
-            // Helper to build API query params from the filters object
             function flattenFilters(f) {
                 const p = {};
                 if (f.assetTypes.length) p.assetType = f.assetTypes.join(',');
@@ -81,9 +113,14 @@
                 allItems,
                 items,
                 searchTerm,
+                searchQuery,
+                searchExecuted,
+                searching,
                 selectedFilters,
                 runSearch,
                 runFilter,
+                clearSearch,
+                loadItems,
             };
         },
     };
@@ -102,5 +139,20 @@
 
     .content-area {
         min-height: calc(100vh - 270px);
+    }
+    .search-tag {
+        background-color: #e7f1ff;
+        color: #0056b3;
+        font-weight: 500;
+        padding: 0.4rem 0.6rem;
+        border: 1px solid #b6d4fe;
+        font-size: 0.85rem;
+        border-radius: 0.375rem;
+    }
+
+    .btn-close-sm {
+        width: 0.75em;
+        height: 0.75em;
+        font-size: 0.7rem;
     }
 </style>

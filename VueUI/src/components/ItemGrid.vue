@@ -28,9 +28,9 @@
                     <i class="bi bi-list"></i>
                 </button>
 
-                <router-link :to="{ name: 'AddAsset' }" class="btn btn-sm add-asset-btn" title="Add New Asset">
+                <button class="btn btn-sm add-asset-btn" title="Add New Asset" @click="showAddModal = true">
                     <i class="bi bi-plus"></i>
-                </router-link>
+                </button>
             </div>
         </div>
 
@@ -85,6 +85,9 @@
                 </button>
             </div>
         </div>
+
+        <!-- Modal for Add Asset -->
+        <ModalAddAsset v-if="showAddModal" @close="showAddModal = false" @saved="handleAssetSaved" />
     </div>
 </template>
 
@@ -92,10 +95,11 @@
     import { ref, computed, watch } from 'vue';
     import ItemTile from './ItemTile.vue';
     import ListItem from './ListItem.vue';
+    import ModalAddAsset from './ModalAddAsset.vue';
 
     export default {
         name: 'ItemGrid',
-        components: { ItemTile, ListItem },
+        components: { ItemTile, ListItem, ModalAddAsset },
         props: {
             filters: {
                 type: Object,
@@ -113,11 +117,12 @@
                 default: () => [],
             },
         },
-        setup(props) {
+        setup(props, { emit }) {
             const viewMode = ref('grid');
             const sortBy = ref('Most Relevant');
             const itemsPerPage = ref(15);
             const currentPage = ref(1);
+            const showAddModal = ref(false);
 
             const filteredItems = computed(() =>
                 props.items.filter(item => {
@@ -163,6 +168,11 @@
                 currentPage.value = 1;
             });
 
+            const handleAssetSaved = () => {
+                emit('refresh');
+                showAddModal.value = false;
+            };
+
             return {
                 viewMode,
                 sortBy,
@@ -171,6 +181,8 @@
                 filteredItems,
                 totalPages,
                 paginatedItems,
+                showAddModal,
+                handleAssetSaved,
             };
         },
     };
