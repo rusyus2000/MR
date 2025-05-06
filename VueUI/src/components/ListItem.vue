@@ -1,12 +1,11 @@
 <template>
-    <div class="card list-item-card shadow-custom mb-1">
+    <div class="card list-item-card shadow-custom mb-1" @click="$emit('click')">
         <div class="card-body d-flex align-items-center p-2">
             <!-- Title & description -->
-            <router-link :to="detailsLink"
-                         class="title-link flex-grow-1 text-decoration-none">
+            <div class="title-link flex-grow-1 text-decoration-none">
                 <h5 class="mb-0">{{ title }}</h5>
                 <p class="mb-0 text-muted small">{{ truncatedDescription }}</p>
-            </router-link>
+            </div>
 
             <!-- Asset type badge -->
             <span class="badge mx-2" :class="getBadgeClass(assetTypes[0])">

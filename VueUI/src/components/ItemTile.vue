@@ -1,5 +1,5 @@
 <template>
-    <div class="card border-0 shadow-custom">
+    <div class="card border-0 shadow-custom" @click="$emit('click')">
         <div class="card-body position-relative">
             <!-- Asset type badges top-right -->
             <div class="asset-type-wrapper">

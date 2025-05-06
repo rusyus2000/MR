@@ -38,7 +38,7 @@
         <div v-if="viewMode==='grid'" class="grid-wrapper">
             <div class="row row-cols-1 row-cols-md-3 g-4">
                 <div class="col" v-for="item in paginatedItems" :key="item.id">
-                    <ItemTile :item="item" />
+                    <ItemTile :item="item" @click="openDetails(item)" />
                 </div>
             </div>
         </div>
@@ -51,7 +51,8 @@
                       :url="item.url"
                       :title="item.title"
                       :description="item.description"
-                      :asset-types="item.assetTypes" />
+                      :asset-types="item.assetTypes"
+                      @click.native="openDetails(item)" />
         </div>
 
         <!-- Pagination Controls -->
@@ -86,8 +87,9 @@
             </div>
         </div>
 
-        <!-- Modal for Add Asset -->
+        <!-- Modals -->
         <ModalAddAsset v-if="showAddModal" @close="showAddModal = false" @saved="handleAssetSaved" />
+        <ModalAssetDetails v-if="selectedItem" :item="selectedItem" @close="selectedItem = null" />
     </div>
 </template>
 
@@ -96,10 +98,11 @@
     import ItemTile from './ItemTile.vue';
     import ListItem from './ListItem.vue';
     import ModalAddAsset from './ModalAddAsset.vue';
+    import ModalAssetDetails from './ModalAssetDetails.vue';
 
     export default {
         name: 'ItemGrid',
-        components: { ItemTile, ListItem, ModalAddAsset },
+        components: { ItemTile, ListItem, ModalAddAsset, ModalAssetDetails },
         props: {
             filters: {
                 type: Object,
@@ -123,6 +126,7 @@
             const itemsPerPage = ref(15);
             const currentPage = ref(1);
             const showAddModal = ref(false);
+            const selectedItem = ref(null);
 
             const filteredItems = computed(() =>
                 props.items.filter(item => {
@@ -173,6 +177,10 @@
                 showAddModal.value = false;
             };
 
+            const openDetails = (item) => {
+                selectedItem.value = item;
+            };
+
             return {
                 viewMode,
                 sortBy,
@@ -183,6 +191,8 @@
                 paginatedItems,
                 showAddModal,
                 handleAssetSaved,
+                selectedItem,
+                openDetails,
             };
         },
     };

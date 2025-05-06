@@ -1,84 +1,82 @@
-<!-- src/components/ModalAddAsset.vue -->
 <template>
     <div class="modal-backdrop">
-        <div class="modal-panel">
-            <h5 class="mb-3">Add New Asset</h5>
-            <form @submit.prevent="submitForm">
-                <div class="mb-2">
-                    <label class="form-label">Title</label>
-                    <input v-model="form.title" type="text" class="form-control" required />
-                </div>
+        <div class="modal-content shadow">
+            <div class="modal-header custom-header">
+                <h5 class="modal-title">Add New Asset</h5>
+                <button class="btn-close" @click="$emit('close')"></button>
+            </div>
+            <div class="modal-body">
+                <form @submit.prevent="submitForm">
+                    <div class="details-grid">
+                        <div class="label">Title:</div>
+                        <div><input v-model="form.title" type="text" class="form-control" required /></div>
 
-                <div class="mb-2">
-                    <label class="form-label">Description</label>
-                    <textarea v-model="form.description" class="form-control" required></textarea>
-                </div>
+                        <div class="label">Description:</div>
+                        <div><textarea v-model="form.description" class="form-control" required /></div>
 
-                <div class="mb-2">
-                    <label class="form-label">URL</label>
-                    <input v-model="form.url" type="url" class="form-control" required />
-                </div>
+                        <div class="label">URL:</div>
+                        <div><input v-model="form.url" type="url" class="form-control" required /></div>
 
-                <div class="mb-2">
-                    <label class="form-label">Asset Types</label>
-                    <select v-model="form.assetTypes" multiple class="form-select" required>
-                        <option v-for="opt in lookup.assetTypes" :key="opt.value" :value="opt.value">
-                            {{ opt.value }}
-                        </option>
-                    </select>
-                </div>
+                        <div class="label">Asset Types:</div>
+                        <div>
+                            <select v-model="form.assetTypes" multiple class="form-select" required>
+                                <option v-for="opt in lookup.assetTypes" :key="opt.value" :value="opt.value">
+                                    {{ opt.value }}
+                                </option>
+                            </select>
+                        </div>
 
-                <div class="row">
-                    <div class="col mb-2">
-                        <label class="form-label">Domain</label>
-                        <select v-model="form.domain" class="form-select" required>
-                            <option v-for="opt in lookup.domains" :key="opt.value" :value="opt.value">
-                                {{ opt.value }}
-                            </option>
-                        </select>
+                        <div class="label">Domain:</div>
+                        <div>
+                            <select v-model="form.domain" class="form-select" required>
+                                <option v-for="opt in lookup.domains" :key="opt.value" :value="opt.value">
+                                    {{ opt.value }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="label">Division:</div>
+                        <div>
+                            <select v-model="form.division" class="form-select" required>
+                                <option v-for="opt in lookup.divisions" :key="opt.value" :value="opt.value">
+                                    {{ opt.value }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="label">Service Line:</div>
+                        <div>
+                            <select v-model="form.serviceLine" class="form-select" required>
+                                <option v-for="opt in lookup.serviceLines" :key="opt.value" :value="opt.value">
+                                    {{ opt.value }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="label">Data Source:</div>
+                        <div>
+                            <select v-model="form.dataSource" class="form-select" required>
+                                <option v-for="opt in lookup.dataSources" :key="opt.value" :value="opt.value">
+                                    {{ opt.value }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="label">Contains PHI:</div>
+                        <div>
+                            <input v-model="form.privacyPhi" class="form-check-input" type="checkbox" id="privacyPhi" />
+                        </div>
                     </div>
-                    <div class="col mb-2">
-                        <label class="form-label">Division</label>
-                        <select v-model="form.division" class="form-select" required>
-                            <option v-for="opt in lookup.divisions" :key="opt.value" :value="opt.value">
-                                {{ opt.value }}
-                            </option>
-                        </select>
-                    </div>
-                </div>
 
-                <div class="row">
-                    <div class="col mb-2">
-                        <label class="form-label">Service Line</label>
-                        <select v-model="form.serviceLine" class="form-select" required>
-                            <option v-for="opt in lookup.serviceLines" :key="opt.value" :value="opt.value">
-                                {{ opt.value }}
-                            </option>
-                        </select>
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary" @click="$emit('close')">Cancel</button>
+                        <button type="submit" class="btn btn-success" :disabled="saving">
+                            <span v-if="saving" class="spinner-border spinner-border-sm me-2" />
+                            Save
+                        </button>
                     </div>
-                    <div class="col mb-2">
-                        <label class="form-label">Data Source</label>
-                        <select v-model="form.dataSource" class="form-select" required>
-                            <option v-for="opt in lookup.dataSources" :key="opt.value" :value="opt.value">
-                                {{ opt.value }}
-                            </option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-check mb-3">
-                    <input v-model="form.privacyPhi" class="form-check-input" type="checkbox" id="privacyPhi" />
-                    <label class="form-check-label" for="privacyPhi">Contains PHI</label>
-                </div>
-
-                <div class="d-flex justify-content-between">
-                    <button type="button" class="btn btn-outline-secondary" @click="$emit('close')">Cancel</button>
-                    <button type="submit" class="btn btn-success" :disabled="saving">
-                        <span v-if="saving" class="spinner-border spinner-border-sm me-2" />
-                        Save
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </template>
@@ -143,11 +141,39 @@
         z-index: 1000;
     }
 
-    .modal-panel {
+    .modal-content {
         background: white;
-        padding: 2rem;
-        width: 650px;
+        padding: 0;
+        width: 700px;
         border-radius: 8px;
         box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header.custom-header {
+        background-color: #f0f4f8;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        row-gap: 0.75rem;
+        column-gap: 1rem;
+        align-items: center;
+    }
+
+    .label {
+        font-weight: 600;
+        white-space: nowrap;
     }
 </style>
