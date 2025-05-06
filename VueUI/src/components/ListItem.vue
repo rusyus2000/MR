@@ -28,6 +28,7 @@
 
 <script>
     import { computed } from 'vue';
+
     export default {
         name: 'ListItem',
         props: {
@@ -35,10 +36,14 @@
             url: { type: String, default: '' },
             title: { type: String, required: true },
             description: { type: String, required: true },
-            assetTypes: { type: Array, default: () => [] }
+            assetTypes: { type: Array, default: () => [] },
         },
         setup(props) {
-            const detailsLink = computed(() => ({ name: 'ItemDetails', params: { id: props.id } }));
+            const detailsLink = computed(() => ({
+                name: 'ItemDetails',
+                params: { id: props.id }
+            }));
+
             const getBadgeClass = type => {
                 const colorMap = {
                     Dashboard: 'bg-dashboard',
@@ -49,10 +54,14 @@
                 };
                 return colorMap[type] || 'bg-teal';
             };
+
             const truncatedDescription = computed(() => {
                 const max = 60;
-                return props.description.length > max ? props.description.slice(0, max) + '...' : props.description;
+                return props.description.length > max
+                    ? props.description.slice(0, max) + '...'
+                    : props.description;
             });
+
             return { detailsLink, getBadgeClass, truncatedDescription };
         }
     };
@@ -65,7 +74,7 @@
     }
 
     .shadow-custom {
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15),0 6px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 6px 6px rgba(0, 0, 0, 0.1);
     }
 
     .title-link h5 {

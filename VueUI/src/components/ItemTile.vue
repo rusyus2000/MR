@@ -1,71 +1,58 @@
 <template>
-    <div class="card border-0 shadow-custom h-100">
-        <div class="card-body d-flex flex-column p-3">
-            <!-- Top bar: asset type badges on left, external link icon on right -->
-            <div class="d-flex justify-content-between align-items-center mb-2 nav-icons">
-                <div class="asset-types d-flex gap-1">
-                    <span v-for="(type, idx) in assetTypes"
-                          :key="idx"
-                          class="badge"
-                          :class="getBadgeClass(type)">
-                        {{ type }}
-                    </span>
-                </div>
-                <div>
-                    <a v-if="url"
-                       :href="url"
-                       target="_blank"
-                       rel="noopener"
-                       class="link-icon"
-                       title="Open Resource">
-                        <i class="bi bi-box-arrow-up-right"></i>
-                    </a>
-                </div>
+    <div class="card border-0 shadow-custom">
+        <div class="card-body position-relative">
+            <!-- Asset type badges top-right -->
+            <div class="asset-type-wrapper">
+                <span v-for="(type, idx) in item.assetTypes"
+                      :key="idx"
+                      :class="['badge', getBadgeClass(type), { 'me-1': idx < item.assetTypes.length - 1 }]">
+                    {{ type }}
+                </span>
             </div>
 
-            <!-- Clickable title and description to navigate to details page -->
-            <router-link v-if="id"
-                         :to="{ name: 'ItemDetails', params: { id } }"
-                         class="text-decoration-none title-link mb-3">
-                <h5 class="card-title mb-1">{{ title }}</h5>
-                <p class="card-text text-muted flex-grow-1 mb-0">{{ truncatedDescription }}</p>
-            </router-link>
+            <!-- Title -->
+            <h5 class="card-title mt-4">{{ item.title }}</h5>
+
+            <!-- Description -->
+            <p class="card-text text-muted description-asset">
+                {{ item.description }}
+            </p>
+
+            <!-- Open resource button -->
+            <div class="request-access-wrapper">
+                <a v-if="item.url"
+                   :href="item.url"
+                   target="_blank"
+                   rel="noopener"
+                   class="btn btn-sm btn-outline-teal">
+                    Open Resource
+                </a>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
-    import { RouterLink } from 'vue-router';
     export default {
         name: 'ItemTile',
-        components: { RouterLink },
         props: {
-            id: { type: [String, Number], default: null },
-            url: { type: String, default: '' },
-            title: { type: String, required: true },
-            description: { type: String, required: true },
-            assetTypes: { type: Array, default: () => [] }
-        },
-        computed: {
-            truncatedDescription() {
-                const max = 170;
-                return this.description.length <= max
-                    ? this.description
-                    : this.description.substring(0, max) + '...';
-            }
+            item: {
+                type: Object,
+                required: true,
+            },
         },
         methods: {
             getBadgeClass(assetType) {
-                const colorMap = {
+                const map = {
                     Dashboard: 'bg-dashboard',
                     Report: 'bg-report',
                     Application: 'bg-application',
                     'Data Model': 'bg-data-model',
-                    Featured: 'bg-featured'
+                    Featured: 'bg-featured',
                 };
-                return colorMap[assetType] || 'bg-teal';
-            }
-        }
+                return map[assetType] || 'bg-teal';
+            },
+        },
     };
 </script>
 
@@ -73,17 +60,67 @@
     .card {
         border-radius: 10px;
         min-height: 250px;
-        height: 250px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
     }
 
-    .shadow-custom {
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 6px 6px rgba(0, 0, 0, 0.1);
+    .card-body {
+        padding: 1.5rem;
+        position: relative;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
     }
 
-    .asset-types .badge {
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin-bottom: 0;
+    }
+
+    .card-text {
+        font-size: 0.9rem;
+        line-height: 1.4;
+        margin-bottom: 0;
+        white-space: normal;
+        word-wrap: break-word;
+    }
+
+    .asset-type-wrapper {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        z-index: 20;
+    }
+
+    .request-access-wrapper {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        z-index: 20;
+    }
+
+    .btn-outline-teal {
+        border-color: #00A89E;
+        color: #00A89E;
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+        .btn-outline-teal:hover {
+            background-color: #00A89E;
+            color: white;
+        }
+
+    .badge {
+        color: white;
         font-size: 0.65rem;
         padding: 0.3em 0.6em;
-        color: #fff;
     }
 
     .bg-dashboard {
@@ -110,22 +147,16 @@
         background-color: #00A89E;
     }
 
-    .link-icon i {
-        font-size: 1.2rem;
-        color: #00A89E;
+    .shadow-custom {
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 6px 6px rgba(0, 0, 0, 0.1);
     }
 
-    .title-link {
-        cursor: pointer;
+    .description-asset {
+        max-height: 110px;
+        overflow: hidden;
     }
 
-    .card-title {
-        font-size: 1.25rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .card-text {
-        font-size: 0.9rem;
-        line-height: 1.4;
-    }
+        .description-asset:hover {
+            overflow: visible;
+        }
 </style>

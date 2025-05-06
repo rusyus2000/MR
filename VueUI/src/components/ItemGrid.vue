@@ -7,7 +7,10 @@
             </span>
             <div class="d-flex align-items-center">
                 <label for="sortBy" class="me-2 mb-0">Sort by:</label>
-                <select id="sortBy" class="form-select form-select-sm me-3" v-model="sortBy" style="width: auto;">
+                <select id="sortBy"
+                        class="form-select form-select-sm me-3"
+                        v-model="sortBy"
+                        style="width: auto;">
                     <option>Most Relevant</option>
                     <option>Alphabetical</option>
                 </select>
@@ -35,11 +38,7 @@
         <div v-if="viewMode==='grid'" class="grid-wrapper">
             <div class="row row-cols-1 row-cols-md-3 g-4">
                 <div class="col" v-for="item in paginatedItems" :key="item.id">
-                    <ItemTile :id="item.id"
-                              :url="item.url"
-                              :title="item.title"
-                              :description="item.description"
-                              :asset-types="item.assetTypes" />
+                    <ItemTile :item="item" />
                 </div>
             </div>
         </div>
@@ -55,24 +54,33 @@
                       :asset-types="item.assetTypes" />
         </div>
 
-        <!-- Pagination -->
+        <!-- Pagination Controls -->
         <div class="d-flex justify-content-between align-items-center mt-4">
             <div class="d-flex align-items-center">
                 <label for="itemsPerPage" class="me-2">Items per page</label>
-                <select id="itemsPerPage" class="form-select form-select-sm" v-model="itemsPerPage" style="width: auto;">
+                <select id="itemsPerPage"
+                        class="form-select form-select-sm"
+                        v-model="itemsPerPage"
+                        style="width: auto;">
                     <option>15</option>
                     <option>30</option>
                     <option>50</option>
                 </select>
             </div>
             <div class="text-muted">
-                {{ (currentPage-1)*itemsPerPage+1 }}-{{ Math.min(currentPage*itemsPerPage, filteredItems.length) }} of {{ filteredItems.length }}
+                {{ (currentPage - 1) * itemsPerPage + 1 }}-
+                {{ Math.min(currentPage * itemsPerPage, filteredItems.length) }}
+                of {{ filteredItems.length }}
             </div>
             <div>
-                <button class="btn btn-sm btn-outline-secondary me-1" :disabled="currentPage===1" @click="currentPage--">
+                <button class="btn btn-sm btn-outline-secondary me-1"
+                        :disabled="currentPage === 1"
+                        @click="currentPage--">
                     <i class="bi bi-chevron-left"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-secondary" :disabled="currentPage===totalPages" @click="currentPage++">
+                <button class="btn btn-sm btn-outline-secondary"
+                        :disabled="currentPage === totalPages"
+                        @click="currentPage++">
                     <i class="bi bi-chevron-right"></i>
                 </button>
             </div>
@@ -82,15 +90,28 @@
 
 <script>
     import { ref, computed, watch } from 'vue';
-    import ItemTile from '../components/ItemTile.vue';
-    import ListItem from '../components/ListItem.vue';
+    import ItemTile from './ItemTile.vue';
+    import ListItem from './ListItem.vue';
 
     export default {
         name: 'ItemGrid',
         components: { ItemTile, ListItem },
         props: {
-            filters: { type: Object, default: () => ({ assetTypes: [], privacy: { phi: false }, domains: [], divisions: [], serviceLines: [], dataSources: [] }) },
-            items: { type: Array, default: () => [] }
+            filters: {
+                type: Object,
+                default: () => ({
+                    assetTypes: [],
+                    privacy: { phi: false },
+                    domains: [],
+                    divisions: [],
+                    serviceLines: [],
+                    dataSources: [],
+                }),
+            },
+            items: {
+                type: Array,
+                default: () => [],
+            },
         },
         setup(props) {
             const viewMode = ref('grid');
@@ -100,31 +121,58 @@
 
             const filteredItems = computed(() =>
                 props.items.filter(item => {
-                    if (props.filters.assetTypes.length && !props.filters.assetTypes.some(type => item.assetTypes.includes(type))) return false;
+                    if (
+                        props.filters.assetTypes.length &&
+                        !props.filters.assetTypes.some(type => item.assetTypes.includes(type))
+                    ) return false;
                     if (props.filters.privacy.phi && !item.privacyPhi) return false;
-                    if (props.filters.domains.length && !props.filters.domains.includes(item.domain)) return false;
-                    if (props.filters.divisions.length && !props.filters.divisions.includes(item.division)) return false;
-                    if (props.filters.serviceLines.length && !props.filters.serviceLines.includes(item.serviceLine)) return false;
-                    if (props.filters.dataSources.length && !props.filters.dataSources.includes(item.dataSource)) return false;
+                    if (
+                        props.filters.domains.length &&
+                        !props.filters.domains.includes(item.domain)
+                    ) return false;
+                    if (
+                        props.filters.divisions.length &&
+                        !props.filters.divisions.includes(item.division)
+                    ) return false;
+                    if (
+                        props.filters.serviceLines.length &&
+                        !props.filters.serviceLines.includes(item.serviceLine)
+                    ) return false;
+                    if (
+                        props.filters.dataSources.length &&
+                        !props.filters.dataSources.includes(item.dataSource)
+                    ) return false;
                     return true;
                 })
             );
 
-            const totalPages = computed(() => Math.ceil(filteredItems.value.length / itemsPerPage.value));
+            const totalPages = computed(() =>
+                Math.ceil(filteredItems.value.length / itemsPerPage.value)
+            );
 
             const paginatedItems = computed(() => {
                 let list = filteredItems.value;
-                if (sortBy.value === 'Alphabetical') list = [...list].sort((a, b) => a.title.localeCompare(b.title));
+                if (sortBy.value === 'Alphabetical') {
+                    list = [...list].sort((a, b) => a.title.localeCompare(b.title));
+                }
                 const start = (currentPage.value - 1) * itemsPerPage.value;
                 return list.slice(start, start + itemsPerPage.value);
             });
 
-            watch(filteredItems, () => {
+            watch([filteredItems, sortBy], () => {
                 currentPage.value = 1;
             });
 
-            return { viewMode, sortBy, itemsPerPage, currentPage, filteredItems, totalPages, paginatedItems };
-        }
+            return {
+                viewMode,
+                sortBy,
+                itemsPerPage,
+                currentPage,
+                filteredItems,
+                totalPages,
+                paginatedItems,
+            };
+        },
     };
 </script>
 
@@ -140,7 +188,6 @@
         margin: 0 auto;
     }
 
-    /* Add Asset button styling */
     .add-asset-btn {
         background-color: #28a745 !important;
         border-color: #28a745 !important;

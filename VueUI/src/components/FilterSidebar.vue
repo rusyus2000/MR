@@ -8,23 +8,20 @@
         <!-- Asset Type -->
         <div class="filter-category">
             <h6>Asset Type</h6>
-            <div v-for="(type, index) in assetTypes"
+            <div v-for="(type, idx) in assetTypes"
                  :key="type.name"
                  class="form-check"
-                 v-show="assetTypesShowAll || index < 5">
+                 v-show="assetTypesShowAll || idx < 5">
                 <input class="form-check-input"
                        type="checkbox"
-                       :id="type.name"
+                       :id="'asset-'+type.name"
                        v-model="type.checked"
                        @change="emitFilters" />
-                <label class="form-check-label" :for="type.name">
+                <label class="form-check-label" :for="'asset-'+type.name">
                     {{ type.name }} ({{ getCount('assetType', type.name) }})
                 </label>
             </div>
-            <a v-if="assetTypes.length > 5"
-               href="#"
-               class="text-teal small"
-               @click.prevent="assetTypesShowAll = !assetTypesShowAll">
+            <a v-if="assetTypes.length > 5" href="#" class="text-teal small" @click.prevent="assetTypesShowAll = !assetTypesShowAll">
                 {{ assetTypesShowAll ? 'Show less' : 'Show more' }}
             </a>
         </div>
@@ -35,10 +32,10 @@
             <div class="form-check">
                 <input class="form-check-input"
                        type="checkbox"
-                       id="phi"
+                       id="privacy-phi"
                        v-model="filters.privacy.phi"
                        @change="emitFilters" />
-                <label class="form-check-label" for="phi">
+                <label class="form-check-label" for="privacy-phi">
                     PHI ({{ getCount('privacy', 'phi') }})
                 </label>
             </div>
@@ -47,23 +44,20 @@
         <!-- Domain -->
         <div class="filter-category">
             <h6>Domain</h6>
-            <div v-for="(domain, index) in domains"
+            <div v-for="(domain, idx) in domains"
                  :key="domain.name"
                  class="form-check"
-                 v-show="domainsShowAll || index < 5">
+                 v-show="domainsShowAll || idx < 5">
                 <input class="form-check-input"
                        type="checkbox"
-                       :id="domain.name"
+                       :id="'domain-'+domain.name"
                        v-model="domain.checked"
                        @change="emitFilters" />
-                <label class="form-check-label" :for="domain.name">
+                <label class="form-check-label" :for="'domain-'+domain.name">
                     {{ domain.name }} ({{ getCount('domain', domain.name) }})
                 </label>
             </div>
-            <a v-if="domains.length > 5"
-               href="#"
-               class="text-teal small"
-               @click.prevent="domainsShowAll = !domainsShowAll">
+            <a v-if="domains.length > 5" href="#" class="text-teal small" @click.prevent="domainsShowAll = !domainsShowAll">
                 {{ domainsShowAll ? 'Show less' : 'Show more' }}
             </a>
         </div>
@@ -71,47 +65,41 @@
         <!-- Division -->
         <div class="filter-category">
             <h6>Division</h6>
-            <div v-for="(division, index) in divisions"
+            <div v-for="(division, idx) in divisions"
                  :key="division.name"
                  class="form-check"
-                 v-show="divisionsShowAll || index < 5">
+                 v-show="divisionsShowAll || idx < 5">
                 <input class="form-check-input"
                        type="checkbox"
-                       :id="division.name"
+                       :id="'division-'+division.name"
                        v-model="division.checked"
                        @change="emitFilters" />
-                <label class="form-check-label" :for="division.name">
+                <label class="form-check-label" :for="'division-'+division.name">
                     {{ division.name }} ({{ getCount('division', division.name) }})
                 </label>
             </div>
-            <a v-if="divisions.length > 5"
-               href="#"
-               class="text-teal small"
-               @click.prevent="divisionsShowAll = !divisionsShowAll">
-                {{ domainsShowAll ? 'Show less' : 'Show more' }}
+            <a v-if="divisions.length > 5" href="#" class="text-teal small" @click.prevent="divisionsShowAll = !divisionsShowAll">
+                {{ divisionsShowAll ? 'Show less' : 'Show more' }}
             </a>
         </div>
 
         <!-- Service Line -->
         <div class="filter-category">
             <h6>Service Line</h6>
-            <div v-for="(line, index) in serviceLines"
+            <div v-for="(line, idx) in serviceLines"
                  :key="line.name"
                  class="form-check"
-                 v-show="serviceLinesShowAll || index < 5">
+                 v-show="serviceLinesShowAll || idx < 5">
                 <input class="form-check-input"
                        type="checkbox"
-                       :id="line.name"
+                       :id="'service-'+line.name"
                        v-model="line.checked"
                        @change="emitFilters" />
-                <label class="form-check-label" :for="line.name">
+                <label class="form-check-label" :for="'service-'+line.name">
                     {{ line.name }} ({{ getCount('serviceLine', line.name) }})
                 </label>
             </div>
-            <a v-if="serviceLines.length > 5"
-               href="#"
-               class="text-teal small"
-               @click.prevent="serviceLinesShowAll = !serviceLinesShowAll">
+            <a v-if="serviceLines.length > 5" href="#" class="text-teal small" @click.prevent="serviceLinesShowAll = !serviceLinesShowAll">
                 {{ serviceLinesShowAll ? 'Show less' : 'Show more' }}
             </a>
         </div>
@@ -119,23 +107,20 @@
         <!-- Data Source -->
         <div class="filter-category">
             <h6>Data Source</h6>
-            <div v-for="(source, index) in dataSources"
+            <div v-for="(source, idx) in dataSources"
                  :key="source.name"
                  class="form-check"
-                 v-show="dataSourcesShowAll || index < 5">
+                 v-show="dataSourcesShowAll || idx < 5">
                 <input class="form-check-input"
                        type="checkbox"
-                       :id="source.name"
+                       :id="'source-'+source.name"
                        v-model="source.checked"
                        @change="emitFilters" />
-                <label class="form-check-label" :for="source.name">
+                <label class="form-check-label" :for="'source-'+source.name">
                     {{ source.name }} ({{ getCount('dataSource', source.name) }})
                 </label>
             </div>
-            <a v-if="dataSources.length > 5"
-               href="#"
-               class="text-teal small"
-               @click.prevent="dataSourcesShowAll = !dataSourcesShowAll">
+            <a v-if="dataSources.length > 5" href="#" class="text-teal small" @click.prevent="dataSourcesShowAll = !dataSourcesShowAll">
                 {{ dataSourcesShowAll ? 'Show less' : 'Show more' }}
             </a>
         </div>
@@ -146,13 +131,13 @@
     export default {
         name: 'FilterSidebar',
         props: {
+            itemsAll: {
+                type: Array,
+                default: () => [],
+            },
             currentDomain: {
                 type: String,
                 default: '',
-            },
-            items: {
-                type: Array,
-                default: () => [],
             },
         },
         data() {
@@ -165,19 +150,13 @@
                     { name: 'Featured', checked: false },
                 ],
                 filters: {
-                    privacy: {
-                        phi: false,
-                    },
+                    privacy: { phi: false },
                 },
                 domains: [
+                    { name: 'Strategy', checked: false },
                     { name: 'Access to Care', checked: false },
-                    { name: 'Clinical Operations', checked: false },
-                    { name: 'Finance', checked: false },
-                    { name: 'Patient Experience', checked: false },
-                    { name: 'People & Workforce', checked: false },
                     { name: 'Quality', checked: false },
-                    { name: 'Revenue Cycle', checked: false },
-                    { name: 'Service Lines', checked: false },
+                    { name: 'People & Workforce', checked: false },
                 ],
                 divisions: [
                     { name: 'Greater Central Valley', checked: false },
@@ -207,67 +186,46 @@
             };
         },
         created() {
+            // Pre-check current domain if provided
             if (this.currentDomain) {
-                const domain = this.domains.find(d => d.name.toLowerCase() === this.currentDomain.toLowerCase());
-                if (domain) {
-                    domain.checked = true;
-                } else {
-                    this.domains.push({
-                        name: this.currentDomain,
-                        checked: true,
-                    });
-                }
+                const d = this.domains.find(x => x.name.toLowerCase() === this.currentDomain.toLowerCase());
+                if (d) d.checked = true;
+                else this.domains.push({ name: this.currentDomain, checked: true });
             }
             this.emitFilters();
         },
-        computed: {
-            getCount() {
-                return (filterType, value) => {
-                    if (!this.items || !Array.isArray(this.items)) return 0;
-                    return this.items.filter(item => {
-                        if (!item) return false;
-                        switch (filterType) {
-                            case 'assetType':
-                                return item.assetTypes.includes(value);
-                            case 'privacy':
-                                return value === 'phi' && item.privacy?.phi;
-                            case 'domain':
-                                return item.domain === value;
-                            case 'division':
-                                return item.division === value;
-                            case 'serviceLine':
-                                return item.serviceLine === value;
-                            case 'dataSource':
-                                return item.dataSource === value;
-                            default:
-                                return false;
-                        }
-                    }).length;
-                };
-            },
-        },
         methods: {
             emitFilters() {
-                const filters = {
-                    assetTypes: this.assetTypes.filter(type => type.checked).map(type => type.name),
+                const out = {
+                    assetTypes: this.assetTypes.filter(t => t.checked).map(t => t.name),
                     privacy: { phi: this.filters.privacy.phi },
-                    domains: this.domains.filter(domain => domain.checked).map(domain => domain.name),
-                    divisions: this.divisions.filter(division => division.checked).map(division => division.name),
-                    serviceLines: this.serviceLines.filter(line => line.checked).map(line => line.name),
-                    dataSources: this.dataSources.filter(source => source.checked).map(source => source.name),
+                    domains: this.domains.filter(d => d.checked).map(d => d.name),
+                    divisions: this.divisions.filter(d => d.checked).map(d => d.name),
+                    serviceLines: this.serviceLines.filter(s => s.checked).map(s => s.name),
+                    dataSources: this.dataSources.filter(ds => ds.checked).map(ds => ds.name),
                 };
-                this.$emit('update:filters', filters);
+                this.$emit('update:filters', out);
             },
             clearAll() {
-                this.assetTypes.forEach(type => (type.checked = false));
+                this.assetTypes.forEach(t => (t.checked = false));
                 this.filters.privacy.phi = false;
-                this.domains.forEach(domain => {
-                    domain.checked = this.currentDomain ? domain.name.toLowerCase() === this.currentDomain.toLowerCase() : false;
-                });
-                this.divisions.forEach(division => (division.checked = false));
-                this.serviceLines.forEach(line => (line.checked = false));
-                this.dataSources.forEach(source => (source.checked = false));
+                this.domains.forEach(d => (d.checked = false));
+                this.divisions.forEach(d => (d.checked = false));
+                this.serviceLines.forEach(s => (s.checked = false));
+                this.dataSources.forEach(ds => (ds.checked = false));
                 this.emitFilters();
+            },
+            getCount(type, val) {
+                return this.itemsAll.filter(item => {
+                    switch (type) {
+                        case 'assetType': return item.assetTypes.includes(val);
+                        case 'privacy': return val === 'phi' && item.privacyPhi;
+                        case 'domain': return item.domain === val;
+                        case 'division': return item.division === val;
+                        case 'serviceLine': return item.serviceLine === val;
+                        case 'dataSource': return item.dataSource === val;
+                    }
+                }).length;
             },
         },
     };
@@ -275,29 +233,18 @@
 
 <style scoped>
     .filter-sidebar {
-        padding: 10px; /* Reduce padding to minimize space */
+        padding: 15px;
         border-right: 1px solid #e0e0e0;
         height: 100%;
-        width: 100%; /* Ensure it takes full width of the column */
-        max-width: none; /* Remove max-width to fill the col-md-3 space */
+        width: fit-content;
+        width: 250px;
     }
 
     .filter-category {
         border: 1px solid #e0e0e0;
         border-radius: 4px;
-        padding: 8px; /* Reduce padding inside filter categories */
-        margin-bottom: 8px;
-    }
-
-    h5 {
-        font-size: 1.25rem;
-        font-weight: 500;
-    }
-
-    h6 {
-        font-size: 1rem;
-        font-weight: 500;
-        margin-bottom: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
     }
 
     .form-check {
@@ -312,7 +259,7 @@
         font-size: 0.9rem;
     }
 
-    .text-Teal {
+    .text-teal {
         color: #00A89E;
     }
 </style>

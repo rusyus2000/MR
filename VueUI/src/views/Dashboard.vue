@@ -2,27 +2,28 @@
     <div>
         <Navbar />
 
-        <HeroSection v-model:search="searchTerm" />
+        <HeroSection v-model:search="searchTerm"
+                     @search-submit="runSearch" />
 
         <div class="content-area d-flex my-4">
-            <!-- Filters column (fixed width) -->
+            <!-- Fixed 250px sidebar -->
             <div class="filter-col">
-                <FilterSidebar :items="items"
-                               :current-domain="''"
-                               @update:filters="onFilterChange"
-                               :show-domain="true" />
+                <FilterSidebar :items-all="allItems"
+                               @update:filters="runFilter" />
             </div>
 
-            <!-- Results column now fills 100% width -->
+            <!-- Asset grid/list -->
             <div class="asset-col">
-                <ItemGrid :filters="selectedFilters" :items="items" />
+                <ItemGrid :filters="selectedFilters"
+                          :items="items"
+                          :search-term="searchTerm" />
             </div>
         </div>
     </div>
 </template>
 
 <script>
-    import { ref, watch, onMounted } from 'vue';
+    import { ref, onMounted } from 'vue';
     import Navbar from '../components/Navbar.vue';
     import HeroSection from '../components/HeroSection.vue';
     import FilterSidebar from '../components/FilterSidebar.vue';
@@ -33,62 +34,70 @@
         name: 'Dashboard',
         components: { Navbar, HeroSection, FilterSidebar, ItemGrid },
         setup() {
+            const allItems = ref([]);
             const items = ref([]);
             const searchTerm = ref('');
             const selectedFilters = ref({
-                assetTypes: [],
-                privacy: { phi: false },
-                domains: [],
-                divisions: [],
-                serviceLines: [],
-                dataSources: [],
+                assetTypes: [], privacy: { phi: false },
+                domains: [], divisions: [], serviceLines: [], dataSources: []
             });
 
-            onMounted(() => loadItems());
-
-            watch(searchTerm, val => {
-                selectedFilters.value = {
-                    assetTypes: [], privacy: { phi: false },
-                    domains: [], divisions: [], serviceLines: [], dataSources: []
-                };
-                loadItems({ q: val });
+            // On mount, load full list and display it
+            onMounted(async () => {
+                allItems.value = await fetchItems();
+                items.value = allItems.value;
             });
 
-            function onFilterChange(filters) {
-                searchTerm.value = '';
+            // Called when user presses Enter in the search box
+            async function runSearch(q) {
+                items.value = await fetchItems({
+                    q,
+                    ...flattenFilters(selectedFilters.value)
+                });
+            }
+
+            // Called whenever filters change
+            async function runFilter(filters) {
                 selectedFilters.value = filters;
-                loadItems(flattenFilters(filters));
+                items.value = await fetchItems({
+                    q: searchTerm.value,
+                    ...flattenFilters(filters)
+                });
             }
 
+            // Helper to build API query params from the filters object
             function flattenFilters(f) {
-                const params = {};
-                if (f.assetTypes.length) params.assetType = f.assetTypes.join(',');
-                if (f.privacy.phi) params.phi = true;
-                if (f.domains.length) params.domain = f.domains.join(',');
-                if (f.divisions.length) params.division = f.divisions.join(',');
-                if (f.serviceLines.length) params.serviceLine = f.serviceLines.join(',');
-                if (f.dataSources.length) params.dataSource = f.dataSources.join(',');
-                return params;
+                const p = {};
+                if (f.assetTypes.length) p.assetType = f.assetTypes.join(',');
+                if (f.privacy.phi) p.phi = true;
+                if (f.domains.length) p.domain = f.domains.join(',');
+                if (f.divisions.length) p.division = f.divisions.join(',');
+                if (f.serviceLines.length) p.serviceLine = f.serviceLines.join(',');
+                if (f.dataSources.length) p.dataSource = f.dataSources.join(',');
+                return p;
             }
 
-            async function loadItems(params = {}) {
-                items.value = await fetchItems(params);
-            }
-
-            return { items, searchTerm, selectedFilters, onFilterChange };
+            return {
+                allItems,
+                items,
+                searchTerm,
+                selectedFilters,
+                runSearch,
+                runFilter,
+            };
         },
     };
 </script>
 
 <style scoped>
     .filter-col {
-        width: 250px; /* fixed width for sidebar */
+        flex: none !important;
+        width: 250px !important;
     }
 
     .asset-col {
-        width: 100%; /* now spans the full remaining width */
+        width: 100%;
         padding: 0 10%;
-        justify-content: center;
     }
 
     .content-area {
