@@ -38,7 +38,7 @@
         <div v-if="viewMode==='grid'" class="grid-wrapper">
             <div class="row row-cols-1 row-cols-md-3 g-4">
                 <div class="col" v-for="item in paginatedItems" :key="item.id">
-                    <ItemTile :item="item" @click="openDetails(item)" />
+                    <ItemTile :item="item" @show-details="openDetails(item)"/>
                 </div>
             </div>
         </div>
@@ -52,7 +52,7 @@
                       :title="item.title"
                       :description="item.description"
                       :asset-types="item.assetTypes"
-                      @click.native="openDetails(item)" />
+                     @show-details="openDetails(item)" />
         </div>
 
         <!-- Pagination Controls -->

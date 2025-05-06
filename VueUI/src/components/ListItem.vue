@@ -1,9 +1,11 @@
 <template>
-    <div class="card list-item-card shadow-custom mb-1" @click="$emit('click')">
+    <div class="card list-item-card shadow-custom mb-1">
         <div class="card-body d-flex align-items-center p-2">
             <!-- Title & description -->
-            <div class="title-link flex-grow-1 text-decoration-none">
-                <h5 class="mb-0">{{ title }}</h5>
+            <div class="flex-grow-1">
+                <a href="#" @click.prevent="$emit('show-details')" class="text-decoration-none">
+                    <h5 class="mb-0">{{ title }}</h5>
+                </a>
                 <p class="mb-0 text-muted small">{{ truncatedDescription }}</p>
             </div>
 

@@ -1,5 +1,5 @@
 <template>
-    <div class="card border-0 shadow-custom" @click="$emit('click')">
+    <div class="card border-0 shadow-custom">
         <div class="card-body position-relative">
             <!-- Asset type badges top-right -->
             <div class="asset-type-wrapper">
@@ -11,9 +11,11 @@
             </div>
 
             <!-- Title -->
-            <h5 class="card-title mt-4">{{ item.title }}</h5>
+            <a href="#" class="title-link d-block text-decoration-none mb-1" @click.prevent="$emit('show-details')">
+                <h5 class="mb-0">{{ item.title }}</h5>
+            </a>
 
-            <!-- Description -->
+    <!-- Description -->
             <p class="card-text text-muted description-asset">
                 {{ item.description }}
             </p>
@@ -159,4 +161,13 @@
         .description-asset:hover {
             overflow: visible;
         }
+    .title-link h5 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .title-link p {
+        margin: 0;
+        font-size: 0.85rem;
+    }
 </style>
