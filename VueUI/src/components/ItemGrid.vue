@@ -30,7 +30,7 @@
                 </button>
 
                 <button class="btn btn-sm add-asset-btn" title="Add New Asset" @click="showAddModal = true">
-                    <i class="bi bi-plus"></i>
+                    <i class="bi bi-plus-lg"></i>
                 </button>
             </div>
         </div>
@@ -39,7 +39,7 @@
         <div v-if="viewMode==='grid'" class="grid-wrapper">
             <div class="row row-cols-1 row-cols-md-3 g-4">
                 <div class="col" v-for="item in paginatedItems" :key="item.id">
-                    <ItemTile :item="item" @show-details="openDetails(item)" />
+                    <ItemTile :item="item" @show-details="openDetails(item)"  @refresh="handleAssetSaved" />
                 </div>
             </div>
         </div>
