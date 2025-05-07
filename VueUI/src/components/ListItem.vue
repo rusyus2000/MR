@@ -98,16 +98,16 @@
 
     .favorite-icon {
         position: absolute;
-        top: -10px;
+        top: -9px;
         left: 10px;
-        font-size: 1.5rem;
-        color: #339999;
+        font-size: 1.4rem;
+        color: #ffad44c7;
         cursor: pointer;
         z-index: 15;
     }
 
         .favorite-icon:hover {
-            color: #227777;
+            color: #d78418c7;
         }
 
     .card-title {

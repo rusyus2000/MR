@@ -91,13 +91,13 @@
         top: -10px;
         left: 10px;
         font-size: 1.4rem;
-        color: #339999;
+        color: #ffad44c7;
         cursor: pointer;
         z-index: 15;
     }
 
         .favorite-icon:hover {
-            color: #227777;
+            color: #d78418c7;
         }
 
     .card {
