@@ -1,6 +1,12 @@
 <template>
     <div class="card border-0 shadow-custom">
         <div class="card-body position-relative">
+            <!-- Bookmark Favorite Icon -->
+            <i class="bi favorite-icon"
+               :class="isFavorite ? 'bi-bookmark-fill' : 'bi-bookmark'"
+               :title="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
+               @click.stop="toggleFavorite"></i>
+
             <!-- Asset type badges top-right -->
             <div class="asset-type-wrapper">
                 <span v-for="(type, idx) in item.assetTypes"
@@ -11,11 +17,11 @@
             </div>
 
             <!-- Title -->
-            <a href="#" class="title-link d-block text-decoration-none mb-1" @click.prevent="$emit('show-details')">
+            <a href="#" class="title-link d-block text-decoration-none mb-2 mt-1" @click.prevent="$emit('show-details')">
                 <h5 class="mb-0">{{ item.title }}</h5>
             </a>
 
-    <!-- Description -->
+            <!-- Description -->
             <p class="card-text text-muted description-asset">
                 {{ item.description }}
             </p>
@@ -43,6 +49,15 @@
                 required: true,
             },
         },
+        data() {
+            return {
+                isFavorite: false,
+            };
+        },
+        mounted() {
+            const favs = JSON.parse(localStorage.getItem('favorites') || '[]');
+            this.isFavorite = favs.includes(this.item.id);
+        },
         methods: {
             getBadgeClass(assetType) {
                 const map = {
@@ -54,11 +69,37 @@
                 };
                 return map[assetType] || 'bg-teal';
             },
+            toggleFavorite() {
+                const favs = new Set(JSON.parse(localStorage.getItem('favorites') || '[]'));
+                if (favs.has(this.item.id)) {
+                    favs.delete(this.item.id);
+                    this.isFavorite = false;
+                } else {
+                    favs.add(this.item.id);
+                    this.isFavorite = true;
+                }
+                localStorage.setItem('favorites', JSON.stringify([...favs]));
+                this.$emit('refresh');
+            }
         },
     };
 </script>
 
 <style scoped>
+    .favorite-icon {
+        position: absolute;
+        top: -10px;
+        left: 10px;
+        font-size: 1.4rem;
+        color: #339999;
+        cursor: pointer;
+        z-index: 15;
+    }
+
+        .favorite-icon:hover {
+            color: #227777;
+        }
+
     .card {
         border-radius: 10px;
         min-height: 250px;
@@ -161,6 +202,7 @@
         .description-asset:hover {
             overflow: visible;
         }
+
     .title-link h5 {
         margin: 0;
         font-size: 1.1rem;

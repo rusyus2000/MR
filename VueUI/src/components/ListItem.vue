@@ -1,22 +1,28 @@
 <template>
     <div class="card list-item-card shadow-custom mb-1">
-        <div class="card-body d-flex align-items-center p-2">
+        <div class="card-body d-flex align-items-center p-2 position-relative">
+            <!-- Bookmark Favorite Icon -->
+            <i class="bi favorite-icon"
+               :class="isFavorite ? 'bi-bookmark-fill' : 'bi-bookmark'"
+               :title="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
+               @click.stop="toggleFavorite"></i>
+
             <!-- Title & description -->
-            <div class="flex-grow-1">
+            <div class="flex-grow-1 ps-4">
                 <a href="#" @click.prevent="$emit('show-details')" class="text-decoration-none">
-                    <h5 class="mb-0">{{ title }}</h5>
+                    <h5 class="mb-0 card-title">{{ item.title }}</h5>
                 </a>
                 <p class="mb-0 text-muted small">{{ truncatedDescription }}</p>
             </div>
 
             <!-- Asset type badge -->
-            <span class="badge mx-2" :class="getBadgeClass(assetTypes[0])">
-                {{ assetTypes[0] }}
+            <span class="badge mx-2" :class="getBadgeClass(item.assetTypes[0])">
+                {{ item.assetTypes[0] }}
             </span>
 
             <!-- External link icon -->
-            <a v-if="url"
-               :href="url"
+            <a v-if="item.url"
+               :href="item.url"
                target="_blank"
                rel="noopener"
                class="link-icon"
@@ -28,24 +34,33 @@
 </template>
 
 <script>
-    import { computed } from 'vue';
-
     export default {
         name: 'ListItem',
         props: {
-            id: { type: [String, Number], required: true },
-            url: { type: String, default: '' },
-            title: { type: String, required: true },
-            description: { type: String, required: true },
-            assetTypes: { type: Array, default: () => [] },
+            item: {
+                type: Object,
+                required: true
+            }
         },
-        setup(props) {
-            const detailsLink = computed(() => ({
-                name: 'ItemDetails',
-                params: { id: props.id }
-            }));
-
-            const getBadgeClass = type => {
+        data() {
+            return {
+                isFavorite: false
+            };
+        },
+        computed: {
+            truncatedDescription() {
+                const max = 90;
+                return this.item.description.length > max
+                    ? this.item.description.slice(0, max) + '...'
+                    : this.item.description;
+            }
+        },
+        mounted() {
+            const favs = JSON.parse(localStorage.getItem('favorites') || '[]');
+            this.isFavorite = favs.includes(this.item.id);
+        },
+        methods: {
+            getBadgeClass(type) {
                 const colorMap = {
                     Dashboard: 'bg-dashboard',
                     Report: 'bg-report',
@@ -54,16 +69,19 @@
                     Featured: 'bg-featured'
                 };
                 return colorMap[type] || 'bg-teal';
-            };
-
-            const truncatedDescription = computed(() => {
-                const max = 60;
-                return props.description.length > max
-                    ? props.description.slice(0, max) + '...'
-                    : props.description;
-            });
-
-            return { detailsLink, getBadgeClass, truncatedDescription };
+            },
+            toggleFavorite() {
+                const favs = new Set(JSON.parse(localStorage.getItem('favorites') || '[]'));
+                if (favs.has(this.item.id)) {
+                    favs.delete(this.item.id);
+                    this.isFavorite = false;
+                } else {
+                    favs.add(this.item.id);
+                    this.isFavorite = true;
+                }
+                localStorage.setItem('favorites', JSON.stringify([...favs]));
+                this.$emit('refresh');
+            }
         }
     };
 </script>
@@ -78,14 +96,24 @@
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 6px 6px rgba(0, 0, 0, 0.1);
     }
 
-    .title-link h5 {
-        margin: 0;
-        font-size: 1.1rem;
+    .favorite-icon {
+        position: absolute;
+        top: -10px;
+        left: 10px;
+        font-size: 1.5rem;
+        color: #339999;
+        cursor: pointer;
+        z-index: 15;
     }
 
-    .title-link p {
-        margin: 0;
-        font-size: 0.85rem;
+        .favorite-icon:hover {
+            color: #227777;
+        }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin-bottom: 0;
     }
 
     .badge {
@@ -94,7 +122,6 @@
         color: #fff;
     }
 
-    /* Badge background colors */
     .bg-dashboard {
         background-color: #00A89E;
     }
@@ -125,6 +152,6 @@
     }
 
     .card-body {
-        padding: 7px 8px 7px 16px !important; /* increased left padding */
+        padding: 7px 8px 7px 16px !important;
     }
 </style>

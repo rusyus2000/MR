@@ -11,6 +11,7 @@
                         class="form-select form-select-sm me-3"
                         v-model="sortBy"
                         style="width: auto;">
+                    <option>Favorites</option>
                     <option>Most Relevant</option>
                     <option>Alphabetical</option>
                 </select>
@@ -38,7 +39,7 @@
         <div v-if="viewMode==='grid'" class="grid-wrapper">
             <div class="row row-cols-1 row-cols-md-3 g-4">
                 <div class="col" v-for="item in paginatedItems" :key="item.id">
-                    <ItemTile :item="item" @show-details="openDetails(item)"/>
+                    <ItemTile :item="item" @show-details="openDetails(item)" />
                 </div>
             </div>
         </div>
@@ -47,12 +48,9 @@
         <div v-else class="list-wrapper">
             <ListItem v-for="item in paginatedItems"
                       :key="item.id"
-                      :id="item.id"
-                      :url="item.url"
-                      :title="item.title"
-                      :description="item.description"
-                      :asset-types="item.assetTypes"
-                     @show-details="openDetails(item)" />
+                      :item="item"
+                      @show-details="openDetails(item)"
+                      @refresh="handleAssetSaved" />
         </div>
 
         <!-- Pagination Controls -->
@@ -122,7 +120,7 @@
         },
         setup(props, { emit }) {
             const viewMode = ref('grid');
-            const sortBy = ref('Most Relevant');
+            const sortBy = ref('Favorites');
             const itemsPerPage = ref(15);
             const currentPage = ref(1);
             const showAddModal = ref(false);
@@ -161,9 +159,18 @@
 
             const paginatedItems = computed(() => {
                 let list = filteredItems.value;
+
                 if (sortBy.value === 'Alphabetical') {
                     list = [...list].sort((a, b) => a.title.localeCompare(b.title));
+                } else if (sortBy.value === 'Favorites') {
+                    const favs = new Set(JSON.parse(localStorage.getItem('favorites') || '[]'));
+                    list = [...list].sort((a, b) => {
+                        const aFav = favs.has(a.id);
+                        const bFav = favs.has(b.id);
+                        return (aFav === bFav) ? 0 : aFav ? -1 : 1;
+                    });
                 }
+
                 const start = (currentPage.value - 1) * itemsPerPage.value;
                 return list.slice(start, start + itemsPerPage.value);
             });
