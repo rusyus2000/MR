@@ -13,32 +13,92 @@ namespace SutterAnalyticsApi.Controllers
         public SearchController(AppDbContext db) => _db = db;
 
         // GET /api/search?q=term
+        //[HttpGet]
+        //public async Task<ActionResult<IEnumerable<ItemDto>>> Search([FromQuery] string q)
+        //{
+        //    if (string.IsNullOrWhiteSpace(q))
+        //        return BadRequest("Query parameter 'q' is required.");
+
+        //    var results = await _db.Items
+        //        .Where(i =>
+        //            EF.Functions.Like(i.Title, $"%{q}%") ||
+        //            EF.Functions.Like(i.Description, $"%{q}%"))
+        //        .Select(i => new ItemDto
+        //        {
+        //            Id = i.Id,
+        //            Title = i.Title,
+        //            Description = i.Description,
+        //            Url = i.Url,
+        //            AssetTypes = i.AssetTypes,
+        //            Domain = i.Domain,
+        //            Division = i.Division,
+        //            ServiceLine = i.ServiceLine,
+        //            DataSource = i.DataSource,
+        //            PrivacyPhi = i.PrivacyPhi
+        //        })
+        //        .ToListAsync();
+
+        //    return Ok(results);
+        //}
+
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ItemDto>>> Search([FromQuery] string q)
+        public async Task<ActionResult<IEnumerable<ItemDto>>> SearchAI([FromQuery] string q)
         {
             if (string.IsNullOrWhiteSpace(q))
                 return BadRequest("Query parameter 'q' is required.");
 
-            var results = await _db.Items
-                .Where(i =>
-                    EF.Functions.Like(i.Title, $"%{q}%") ||
-                    EF.Functions.Like(i.Description, $"%{q}%"))
-                .Select(i => new ItemDto
-                {
-                    Id = i.Id,
-                    Title = i.Title,
-                    Description = i.Description,
-                    Url = i.Url,
-                    AssetTypes = i.AssetTypes,
-                    Domain = i.Domain,
-                    Division = i.Division,
-                    ServiceLine = i.ServiceLine,
-                    DataSource = i.DataSource,
-                    PrivacyPhi = i.PrivacyPhi
-                })
-                .ToListAsync();
+            // 1. Call AI Search API
+            using var httpClient = new HttpClient();
+            try
+            {
+                var response = await httpClient.GetAsync($"http://127.0.0.1:8000/search?query={Uri.EscapeDataString(q)}");
+                if (!response.IsSuccessStatusCode)
+                    return StatusCode((int)response.StatusCode, "AI search service failed.");
 
-            return Ok(results);
+                var aiResults = await response.Content.ReadFromJsonAsync<List<AiSearchResult>>();
+                if (aiResults == null || !aiResults.Any())
+                    return Ok(new List<ItemDto>()); // No results
+
+                var ids = aiResults.Select(r => r.Id).ToList();
+
+                // 2. Query matching items from DB
+                var matchedItems = await _db.Items
+                    .Where(i => ids.Contains(i.Id))
+                    .ToListAsync();
+
+                // 3. Preserve AI sort order
+                var ordered = ids
+                    .Select(id => matchedItems.FirstOrDefault(i => i.Id == id))
+                    .Where(i => i != null)
+                    .Select(i => new ItemDto
+                    {
+                        Id = i.Id,
+                        Title = i.Title,
+                        Description = i.Description,
+                        Url = i.Url,
+                        AssetTypes = i.AssetTypes,
+                        Domain = i.Domain,
+                        Division = i.Division,
+                        ServiceLine = i.ServiceLine,
+                        DataSource = i.DataSource,
+                        PrivacyPhi = i.PrivacyPhi,
+                        DateAdded = i.DateAdded
+                    })
+                    .ToList();
+
+                return Ok(ordered);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error contacting AI Search: {ex.Message}");
+            }
         }
+
+        public class AiSearchResult
+        {
+            public int Id { get; set; }
+            public string Title { get; set; }
+        }
+
     }
 }

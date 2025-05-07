@@ -39,7 +39,7 @@
     import HeroSection from '../components/HeroSection.vue';
     import FilterSidebar from '../components/FilterSidebar.vue';
     import ItemGrid from '../components/ItemGrid.vue';
-    import { fetchItems } from '../services/api';
+    import { fetchItems, searchItems } from '../services/api';
 
     export default {
         name: 'Dashboard',
@@ -70,10 +70,7 @@
                 if (!q.trim()) return;
                 searching.value = true;
                 try {
-                    const result = await fetchItems({
-                        q,
-                        ...flattenFilters(selectedFilters.value)
-                    });
+                    const result = await searchItems(q); // changed from fetchItems
                     items.value = result;
                     searchExecuted.value = true;
                     searchQuery.value = q;
