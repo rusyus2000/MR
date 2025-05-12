@@ -61,8 +61,7 @@ export function fetchLookup(type) {
 
 /** Search items by full-text query (parameter `q`) */
 export function searchItems(q) {
-    return fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(q)}`).then(
-        handleResponse
-    );
+    return fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(q)}`)
+        .then(handleResponse);
 }
 
