@@ -67,24 +67,30 @@ namespace SutterAnalyticsApi.Controllers
                     .ToListAsync();
 
                 // 3. Preserve AI sort order
-                var ordered = ids
-                    .Select(id => matchedItems.FirstOrDefault(i => i.Id == id))
-                    .Where(i => i != null)
-                    .Select(i => new ItemDto
-                    {
-                        Id = i.Id,
-                        Title = i.Title,
-                        Description = i.Description,
-                        Url = i.Url,
-                        AssetTypes = i.AssetTypes,
-                        Domain = i.Domain,
-                        Division = i.Division,
-                        ServiceLine = i.ServiceLine,
-                        DataSource = i.DataSource,
-                        PrivacyPhi = i.PrivacyPhi,
-                        DateAdded = i.DateAdded
-                    })
-                    .ToList();
+                var ordered = aiResults
+                             .Select(r =>
+                             {
+                                 var match = matchedItems.FirstOrDefault(i => i.Id == r.Id);
+                                 if (match == null) return null;
+
+                                 return new ItemDto
+                                 {
+                                     Id = match.Id,
+                                     Title = match.Title,
+                                     Description = match.Description,
+                                     Url = match.Url,
+                                     AssetTypes = match.AssetTypes,
+                                     Domain = match.Domain,
+                                     Division = match.Division,
+                                     ServiceLine = match.ServiceLine,
+                                     DataSource = match.DataSource,
+                                     PrivacyPhi = match.PrivacyPhi,
+                                     DateAdded = match.DateAdded,
+                                     Score = r.Score // <- now you have access to the score!
+                                 };
+                             })
+                             .Where(dto => dto != null)
+                             .ToList();
 
                 return Ok(ordered);
             }
@@ -98,6 +104,9 @@ namespace SutterAnalyticsApi.Controllers
         {
             public int Id { get; set; }
             public string Title { get; set; }
+            public double Score { get; set; }
+            public double Original_Score { get; set; }
+            public double Keyword_Boost { get; set; }
         }
 
     }

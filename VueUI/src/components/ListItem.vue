@@ -7,6 +7,12 @@
                :title="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
                @click.stop="toggleFavorite(item.id)"></i>
 
+            <!-- Relevance Score below bookmark -->
+            <span v-if="searchExecuted && item.score !== undefined"
+                  class="match-score-badge">
+                {{ relevancePercent }}<small>%</small>
+            </span>
+
             <!-- Title & description -->
             <div class="flex-grow-1 ps-4">
                 <a href="#" @click.prevent="$emit('show-details')" class="text-decoration-none">
@@ -14,6 +20,7 @@
                 </a>
                 <p class="mb-0 text-muted small">{{ truncatedDescription }}</p>
             </div>
+
 
             <!-- Asset type badge -->
             <span class="badge mx-2" :class="getBadgeClass(item.assetTypes[0])">
@@ -43,6 +50,10 @@
             item: {
                 type: Object,
                 required: true
+            },
+            searchExecuted: {
+                type: Boolean,
+                default: false
             }
         },
         computed: {
@@ -54,6 +65,15 @@
             },
             isFavorite() {
                 return isFavoriteFn(this.item.id);
+            },
+            relevancePercent() {
+                if (typeof this.item.score !== 'number') return null;
+                const max = 2.5;
+                const normalized = 1 - (this.item.score / max);
+                return Math.round(normalized * 100);
+            },
+            showMatch() {
+                return this.searchExecuted && typeof this.item.score === 'number';
             }
         },
         methods: {
@@ -96,6 +116,31 @@
             color: #d78418c7;
         }
 
+
+    .match-score-badge {
+        position: absolute;
+        top: 27px; /* 14px lower */
+        left: 8px;
+        background-color: #e7f1ff;
+        color: #0056b3;
+        font-weight: 600;
+       /* padding: 4px;*/
+        width: 27px;
+        height: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid #b6d4fe;
+        border-radius: 0.375rem;
+        font-size: 0.6rem;
+        line-height: 1;
+        z-index: 14;
+    }
+
+        .match-score-badge small {
+            font-size: 1em;
+            margin-left: 1px;
+        }
     .card-title {
         font-size: 1.1rem;
         font-weight: 500;

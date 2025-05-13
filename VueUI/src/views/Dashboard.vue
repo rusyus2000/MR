@@ -1,4 +1,4 @@
-<template>
+﻿<template>
     <div>
         <Navbar />
 
@@ -27,6 +27,7 @@
                           :filters="selectedFilters"
                           :items="items"
                           :search-term="searchTerm"
+                          :search-executed="searchExecuted"
                           @refresh="loadItems"
                           @clear-filters="clearFilters" />
             </div>
@@ -49,7 +50,7 @@
 
             const filtersActive = computed(() => {
                 const f = selectedFilters.value;
-                return (
+                return !!(
                     f.assetTypes.length ||
                     f.privacy.phi ||
                     f.domains.length ||
@@ -91,9 +92,11 @@
                 if (!q.trim()) return;
                 searching.value = true;
                 try {
+                    console.log('[runSearch]', q);
+                    searchExecuted.value = true;
                     const result = await searchItems(q);
                     items.value = result;
-                    searchExecuted.value = true;
+                    console.log('[runSearch] → searchExecuted is now', searchExecuted.value);
                     searchQuery.value = q;
                     itemGrid.value?.resetSort('Most Relevant');
                     searchTerm.value = '';

@@ -39,7 +39,11 @@
         <div v-if="viewMode==='grid'" class="grid-wrapper">
             <div class="row row-cols-1 row-cols-md-3 g-4">
                 <div class="col" v-for="item in paginatedItems" :key="item.id">
-                    <ItemTile :item="item" @show-details="openDetails(item)" @refresh="handleAssetSaved" />
+                    <ItemTile :key="item.id + '-' + (searchExecuted ? 'yes' : 'no')"
+                              :item="item"
+                              :search-executed="searchExecuted"
+                              @show-details="openDetails(item)"
+                              @refresh="handleAssetSaved" />
                 </div>
             </div>
         </div>
@@ -49,6 +53,7 @@
             <ListItem v-for="item in paginatedItems"
                       :key="item.id"
                       :item="item"
+                       :search-executed="searchExecuted"
                       @show-details="openDetails(item)"
                       @refresh="handleAssetSaved" />
         </div>
@@ -92,7 +97,7 @@
 </template>
 
 <script>
-    import { ref, computed, watch } from 'vue';
+    import { ref, computed, watch, toRef } from 'vue';
     import ItemTile from './ItemTile.vue';
     import ListItem from './ListItem.vue';
     import ModalAddAsset from './ModalAddAsset.vue';
@@ -118,6 +123,10 @@
                 type: Array,
                 default: () => [],
             },
+            searchExecuted: {            
+                type: Boolean,
+                default: false
+            },
         },
         setup(props, { emit }) {
             const viewMode = ref('grid');
@@ -126,7 +135,7 @@
             const currentPage = ref(1);
             const showAddModal = ref(false);
             const selectedItem = ref(null);
-
+            const searchExecuted = toRef(props, 'searchExecuted');
             const resetSort = (to = 'Most Relevant') => {
                 sortBy.value = to;
             };
@@ -170,6 +179,10 @@
                 currentPage.value = 1;
             });
 
+            watch(() => props.searchExecuted, (val) => {
+                console.log('[ItemGrid] searchExecuted changed to:', val);
+            });
+
             const handleAssetSaved = () => {
                 emit('refresh');
                 showAddModal.value = false;
@@ -194,7 +207,8 @@
                 selectedItem,
                 openDetails,
                 resetSort,
-                filtersActive
+                filtersActive,
+                searchExecuted
             };
         }
     };
@@ -222,4 +236,5 @@
             background-color: #218838 !important;
             border-color: #1e7e34 !important;
         }
+    
 </style>

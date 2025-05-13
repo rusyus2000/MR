@@ -1,11 +1,17 @@
-<template>
+﻿<template>
     <div class="card border-0 shadow-custom">
         <div class="card-body position-relative">
+
             <!-- Bookmark Favorite Icon -->
             <i class="bi favorite-icon"
                :class="isFavorite ? 'bi-bookmark-fill' : 'bi-bookmark'"
                :title="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
                @click.stop="toggleFavorite(item.id)"></i>
+
+            <!-- Relevance Score -->
+            <span v-if="showMatch" class="match-label text-muted small">
+                {{ relevancePercent }}% match
+            </span>
 
             <!-- Asset type badges top-right -->
             <div class="asset-type-wrapper">
@@ -17,7 +23,8 @@
             </div>
 
             <!-- Title -->
-            <a href="#" class="title-link d-block text-decoration-none mb-2 mt-1" @click.prevent="$emit('show-details')">
+            <a href="#" class="title-link d-block text-decoration-none mb-2 mt-1"
+               @click.prevent="$emit('show-details')">
                 <h5 class="mb-0">{{ item.title }}</h5>
             </a>
 
@@ -41,20 +48,35 @@
 </template>
 
 <script>
-    import { computed } from 'vue';
+    import { computed, toRef } from 'vue';
     import { toggleFavorite, isFavorite as isFavoriteFn } from '../composables/favorites';
 
     export default {
         name: 'ItemTile',
         props: {
-            item: {
-                type: Object,
-                required: true,
-            },
+            item: { type: Object, required: true },
+            searchExecuted: { type: Boolean, default: false }
         },
-        methods: {
-            toggleFavorite,
-            getBadgeClass(assetType) {
+        setup(props) {
+            const isFavorite = computed(() => isFavoriteFn(props.item.id));
+
+            const relevancePercent = computed(() => {
+                const score = props.item.score;
+                if (typeof score !== 'number') return null;
+                const max = 2.5;
+                const normalized = 1 - (score / max);
+                return Math.round(normalized * 100);
+            });
+
+            const searchExecuted = toRef(props, 'searchExecuted');
+
+            const showMatch = computed(() => {
+                console.log('[ItemTile] - ', searchExecuted.value, ' - ', typeof props.item.score);
+                return searchExecuted.value && typeof props.item.score === 'number';
+            });
+
+
+            const getBadgeClass = (assetType) => {
                 const map = {
                     Dashboard: 'bg-dashboard',
                     Report: 'bg-report',
@@ -63,12 +85,15 @@
                     Featured: 'bg-featured',
                 };
                 return map[assetType] || 'bg-teal';
-            },
-        },
-        computed: {
-            isFavorite() {
-                return isFavoriteFn(this.item.id);
-            }
+            };
+
+            return {
+                isFavorite,
+                relevancePercent,
+                showMatch,
+                getBadgeClass,
+                toggleFavorite
+            };
         }
     };
 </script>
@@ -87,6 +112,19 @@
         .favorite-icon:hover {
             color: #d78418c7;
         }
+
+    .match-label {
+        position: absolute;
+        top: -5px;
+        left: 40px;
+        background-color: #e7f1ff;
+        color: #0056b3;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 2px 6px;
+        border-radius: 4px;
+        border: 1px solid #b6d4fe;
+    }
 
     .card {
         border-radius: 10px;

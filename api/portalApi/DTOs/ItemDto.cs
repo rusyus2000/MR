@@ -15,5 +15,6 @@ namespace SutterAnalyticsApi.DTOs
 
         // New field
         public DateTime DateAdded { get; set; }
+        public double? Score { get; set; }
     }
 }
