@@ -1,4 +1,4 @@
-<template>
+﻿<template>
     <div class="modal-backdrop">
         <div class="modal-content shadow">
             <div class="modal-header custom-header">
@@ -18,15 +18,26 @@
                     <div class="label">Date Added:</div><div>{{ new Date(item.dateAdded).toLocaleDateString() }}</div>
                 </div>
             </div>
+            <div class="d-flex justify-content-end mt-3 px-4 pb-3">
+                <button class="btn btn-sm favorite-icon-btn" @click="toggleFavorite(item.id)">
+                    {{ isFavorite(item.id) ? '★ Remove from Favorites' : '☆ Add to Favorites' }}
+                </button>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
+    import { toggleFavorite, isFavorite } from '../composables/favorites';
+
     export default {
         name: 'ModalAssetDetails',
         props: {
             item: Object
+        },
+        methods: {
+            toggleFavorite,
+            isFavorite
         }
     };
 </script>
@@ -79,4 +90,16 @@
         font-weight: 600;
         white-space: nowrap;
     }
+
+    /* Styled like your existing favorite icon */
+    .favorite-icon-btn {
+        color: #ffad44c7;
+        border-color: #ffad44c7;
+        background: transparent;
+    }
+
+        .favorite-icon-btn:hover {
+            color: #d78418c7;
+            border-color: #d78418c7;
+        }
 </style>

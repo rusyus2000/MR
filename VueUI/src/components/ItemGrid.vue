@@ -1,4 +1,4 @@
-<template>
+﻿<template>
     <div class="item-grid-container my-4">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -39,7 +39,7 @@
         <div v-if="viewMode==='grid'" class="grid-wrapper">
             <div class="row row-cols-1 row-cols-md-3 g-4">
                 <div class="col" v-for="item in paginatedItems" :key="item.id">
-                    <ItemTile :item="item" @show-details="openDetails(item)"  @refresh="handleAssetSaved" />
+                    <ItemTile :item="item" @show-details="openDetails(item)" @refresh="handleAssetSaved" />
                 </div>
             </div>
         </div>
@@ -97,6 +97,7 @@
     import ListItem from './ListItem.vue';
     import ModalAddAsset from './ModalAddAsset.vue';
     import ModalAssetDetails from './ModalAssetDetails.vue';
+    import { favorites } from '../composables/favorites';
 
     export default {
         name: 'ItemGrid',
@@ -126,29 +127,19 @@
             const showAddModal = ref(false);
             const selectedItem = ref(null);
 
+            const resetSort = (to = 'Most Relevant') => {
+                sortBy.value = to;
+            };
+
             const filteredItems = computed(() =>
                 props.items.filter(item => {
-                    if (
-                        props.filters.assetTypes.length &&
-                        !props.filters.assetTypes.some(type => item.assetTypes.includes(type))
-                    ) return false;
-                    if (props.filters.privacy.phi && !item.privacyPhi) return false;
-                    if (
-                        props.filters.domains.length &&
-                        !props.filters.domains.includes(item.domain)
-                    ) return false;
-                    if (
-                        props.filters.divisions.length &&
-                        !props.filters.divisions.includes(item.division)
-                    ) return false;
-                    if (
-                        props.filters.serviceLines.length &&
-                        !props.filters.serviceLines.includes(item.serviceLine)
-                    ) return false;
-                    if (
-                        props.filters.dataSources.length &&
-                        !props.filters.dataSources.includes(item.dataSource)
-                    ) return false;
+                    const f = props.filters;
+                    if (f.assetTypes.length && !f.assetTypes.some(type => item.assetTypes.includes(type))) return false;
+                    if (f.privacy.phi && !item.privacyPhi) return false;
+                    if (f.domains.length && !f.domains.includes(item.domain)) return false;
+                    if (f.divisions.length && !f.divisions.includes(item.division)) return false;
+                    if (f.serviceLines.length && !f.serviceLines.includes(item.serviceLine)) return false;
+                    if (f.dataSources.length && !f.dataSources.includes(item.dataSource)) return false;
                     return true;
                 })
             );
@@ -163,11 +154,11 @@
                 if (sortBy.value === 'Alphabetical') {
                     list = [...list].sort((a, b) => a.title.localeCompare(b.title));
                 } else if (sortBy.value === 'Favorites') {
-                    const favs = new Set(JSON.parse(localStorage.getItem('favorites') || '[]'));
+                    const favs = favorites.value;
                     list = [...list].sort((a, b) => {
                         const aFav = favs.has(a.id);
                         const bFav = favs.has(b.id);
-                        return (aFav === bFav) ? 0 : aFav ? -1 : 1;
+                        return aFav === bFav ? 0 : aFav ? -1 : 1;
                     });
                 }
 
@@ -188,6 +179,8 @@
                 selectedItem.value = item;
             };
 
+            const filtersActive = computed(() => filteredItems.value.length < props.items.length);
+
             return {
                 viewMode,
                 sortBy,
@@ -200,8 +193,10 @@
                 handleAssetSaved,
                 selectedItem,
                 openDetails,
+                resetSort,
+                filtersActive
             };
-        },
+        }
     };
 </script>
 

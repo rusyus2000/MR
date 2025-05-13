@@ -5,7 +5,7 @@
             <i class="bi favorite-icon"
                :class="isFavorite ? 'bi-bookmark-fill' : 'bi-bookmark'"
                :title="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
-               @click.stop="toggleFavorite"></i>
+               @click.stop="toggleFavorite(item.id)"></i>
 
             <!-- Asset type badges top-right -->
             <div class="asset-type-wrapper">
@@ -41,6 +41,9 @@
 </template>
 
 <script>
+    import { computed } from 'vue';
+    import { toggleFavorite, isFavorite as isFavoriteFn } from '../composables/favorites';
+
     export default {
         name: 'ItemTile',
         props: {
@@ -49,16 +52,8 @@
                 required: true,
             },
         },
-        data() {
-            return {
-                isFavorite: false,
-            };
-        },
-        mounted() {
-            const favs = JSON.parse(localStorage.getItem('favorites') || '[]');
-            this.isFavorite = favs.includes(this.item.id);
-        },
         methods: {
+            toggleFavorite,
             getBadgeClass(assetType) {
                 const map = {
                     Dashboard: 'bg-dashboard',
@@ -69,19 +64,12 @@
                 };
                 return map[assetType] || 'bg-teal';
             },
-            toggleFavorite() {
-                const favs = new Set(JSON.parse(localStorage.getItem('favorites') || '[]'));
-                if (favs.has(this.item.id)) {
-                    favs.delete(this.item.id);
-                    this.isFavorite = false;
-                } else {
-                    favs.add(this.item.id);
-                    this.isFavorite = true;
-                }
-                localStorage.setItem('favorites', JSON.stringify([...favs]));
-                this.$emit('refresh');
-            }
         },
+        computed: {
+            isFavorite() {
+                return isFavoriteFn(this.item.id);
+            }
+        }
     };
 </script>
 

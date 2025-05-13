@@ -24,7 +24,10 @@
     <style scoped>
         .navbar-brand,
         .navbar-text {
-            font-size: 1.5rem; /* Slightly larger font to match the logo */
+            padding-top: 0 !important;
+            padding-bottom: .5rem;
+            font-weight: 700;
+            font-size: 1.5rem
         }
 
         .navbar {

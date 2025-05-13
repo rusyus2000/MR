@@ -2,7 +2,13 @@
     <div class="filter-sidebar">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h5 class="text-dark">Filter By</h5>
-            <a href="#" class="text-teal" @click.prevent="clearAll">Clear all</a>
+            <span v-if="filtersActive"
+                  class="search-tag badge d-inline-flex align-items-center"
+                  style="cursor: pointer;"
+                  @click.prevent="clearAll">
+                <span class="me-2">Clear</span>
+                <button class="btn-close btn-close-sm" aria-label="Close"></button>
+            </span>
         </div>
 
         <!-- Asset Type -->
@@ -139,6 +145,10 @@
                 type: String,
                 default: '',
             },
+            filtersActive: {
+                type: Boolean,
+                default: false
+            }
         },
         data() {
             return {
@@ -233,7 +243,7 @@
 
 <style scoped>
     .filter-sidebar {
-        padding: 15px;
+        padding: 0px 5px 5px 5px;
         border-right: 1px solid #e0e0e0;
         height: 100%;
         width: fit-content;
@@ -247,6 +257,20 @@
         margin-bottom: 10px;
     }
 
+    .search-tag {
+        background-color: #e7f1ff;
+        color: #0056b3;
+        font-weight: 500;
+        padding: 0.4rem 0.6rem;
+        border: 1px solid #b6d4fe;
+        font-size: 0.85rem;
+        border-radius: 0.375rem;
+    }
+    .btn-close-sm {
+        width: 0.75em;
+        height: 0.75em;
+        font-size: 0.7rem;
+    }
     .form-check {
         margin-bottom: 2px;
     }

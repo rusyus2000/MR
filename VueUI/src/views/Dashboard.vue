@@ -11,10 +11,9 @@
 
         <div class="content-area d-flex my-4">
             <!-- Fixed 250px sidebar -->
-            <div class="filter-col">
-                <FilterSidebar :items-all="allItems"
-                               @update:filters="runFilter" />
-            </div>
+            <FilterSidebar :items-all="allItems"
+                           :filters-active="filtersActive"
+                           @update:filters="runFilter" />
 
             <!-- Asset grid/list -->
             <div class="asset-col">
@@ -24,17 +23,19 @@
                         <button @click="clearSearch" class="btn-close btn-close-sm" aria-label="Close"></button>
                     </span>
                 </div>
-                <ItemGrid :filters="selectedFilters"
+                <ItemGrid ref="itemGrid"
+                          :filters="selectedFilters"
                           :items="items"
                           :search-term="searchTerm"
-                          @refresh="loadItems" />
+                          @refresh="loadItems"
+                          @clear-filters="clearFilters" />
             </div>
         </div>
     </div>
 </template>
 
 <script>
-    import { ref, onMounted } from 'vue';
+    import { ref, computed, onMounted } from 'vue';
     import Navbar from '../components/Navbar.vue';
     import HeroSection from '../components/HeroSection.vue';
     import FilterSidebar from '../components/FilterSidebar.vue';
@@ -45,16 +46,34 @@
         name: 'Dashboard',
         components: { Navbar, HeroSection, FilterSidebar, ItemGrid },
         setup() {
+
+            const filtersActive = computed(() => {
+                const f = selectedFilters.value;
+                return (
+                    f.assetTypes.length ||
+                    f.privacy.phi ||
+                    f.domains.length ||
+                    f.divisions.length ||
+                    f.serviceLines.length ||
+                    f.dataSources.length
+                );
+            });
+
             const allItems = ref([]);
             const items = ref([]);
             const searchTerm = ref('');
             const searchQuery = ref('');
             const searchExecuted = ref(false);
             const searching = ref(false);
+            const itemGrid = ref(null);
 
             const selectedFilters = ref({
-                assetTypes: [], privacy: { phi: false },
-                domains: [], divisions: [], serviceLines: [], dataSources: []
+                assetTypes: [],
+                privacy: { phi: false },
+                domains: [],
+                divisions: [],
+                serviceLines: [],
+                dataSources: []
             });
 
             const loadItems = async () => {
@@ -62,7 +81,9 @@
                 allItems.value = items.value;
             };
 
-            onMounted(async () => {
+            
+
+            onMounted(() => {
                 loadItems();
             });
 
@@ -70,10 +91,11 @@
                 if (!q.trim()) return;
                 searching.value = true;
                 try {
-                    const result = await searchItems(q); // changed from fetchItems
+                    const result = await searchItems(q);
                     items.value = result;
                     searchExecuted.value = true;
                     searchQuery.value = q;
+                    itemGrid.value?.resetSort('Most Relevant');
                     searchTerm.value = '';
                 } finally {
                     searching.value = false;
@@ -89,10 +111,23 @@
 
             async function runFilter(filters) {
                 selectedFilters.value = filters;
-                items.value = await fetchItems({
-                    q: searchQuery.value,
-                    ...flattenFilters(filters)
-                });
+                //items.value = await fetchItems({
+                //    q: searchQuery.value,
+                //    ...flattenFilters(filters)
+                //});
+            }
+
+            function clearFilters() {
+                selectedFilters.value = {
+                    assetTypes: [],
+                    privacy: { phi: false },
+                    domains: [],
+                    divisions: [],
+                    serviceLines: [],
+                    dataSources: []
+                };
+                itemGrid.value?.resetSort('Favorites');
+                runSearch(searchQuery.value);
             }
 
             function flattenFilters(f) {
@@ -117,9 +152,12 @@
                 runSearch,
                 runFilter,
                 clearSearch,
+                clearFilters,
                 loadItems,
+                itemGrid,
+                filtersActive
             };
-        },
+        }
     };
 </script>
 
@@ -137,6 +175,7 @@
     .content-area {
         min-height: calc(100vh - 270px);
     }
+
     .search-tag {
         background-color: #e7f1ff;
         color: #0056b3;

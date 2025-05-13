@@ -5,7 +5,7 @@
             <i class="bi favorite-icon"
                :class="isFavorite ? 'bi-bookmark-fill' : 'bi-bookmark'"
                :title="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
-               @click.stop="toggleFavorite"></i>
+               @click.stop="toggleFavorite(item.id)"></i>
 
             <!-- Title & description -->
             <div class="flex-grow-1 ps-4">
@@ -34,6 +34,9 @@
 </template>
 
 <script>
+    import { computed } from 'vue';
+    import { toggleFavorite, isFavorite as isFavoriteFn } from '../composables/favorites';
+
     export default {
         name: 'ListItem',
         props: {
@@ -42,24 +45,19 @@
                 required: true
             }
         },
-        data() {
-            return {
-                isFavorite: false
-            };
-        },
         computed: {
             truncatedDescription() {
                 const max = 90;
                 return this.item.description.length > max
                     ? this.item.description.slice(0, max) + '...'
                     : this.item.description;
+            },
+            isFavorite() {
+                return isFavoriteFn(this.item.id);
             }
         },
-        mounted() {
-            const favs = JSON.parse(localStorage.getItem('favorites') || '[]');
-            this.isFavorite = favs.includes(this.item.id);
-        },
         methods: {
+            toggleFavorite,
             getBadgeClass(type) {
                 const colorMap = {
                     Dashboard: 'bg-dashboard',
@@ -69,18 +67,6 @@
                     Featured: 'bg-featured'
                 };
                 return colorMap[type] || 'bg-teal';
-            },
-            toggleFavorite() {
-                const favs = new Set(JSON.parse(localStorage.getItem('favorites') || '[]'));
-                if (favs.has(this.item.id)) {
-                    favs.delete(this.item.id);
-                    this.isFavorite = false;
-                } else {
-                    favs.add(this.item.id);
-                    this.isFavorite = true;
-                }
-                localStorage.setItem('favorites', JSON.stringify([...favs]));
-                this.$emit('refresh');
             }
         }
     };
