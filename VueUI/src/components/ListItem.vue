@@ -119,14 +119,14 @@
 
     .match-score-badge {
         position: absolute;
-        top: 27px; /* 14px lower */
+        top: 25px; /* 14px lower */
         left: 8px;
         background-color: #e7f1ff;
         color: #0056b3;
         font-weight: 600;
        /* padding: 4px;*/
         width: 27px;
-        height: 20px;
+        height: 24px;
         display: flex;
         justify-content: center;
         align-items: center;
