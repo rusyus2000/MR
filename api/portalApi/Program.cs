@@ -1,22 +1,28 @@
 using Microsoft.EntityFrameworkCore;
+using portalApi.Middleware;
 using SutterAnalyticsApi.Data;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddAuthentication("Windows")
+    .AddNegotiate(); // <- uses Windows auth
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddCors(opts => {
     opts.AddDefaultPolicy(policy => policy
-      .AllowAnyOrigin()
+      .WithOrigins("http://localhost:5174")
       .AllowAnyHeader()
       .AllowAnyMethod()
+      .AllowCredentials()
     );
 });
 
-// 1) EF Core InMemory
+// Use SQL Server instead of InMemory
 builder.Services.AddDbContext<AppDbContext>(opts =>
-    opts.UseInMemoryDatabase("SutterAnalyticsDb"));
-
-// 2) Seeder
-builder.Services.AddTransient<SampleDataSeeder>();
+    opts.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
 
 // 3) Controllers
 builder.Services.AddControllers();
@@ -24,12 +30,10 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// 4) Seed data
-using (var scope = app.Services.CreateScope())
-{
-    var seeder = scope.ServiceProvider.GetRequiredService<SampleDataSeeder>();
-    seeder.Seed();
-}
+
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseMiddleware<EnsureUserExistsMiddleware>();
 app.MapControllers();
 app.Run();

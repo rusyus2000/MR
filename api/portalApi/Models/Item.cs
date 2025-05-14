@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SutterAnalyticsApi.Models
 {
@@ -34,11 +35,12 @@ namespace SutterAnalyticsApi.Models
         public DateTime DateAdded { get; set; }
 
         // Not mapped helper
+        [NotMapped]
         public List<string> AssetTypes
         {
             get => string.IsNullOrWhiteSpace(AssetTypesCsv)
-                     ? new List<string>()
-                     : new List<string>(AssetTypesCsv.Split(','));
+                ? new List<string>()
+                : new List<string>(AssetTypesCsv.Split(','));
             set => AssetTypesCsv = string.Join(',', value);
         }
     }

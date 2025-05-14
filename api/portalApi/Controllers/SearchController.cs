@@ -2,12 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SutterAnalyticsApi.Data;
 using SutterAnalyticsApi.DTOs;
+using SutterAnalyticsApi.Models;
 
 namespace SutterAnalyticsApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class SearchController : ControllerBase
+    public class SearchController : MpBaseController
     {
         private readonly AppDbContext _db;
         public SearchController(AppDbContext db) => _db = db;
@@ -56,6 +57,19 @@ namespace SutterAnalyticsApi.Controllers
                     return StatusCode((int)response.StatusCode, "AI search service failed.");
 
                 var aiResults = await response.Content.ReadFromJsonAsync<List<AiSearchResult>>();
+
+                //var user = await _db.Users.FirstOrDefaultAsync(); // TODO: Replace with actual user (e.g., from claims)
+
+                //_db.UserSearchHistories.Add(new UserSearchHistory
+                //{
+                //    UserId = user.Id,
+                //    Query = q,
+                //    SearchedAt = DateTime.UtcNow
+                //});
+                //await _db.SaveChangesAsync();
+
+
+
                 if (aiResults == null || !aiResults.Any())
                     return Ok(new List<ItemDto>()); // No results
 

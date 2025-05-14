@@ -12,7 +12,7 @@ namespace SutterAnalyticsApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ItemsController : ControllerBase
+    public class ItemsController : MpBaseController
     {
         private readonly AppDbContext _db;
         public ItemsController(AppDbContext db) => _db = db;

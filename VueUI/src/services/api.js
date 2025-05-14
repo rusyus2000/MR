@@ -15,12 +15,12 @@ async function handleResponse(res) {
  */
 export function fetchItems(params = {}) {
     const qs = new URLSearchParams(params).toString();
-    return fetch(`${API_BASE_URL}/items?${qs}`).then(handleResponse);
+    return fetch(`${API_BASE_URL}/items?${qs}`, { credentials: 'include' }).then(handleResponse);
 }
 
 /** Fetch a single item by its ID */
 export function fetchItem(id) {
-    return fetch(`${API_BASE_URL}/items/${id}`).then(handleResponse);
+    return fetch(`${API_BASE_URL}/items/${id}`, { credentials: 'include' }).then(handleResponse);
 }
 
 /** Create a new item */
@@ -28,6 +28,7 @@ export function createItem(payload) {
     return fetch(`${API_BASE_URL}/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload),
     }).then(handleResponse);
 }
@@ -37,6 +38,7 @@ export function updateItem(id, payload) {
     return fetch(`${API_BASE_URL}/items/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload),
     }).then(handleResponse);
 }
@@ -45,6 +47,7 @@ export function updateItem(id, payload) {
 export function deleteItem(id) {
     return fetch(`${API_BASE_URL}/items/${id}`, {
         method: 'DELETE',
+        credentials: 'include'
     }).then(res => {
         if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
     });
@@ -56,12 +59,12 @@ export function deleteItem(id) {
  *   "Domain", "Division", "ServiceLine", "DataSource", "AssetType"
  */
 export function fetchLookup(type) {
-    return fetch(`${API_BASE_URL}/lookups/${type}`).then(handleResponse);
+    return fetch(`${API_BASE_URL}/lookups/${type}`, { credentials: 'include' }).then(handleResponse);
 }
 
 /** Search items by full-text query (parameter `q`) */
 export function searchItems(q) {
-    return fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(q)}`)
+    return fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(q)}`, { credentials: 'include' })
         .then(handleResponse);
 }
 
