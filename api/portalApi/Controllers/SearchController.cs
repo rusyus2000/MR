@@ -48,7 +48,6 @@ namespace SutterAnalyticsApi.Controllers
             if (string.IsNullOrWhiteSpace(q))
                 return BadRequest("Query parameter 'q' is required.");
 
-            // 1. Call AI Search API
             using var httpClient = new HttpClient();
             try
             {
@@ -57,54 +56,49 @@ namespace SutterAnalyticsApi.Controllers
                     return StatusCode((int)response.StatusCode, "AI search service failed.");
 
                 var aiResults = await response.Content.ReadFromJsonAsync<List<AiSearchResult>>();
-
-                //var user = await _db.Users.FirstOrDefaultAsync(); // TODO: Replace with actual user (e.g., from claims)
-
-                //_db.UserSearchHistories.Add(new UserSearchHistory
-                //{
-                //    UserId = user.Id,
-                //    Query = q,
-                //    SearchedAt = DateTime.UtcNow
-                //});
-                //await _db.SaveChangesAsync();
-
-
-
                 if (aiResults == null || !aiResults.Any())
-                    return Ok(new List<ItemDto>()); // No results
+                    return Ok(new List<ItemDto>());
 
                 var ids = aiResults.Select(r => r.Id).ToList();
 
-                // 2. Query matching items from DB
+                // ?? Get current user
+                var user = CurrentUser;
+                var favoriteIds = await _db.UserFavorites
+                    .Where(f => f.UserId == user.Id)
+                    .Select(f => f.ItemId)
+                    .ToListAsync();
+
+                // ?? Query matching items from DB
                 var matchedItems = await _db.Items
                     .Where(i => ids.Contains(i.Id))
                     .ToListAsync();
 
-                // 3. Preserve AI sort order
+                // ?? Preserve AI sort order, and include IsFavorite
                 var ordered = aiResults
-                             .Select(r =>
-                             {
-                                 var match = matchedItems.FirstOrDefault(i => i.Id == r.Id);
-                                 if (match == null) return null;
+                    .Select(r =>
+                    {
+                        var match = matchedItems.FirstOrDefault(i => i.Id == r.Id);
+                        if (match == null) return null;
 
-                                 return new ItemDto
-                                 {
-                                     Id = match.Id,
-                                     Title = match.Title,
-                                     Description = match.Description,
-                                     Url = match.Url,
-                                     AssetTypes = match.AssetTypes,
-                                     Domain = match.Domain,
-                                     Division = match.Division,
-                                     ServiceLine = match.ServiceLine,
-                                     DataSource = match.DataSource,
-                                     PrivacyPhi = match.PrivacyPhi,
-                                     DateAdded = match.DateAdded,
-                                     Score = r.Score // <- now you have access to the score!
-                                 };
-                             })
-                             .Where(dto => dto != null)
-                             .ToList();
+                        return new ItemDto
+                        {
+                            Id = match.Id,
+                            Title = match.Title,
+                            Description = match.Description,
+                            Url = match.Url,
+                            AssetTypes = match.AssetTypes,
+                            Domain = match.Domain,
+                            Division = match.Division,
+                            ServiceLine = match.ServiceLine,
+                            DataSource = match.DataSource,
+                            PrivacyPhi = match.PrivacyPhi,
+                            DateAdded = match.DateAdded,
+                            Score = r.Score,
+                            IsFavorite = favoriteIds.Contains(match.Id)
+                        };
+                    })
+                    .Where(dto => dto != null)
+                    .ToList();
 
                 return Ok(ordered);
             }
@@ -113,6 +107,7 @@ namespace SutterAnalyticsApi.Controllers
                 return StatusCode(500, $"Error contacting AI Search: {ex.Message}");
             }
         }
+
 
         public class AiSearchResult
         {
