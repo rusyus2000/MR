@@ -41,8 +41,8 @@
     import HeroSection from '../components/HeroSection.vue';
     import FilterSidebar from '../components/FilterSidebar.vue';
     import ItemGrid from '../components/ItemGrid.vue';
-    import { fetchItems, searchItems } from '../services/api';
-
+    import { fetchItems, searchItems, fetchFavorites } from '../services/api';
+  
     export default {
         name: 'Dashboard',
         components: { Navbar, HeroSection, FilterSidebar, ItemGrid },
@@ -85,7 +85,7 @@
             
 
             onMounted(() => {
-                loadItems();
+               loadItems();
             });
 
             async function runSearch(q) {

@@ -17,6 +17,20 @@ namespace SutterAnalyticsApi.Controllers
             _db = db;
         }
 
+        [HttpGet("favorites")]
+        public async Task<IActionResult> GetFavorites()
+        {
+            var user = CurrentUser;
+            if (user == null) return Unauthorized();
+
+            var favIds = await _db.UserFavorites
+                .Where(f => f.UserId == user.Id)
+                .Select(f => f.ItemId)
+                .ToListAsync();
+
+            return Ok(favIds);
+        }
+
         // POST /api/useractions/togglefavorite/{itemId}
         [HttpPost("togglefavorite/{itemId:int}")]
         public async Task<IActionResult> ToggleFavorite(int itemId)

@@ -68,3 +68,22 @@ export function searchItems(q) {
         .then(handleResponse);
 }
 
+export function toggleFavoriteApi(itemId) {
+    return fetch(`${API_BASE_URL}/useractions/togglefavorite/${itemId}`, {
+        method: 'POST',
+        credentials: 'include'
+    }).then(res => {
+        if (!res.ok && res.status !== 204) {
+            throw new Error(`Toggle failed: ${res.status}`);
+        }
+    });
+}
+
+export async function fetchFavorites() {
+    return fetch(`${API_BASE_URL}/useractions/favorites`, {
+        credentials: 'include'
+    }).then(res => {
+        if (!res.ok) throw new Error('Failed to fetch favorites');
+        return res.json();
+    });
+}

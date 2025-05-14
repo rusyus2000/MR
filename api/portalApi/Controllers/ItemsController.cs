@@ -17,34 +17,45 @@ namespace SutterAnalyticsApi.Controllers
         private readonly AppDbContext _db;
         public ItemsController(AppDbContext db) => _db = db;
 
-        // GET /api/items?…&q=…
+        //[HttpGet]
+        //public async Task<IActionResult> GetAll()
+        //{
+        //    var user = CurrentUser;
+
+        //    var favoriteIds = await _db.UserFavorites
+        //        .Where(f => f.UserId == user.Id)
+        //        .Select(f => f.ItemId)
+        //        .ToListAsync();
+
+        //    var items = await _db.Items
+        //        .Select(item => new
+        //        {
+        //            item.Id,
+        //            item.Title,
+        //            item.Description,
+        //            item.DateAdded,
+        //            IsFavorite = favoriteIds.Contains(item.Id)
+        //        })
+        //        .ToListAsync();
+
+        //    return Ok(items);
+        //}
+
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ItemDto>>> GetAll(
-            [FromQuery] int? top,
-            [FromQuery] string? domain,
-            [FromQuery] string? division,
-            [FromQuery] string? serviceLine,
-            [FromQuery] string? dataSource,
-            [FromQuery] string? assetType,
-            [FromQuery] bool? phi,
-            [FromQuery] string? q)
+     [FromQuery] int? top,
+     [FromQuery] string? domain,
+     [FromQuery] string? division,
+     [FromQuery] string? serviceLine,
+     [FromQuery] string? dataSource,
+     [FromQuery] string? assetType,
+     [FromQuery] bool? phi)
         {
+            var user = CurrentUser;
             var query = _db.Items.AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(q))
-            {
-                var pattern = $"%{q}%";
-                query = query.Where(i =>
-                       EF.Functions.Like(i.Title, pattern)
-                    || EF.Functions.Like(i.Description, pattern)
-                    || EF.Functions.Like(i.Url, pattern)
-                    || EF.Functions.Like(i.Domain, pattern)
-                    || EF.Functions.Like(i.Division, pattern)
-                    || EF.Functions.Like(i.ServiceLine, pattern)
-                    || EF.Functions.Like(i.DataSource, pattern)
-                );
-            }
-
+            // Filtering only (no search query)
             if (!string.IsNullOrWhiteSpace(domain))
                 query = query.Where(i => i.Domain == domain);
             if (!string.IsNullOrWhiteSpace(division))
@@ -54,12 +65,18 @@ namespace SutterAnalyticsApi.Controllers
             if (!string.IsNullOrWhiteSpace(dataSource))
                 query = query.Where(i => i.DataSource == dataSource);
             if (!string.IsNullOrWhiteSpace(assetType))
-                query = query.Where(i => i.AssetTypesCsv.Contains(assetType));
+                query = query.Where(i => i.AssetTypesCsv != null && i.AssetTypesCsv.Contains(assetType));
             if (phi.HasValue)
                 query = query.Where(i => i.PrivacyPhi == phi.Value);
 
             if (top.HasValue)
                 query = query.OrderByDescending(i => i.DateAdded).Take(top.Value);
+
+            // Get user's favorite item IDs
+            var favoriteIds = await _db.UserFavorites
+                .Where(f => f.UserId == user.Id)
+                .Select(f => f.ItemId)
+                .ToListAsync();
 
             var list = await query.Select(i => new ItemDto
             {
@@ -73,11 +90,13 @@ namespace SutterAnalyticsApi.Controllers
                 ServiceLine = i.ServiceLine,
                 DataSource = i.DataSource,
                 PrivacyPhi = i.PrivacyPhi,
-                DateAdded = i.DateAdded
+                DateAdded = i.DateAdded,
+                IsFavorite = favoriteIds.Contains(i.Id)
             }).ToListAsync();
 
             return Ok(list);
         }
+
 
         // GET /api/items/{id}
         [HttpGet("{id:int}")]
