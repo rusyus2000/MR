@@ -6,7 +6,7 @@
             <i class="bi favorite-icon"
                :class="isFavorite ? 'bi-bookmark-fill' : 'bi-bookmark'"
                :title="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
-               @click.stop="toggleFavorite(item.id)"></i>
+               @click.stop="toggleFavorite(item)"></i>
 
             <!-- Relevance Score -->
             <span v-if="showMatch" class="match-label text-muted small">
@@ -47,56 +47,53 @@
     </div>
 </template>
 
-<script>
+<script setup>
     import { computed, toRef } from 'vue';
-    import { toggleFavorite, isFavorite as isFavoriteFn } from '../composables/favorites';
+    import { toggleFavoriteApi } from '../services/api';
 
-    export default {
-        name: 'ItemTile',
-        props: {
-            item: { type: Object, required: true },
-            searchExecuted: { type: Boolean, default: false }
-        },
-        setup(props) {
-            const isFavorite = computed(() => isFavoriteFn(props.item.id));
+    const props = defineProps({
+        item: { type: Object, required: true },
+        searchExecuted: { type: Boolean, default: false }
+    });
 
-            const relevancePercent = computed(() => {
-                const score = props.item.score;
-                if (typeof score !== 'number') return null;
-                const max = 2.5;
-                const normalized = 1 - (score / max);
-                return Math.round(normalized * 100);
+    const isFavorite = computed(() => props.item.isFavorite);
+
+    function toggleFavorite(item) {
+        toggleFavoriteApi(item.id)
+            .then(() => {
+                item.isFavorite = !item.isFavorite;
+            })
+            .catch(err => {
+                console.error('Toggle favorite failed', err);
             });
+    }
 
-            const searchExecuted = toRef(props, 'searchExecuted');
+    const relevancePercent = computed(() => {
+        const score = props.item.score;
+        if (typeof score !== 'number') return null;
+        const max = 2.5;
+        const normalized = 1 - (score / max);
+        return Math.round(normalized * 100);
+    });
 
-            const showMatch = computed(() => {
-                console.log('[ItemTile] - ', searchExecuted.value, ' - ', typeof props.item.score);
-                return searchExecuted.value && typeof props.item.score === 'number';
-            });
+    const searchExecuted = toRef(props, 'searchExecuted');
 
+    const showMatch = computed(() => {
+        return searchExecuted.value && typeof props.item.score === 'number';
+    });
 
-            const getBadgeClass = (assetType) => {
-                const map = {
-                    Dashboard: 'bg-dashboard',
-                    Report: 'bg-report',
-                    Application: 'bg-application',
-                    'Data Model': 'bg-data-model',
-                    Featured: 'bg-featured',
-                };
-                return map[assetType] || 'bg-teal';
-            };
-
-            return {
-                isFavorite,
-                relevancePercent,
-                showMatch,
-                getBadgeClass,
-                toggleFavorite
-            };
-        }
+    const getBadgeClass = (assetType) => {
+        const map = {
+            Dashboard: 'bg-dashboard',
+            Report: 'bg-report',
+            Application: 'bg-application',
+            'Data Model': 'bg-data-model',
+            Featured: 'bg-featured',
+        };
+        return map[assetType] || 'bg-teal';
     };
 </script>
+
 
 <style scoped>
     .favorite-icon {

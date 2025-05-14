@@ -1,6 +1,6 @@
 // src/composables/favorites.js
 import { ref } from 'vue';
-import { toggleFavoriteApi } from '../services/api';
+//import { toggleFavoriteApi } from '../services/api';
 
 export const favorites = ref(new Set()); // 
 

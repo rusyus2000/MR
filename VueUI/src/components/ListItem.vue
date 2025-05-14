@@ -1,11 +1,11 @@
-<template>
+﻿<template>
     <div class="card list-item-card shadow-custom mb-1">
         <div class="card-body d-flex align-items-center p-2 position-relative">
             <!-- Bookmark Favorite Icon -->
             <i class="bi favorite-icon"
                :class="isFavorite ? 'bi-bookmark-fill' : 'bi-bookmark'"
                :title="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
-               @click.stop="toggleFavorite(item.id)"></i>
+               @click.stop="toggleFavorite(item)"></i>
 
             <!-- Relevance Score below bookmark -->
             <span v-if="searchExecuted && item.score !== undefined"
@@ -42,7 +42,7 @@
 
 <script>
     import { computed } from 'vue';
-    import { toggleFavorite, isFavorite as isFavoriteFn } from '../composables/favorites';
+    import { toggleFavoriteApi } from '../services/api';
 
     export default {
         name: 'ListItem',
@@ -64,7 +64,7 @@
                     : this.item.description;
             },
             isFavorite() {
-                return isFavoriteFn(this.item.id);
+                return this.item.isFavorite;
             },
             relevancePercent() {
                 if (typeof this.item.score !== 'number') return null;
@@ -77,7 +77,14 @@
             }
         },
         methods: {
-            toggleFavorite,
+            async toggleFavorite(item) {
+                try {
+                    await toggleFavoriteApi(item.id);  //  fixed function name
+                    item.isFavorite = !item.isFavorite;
+                } catch (err) {
+                    console.error('Failed to toggle favorite', err);
+                }
+            },
             getBadgeClass(type) {
                 const colorMap = {
                     Dashboard: 'bg-dashboard',
@@ -91,6 +98,7 @@
         }
     };
 </script>
+
 
 <style scoped>
     .list-item-card {
@@ -124,7 +132,7 @@
         background-color: #e7f1ff;
         color: #0056b3;
         font-weight: 600;
-       /* padding: 4px;*/
+        /* padding: 4px;*/
         width: 27px;
         height: 24px;
         display: flex;
@@ -141,6 +149,7 @@
             font-size: 1em;
             margin-left: 1px;
         }
+
     .card-title {
         font-size: 1.1rem;
         font-weight: 500;

@@ -163,11 +163,10 @@
                 if (sortBy.value === 'Alphabetical') {
                     list = [...list].sort((a, b) => a.title.localeCompare(b.title));
                 } else if (sortBy.value === 'Favorites') {
-                    const favs = favorites.value;
                     list = [...list].sort((a, b) => {
-                        const aFav = favs.has(a.id);
-                        const bFav = favs.has(b.id);
-                        return aFav === bFav ? 0 : aFav ? -1 : 1;
+                        const aFav = a.isFavorite ? 0 : 1;
+                        const bFav = b.isFavorite ? 0 : 1;
+                        return aFav - bFav; // favorites first
                     });
                 }
 
