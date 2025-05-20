@@ -1,4 +1,4 @@
-// src/services/api.js
+﻿// src/services/api.js
 import { API_BASE_URL } from '../config';
 
 async function handleResponse(res) {
@@ -24,12 +24,32 @@ export function fetchItem(id) {
 }
 
 /** Create a new item */
+//export function createItem(payload) {
+//    return fetch(`${API_BASE_URL}/items`, {
+//        method: 'POST',
+//        headers: {
+//            'Content-Type': 'application/json',
+//        },
+//        credentials: 'include', // This is required for Windows Auth
+//        body: JSON.stringify(payload),
+//    })
+//    .then(handleResponse);
+//}
 export function createItem(payload) {
+    const form = new FormData();
+    for (const key in payload) {
+        const value = payload[key];
+        if (Array.isArray(value)) {
+            value.forEach(v => form.append(key, v));
+        } else {
+            form.append(key, value);
+        }
+    }
+
     return fetch(`${API_BASE_URL}/items`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(payload),
+        body: form // ✅ no headers needed
     }).then(handleResponse);
 }
 

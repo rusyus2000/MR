@@ -16,8 +16,10 @@ namespace SutterAnalyticsApi.Controllers
         [HttpGet("{type}")]
         public async Task<ActionResult<IEnumerable<LookupDto>>> GetByType(string type)
         {
+            var typeLower = type.ToLower();
+
             var list = await _db.LookupValues
-                .Where(l => l.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
+                .Where(l => l.Type.ToLower() == typeLower)
                 .Select(l => new LookupDto { Id = l.Id, Value = l.Value })
                 .ToListAsync();
 

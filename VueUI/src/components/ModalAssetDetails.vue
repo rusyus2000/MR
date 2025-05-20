@@ -19,8 +19,8 @@
                 </div>
             </div>
             <div class="d-flex justify-content-end mt-3 px-4 pb-3">
-                <button class="btn btn-sm favorite-icon-btn" @click="toggleFavorite(item.id)">
-                    {{ isFavorite(item.id) ? '★ Remove from Favorites' : '☆ Add to Favorites' }}
+                <button class="btn btn-sm favorite-icon-btn" @click="toggleFavorite(item)">
+                    {{ item.isFavorite ? '★ Remove from Favorites' : '☆ Add to Favorites' }}
                 </button>
             </div>
         </div>
@@ -28,7 +28,7 @@
 </template>
 
 <script>
-    import { toggleFavorite, isFavorite } from '../composables/favorites';
+    import { toggleFavoriteApi } from '../services/api';
 
     export default {
         name: 'ModalAssetDetails',
@@ -36,11 +36,18 @@
             item: Object
         },
         methods: {
-            toggleFavorite,
-            isFavorite
+            async toggleFavorite(item) {
+                try {
+                    await toggleFavoriteApi(item.id);
+                    item.isFavorite = !item.isFavorite;
+                } catch (err) {
+                    console.error('Failed to toggle favorite', err);
+                }
+            }
         }
     };
 </script>
+
 
 <style scoped>
     .modal-backdrop {

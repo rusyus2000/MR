@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SutterAnalyticsApi.Data;
@@ -122,7 +123,7 @@ namespace SutterAnalyticsApi.Controllers
 
         // POST /api/items
         [HttpPost]
-        public async Task<ActionResult<ItemDto>> Create([FromBody] CreateItemDto dto)
+        public async Task<IActionResult> Create([FromForm] CreateItemDto dto)
         {
             var i = new Item
             {
@@ -137,23 +138,20 @@ namespace SutterAnalyticsApi.Controllers
                 PrivacyPhi = dto.PrivacyPhi,
                 DateAdded = DateTime.UtcNow
             };
+
             _db.Items.Add(i);
             await _db.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetById), new { id = i.Id }, new ItemDto
-            {
-                Id = i.Id,
-                Title = i.Title,
-                Description = i.Description,
-                Url = i.Url,
-                AssetTypes = i.AssetTypes,
-                Domain = i.Domain,
-                Division = i.Division,
-                ServiceLine = i.ServiceLine,
-                DataSource = i.DataSource,
-                PrivacyPhi = i.PrivacyPhi,
-                DateAdded = i.DateAdded
-            });
+            // Call FastAPI /rebuild-index endpoint
+            using (var http = new HttpClient()) 
+                {
+                // Replace with your FastAPI base URL as appropriate!
+                var apiBaseUrl = "http://localhost:8000"; // e.g., if running locally on port 8000
+                var response = await http.PostAsync($"{apiBaseUrl}/rebuild-index", null);
+                // Optionally: check response.IsSuccessStatusCode and handle errors/logging
+            }
+
+            return Ok(new { id = i.Id });
         }
 
         // PUT /api/items/{id}
