@@ -9,16 +9,28 @@ builder.Services.AddAuthentication(); // No AddNegotiate on IIS
 
 builder.Services.AddAuthorization();
 
-// ? Configure CORS
+// CORS configuration based on environment
+string[] devOrigins = { "http://localhost:5174" };
+string[] prodOrigins = { "http://smf-appweb-dev", "http://smf-appweb-dev.sutterhealth.org", "https://smf-appweb-dev.sutterhealth.org" }; // Add all production origins you expect
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy
-            .WithOrigins("http://localhost:5174")
-            .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials();
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.WithOrigins(devOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(prodOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        }
     });
 });
 
@@ -31,7 +43,7 @@ var app = builder.Build();
 
 app.UseRouting();
 
-// ? Move UseCors early and remove manual OPTIONS block
+// Move UseCors early
 app.UseCors();
 
 // Apply auth middleware AFTER CORS

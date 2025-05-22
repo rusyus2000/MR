@@ -3,6 +3,12 @@ import Dashboard from '../views/Dashboard.vue';
 import AddAsset from '../views/AddAsset.vue';
 import ItemDetails from '../views/ItemDetails.vue';
 
+// This uses Vite's environment variables
+const base =
+    import.meta.env.MODE === 'production'
+        ? '/mp_ui/'
+        : '/';
+
 const routes = [
     {
         path: '/',
@@ -20,10 +26,9 @@ const routes = [
         name: 'AddAsset',
         component: AddAsset,
     },
-    // catch-all could go here if desired
 ];
 
 export default createRouter({
-    history: createWebHistory(),
+    history: createWebHistory(base),
     routes,
 });
