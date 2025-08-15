@@ -10,13 +10,21 @@
                     <div class="label">Description:</div><div>{{ item.description }}</div>
                     <div class="label">URL:</div><div><a :href="item.url" target="_blank">{{ item.url }}</a></div>
                     <div class="label">Asset Types:</div><div>{{ item.assetTypes.join(', ') }}</div>
-                    <div class="label">Tags:</div><div>{{ item.tags ? item.tags.join(', ') : '' }}</div>
                     <div class="label">Domain:</div><div>{{ item.domain }}</div>
                     <div class="label">Division:</div><div>{{ item.division }}</div>
                     <div class="label">Service Line:</div><div>{{ item.serviceLine }}</div>
                     <div class="label">Data Source:</div><div>{{ item.dataSource }}</div>
                     <div class="label">Contains PHI:</div><div>{{ item.privacyPhi ? 'Yes' : 'No' }}</div>
                     <div class="label">Date Added:</div><div>{{ new Date(item.dateAdded).toLocaleDateString() }}</div>
+                </div>
+            </div>
+                <!-- Tags rendered at the bottom of the modal body -->
+                <div class="mt-3">
+                    <div class="tag-list">
+                        <span v-for="(t, idx) in (item.tags || [])" :key="idx" class="tag-chip me-1">
+                            <span class="tag-text">{{ t }}</span>
+                        </span>
+                    </div>
                 </div>
             </div>
             <div class="d-flex justify-content-end mt-3 px-4 pb-3">
@@ -97,6 +105,30 @@
     .label {
         font-weight: 600;
         white-space: nowrap;
+    }
+
+    .tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tag-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.35rem;
+        background-color: #eaf6ff;
+        border: 1px solid #c7e6ff;
+        color: #05567a;
+        font-size: 0.85rem;
+    }
+
+    .tag-chip .tag-text {
+        line-height: 1;
+        display: inline-block;
+        vertical-align: middle;
     }
 
     /* Styled like your existing favorite icon */
