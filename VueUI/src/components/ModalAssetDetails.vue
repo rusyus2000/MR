@@ -16,14 +16,18 @@
                     <div class="label">Data Source:</div><div>{{ item.dataSource }}</div>
                     <div class="label">Contains PHI:</div><div>{{ item.privacyPhi ? 'Yes' : 'No' }}</div>
                     <div class="label">Date Added:</div><div>{{ new Date(item.dateAdded).toLocaleDateString() }}</div>
-                </div>
-            </div>
-                <!-- Tags rendered at the bottom of the modal body -->
-                <div class="mt-3">
-                    <div class="tag-list">
-                        <span v-for="(t, idx) in (item.tags || [])" :key="idx" class="tag-chip me-1">
-                            <span class="tag-text">{{ t }}</span>
-                        </span>
+                    <div class="label">Tags:</div>
+                    <div>
+                        <div class="tag-list">
+                            <template v-if="!item || !item.tags || item.tags.length === 0">
+                                <span class="text-muted">None</span>
+                            </template>
+                            <template v-else>
+                                <span v-for="(t, idx) in item.tags" :key="idx" class="tag-chip me-1">
+                                    <span class="tag-text">{{ t }}</span>
+                                </span>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -102,6 +106,13 @@
         column-gap: 1rem;
     }
 
+    /* Make value cells align items consistently (center vertically) so multi-line
+       content like tag chips aligns the same as other property values. */
+    .details-grid > div {
+        display: flex;
+        align-items: center;
+    }
+
     .label {
         font-weight: 600;
         white-space: nowrap;
@@ -111,6 +122,8 @@
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
+        margin: 0; /* ensure no extra vertical spacing */
+        align-items: center;
     }
 
     .tag-chip {
