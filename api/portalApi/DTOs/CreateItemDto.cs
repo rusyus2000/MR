@@ -9,4 +9,6 @@ public class CreateItemDto
     public string ServiceLine { get; set; }
     public string DataSource { get; set; }
     public bool PrivacyPhi { get; set; }
+    // Free-form tags that can be attached to the item. Sent from the UI as repeated form entries.
+    public List<string> Tags { get; set; } = new();
 }

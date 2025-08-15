@@ -66,6 +66,20 @@
                         <div>
                             <input v-model="form.privacyPhi" class="form-check-input" type="checkbox" id="privacyPhi" />
                         </div>
+
+                        <div class="label">Tags:</div>
+                        <div>
+                            <div class="d-flex mb-2">
+                                <input v-model="newTag" @keydown.enter.prevent="addTag" placeholder="Add a tag and press Enter" class="form-control me-2" />
+                                <button type="button" class="btn btn-outline-primary" @click="addTag">Add</button>
+                            </div>
+                            <div class="tag-list">
+                                <span v-for="(t, idx) in form.tags" :key="idx" class="tag-chip me-1">
+                                    <span class="tag-text">{{ t }}</span>
+                                    <button type="button" class="tag-remove" @click="removeTag(idx)" aria-label="Remove tag">×</button>
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="d-flex justify-content-between mt-4">
@@ -94,6 +108,7 @@
         description: '',
         url: '',
         assetTypes: [],
+        tags: [],
         domain: '',
         division: '',
         serviceLine: '',
@@ -127,6 +142,21 @@
         } finally {
             saving.value = false
         }
+    }
+
+    const newTag = ref('')
+
+    function addTag() {
+        const v = (newTag.value || '').trim()
+        if (!v) return
+        if (!form.value.tags.includes(v)) {
+            form.value.tags.push(v)
+        }
+        newTag.value = ''
+    }
+
+    function removeTag(i) {
+        form.value.tags.splice(i, 1)
     }
 </script>
 
@@ -175,5 +205,42 @@
     .label {
         font-weight: 600;
         white-space: nowrap;
+    }
+    .tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tag-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.5rem;
+        background-color: #eaf6ff; /* very light bluish */
+        border: 1px solid #c7e6ff; /* slightly darker border */
+        color: #05567a;
+        font-size: 0.85rem;
+    }
+
+    .tag-chip .tag-text {
+        line-height: 1;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .tag-remove {
+        background: transparent;
+        border: none;
+        color: #05567a;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0 0.25rem;
+        line-height: 1;
+    }
+
+    .tag-remove:focus {
+        outline: none;
     }
 </style>

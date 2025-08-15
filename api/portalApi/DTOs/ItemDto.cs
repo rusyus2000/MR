@@ -17,5 +17,7 @@ namespace SutterAnalyticsApi.DTOs
         public DateTime DateAdded { get; set; }
         public double? Score { get; set; }
         public bool IsFavorite { get; set; }
+        // Tags associated with the item (free-form)
+        public List<string> Tags { get; set; } = new();
     }
 }

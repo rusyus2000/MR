@@ -21,6 +21,9 @@ namespace SutterAnalyticsApi.Models
         // Stored as comma-separated values in the DB
         public string AssetTypesCsv { get; set; }
 
+        // Stored as comma-separated values in the DB (tags). Kept separate from AssetTypesCsv.
+        public string TagsCsv { get; set; }
+
         [Required]
         public string Domain { get; set; }
 
@@ -42,6 +45,16 @@ namespace SutterAnalyticsApi.Models
                 ? new List<string>()
                 : new List<string>(AssetTypesCsv.Split(','));
             set => AssetTypesCsv = string.Join(',', value);
+        }
+
+        // Not mapped helper for tags
+        [NotMapped]
+        public List<string> Tags
+        {
+            get => string.IsNullOrWhiteSpace(TagsCsv)
+                ? new List<string>()
+                : new List<string>(TagsCsv.Split(','));
+            set => TagsCsv = string.Join(',', value);
         }
     }
 }

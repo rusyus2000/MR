@@ -10,6 +10,7 @@
                     <div class="label">Description:</div><div>{{ item.description }}</div>
                     <div class="label">URL:</div><div><a :href="item.url" target="_blank">{{ item.url }}</a></div>
                     <div class="label">Asset Types:</div><div>{{ item.assetTypes.join(', ') }}</div>
+                    <div class="label">Tags:</div><div>{{ item.tags ? item.tags.join(', ') : '' }}</div>
                     <div class="label">Domain:</div><div>{{ item.domain }}</div>
                     <div class="label">Division:</div><div>{{ item.division }}</div>
                     <div class="label">Service Line:</div><div>{{ item.serviceLine }}</div>

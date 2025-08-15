@@ -86,6 +86,7 @@ namespace SutterAnalyticsApi.Controllers
                 Description = i.Description,
                 Url = i.Url,
                 AssetTypes = i.AssetTypes,
+                Tags = i.Tags,
                 Domain = i.Domain,
                 Division = i.Division,
                 ServiceLine = i.ServiceLine,
@@ -112,6 +113,7 @@ namespace SutterAnalyticsApi.Controllers
                 Description = i.Description,
                 Url = i.Url,
                 AssetTypes = i.AssetTypes,
+                Tags = i.Tags,
                 Domain = i.Domain,
                 Division = i.Division,
                 ServiceLine = i.ServiceLine,
@@ -131,6 +133,7 @@ namespace SutterAnalyticsApi.Controllers
                 Description = dto.Description,
                 Url = dto.Url,
                 AssetTypes = dto.AssetTypes,
+                Tags = dto.Tags,
                 Domain = dto.Domain,
                 Division = dto.Division,
                 ServiceLine = dto.ServiceLine,
@@ -165,6 +168,7 @@ namespace SutterAnalyticsApi.Controllers
             i.Description = dto.Description;
             i.Url = dto.Url;
             i.AssetTypes = dto.AssetTypes;
+            i.Tags = dto.Tags;
             i.Domain = dto.Domain;
             i.Division = dto.Division;
             i.ServiceLine = dto.ServiceLine;
