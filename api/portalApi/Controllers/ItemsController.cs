@@ -54,7 +54,10 @@ namespace SutterAnalyticsApi.Controllers
      [FromQuery] bool? phi)
         {
             var user = CurrentUser;
-            var query = _db.Items.AsQueryable();
+            var query = _db.Items
+                .Include(i => i.ItemTags)
+                    .ThenInclude(it => it.Tag)
+                .AsQueryable();
 
             // Filtering only (no search query)
             if (!string.IsNullOrWhiteSpace(domain))
@@ -86,7 +89,7 @@ namespace SutterAnalyticsApi.Controllers
                 Description = i.Description,
                 Url = i.Url,
                 AssetTypes = i.AssetTypes,
-                Tags = i.Tags,
+                Tags = i.ItemTags.Select(it => it.Tag.Value).ToList(),
                 Domain = i.Domain,
                 Division = i.Division,
                 ServiceLine = i.ServiceLine,
@@ -104,7 +107,10 @@ namespace SutterAnalyticsApi.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult<ItemDto>> GetById(int id)
         {
-            var i = await _db.Items.FindAsync(id);
+            var i = await _db.Items
+                .Include(it => it.ItemTags)
+                    .ThenInclude(it => it.Tag)
+                .FirstOrDefaultAsync(it => it.Id == id);
             if (i == null) return NotFound();
             // record that the current user opened this asset
             try
@@ -133,7 +139,7 @@ namespace SutterAnalyticsApi.Controllers
                 Description = i.Description,
                 Url = i.Url,
                 AssetTypes = i.AssetTypes,
-                Tags = i.Tags,
+                Tags = i.ItemTags.Select(it => it.Tag.Value).ToList(),
                 Domain = i.Domain,
                 Division = i.Division,
                 ServiceLine = i.ServiceLine,
@@ -153,7 +159,7 @@ namespace SutterAnalyticsApi.Controllers
                 Description = dto.Description,
                 Url = dto.Url,
                 AssetTypes = dto.AssetTypes,
-                Tags = dto.Tags,
+                // tags will be attached via ItemTags below
                 Domain = dto.Domain,
                 Division = dto.Division,
                 ServiceLine = dto.ServiceLine,
@@ -161,6 +167,21 @@ namespace SutterAnalyticsApi.Controllers
                 PrivacyPhi = dto.PrivacyPhi,
                 DateAdded = DateTime.UtcNow
             };
+
+            // Attach tags: find existing Tag entities or create new ones
+            if (dto.Tags != null && dto.Tags.Any())
+            {
+                foreach (var t in dto.Tags.Select(tt => tt?.Trim()).Where(tt => !string.IsNullOrWhiteSpace(tt)))
+                {
+                    var tag = await _db.Tags.FirstOrDefaultAsync(x => x.Value == t);
+                    if (tag == null)
+                    {
+                        tag = new Tag { Value = t };
+                        _db.Tags.Add(tag);
+                    }
+                    i.ItemTags.Add(new ItemTag { Item = i, Tag = tag });
+                }
+            }
 
             _db.Items.Add(i);
             await _db.SaveChangesAsync();
@@ -188,7 +209,26 @@ namespace SutterAnalyticsApi.Controllers
             i.Description = dto.Description;
             i.Url = dto.Url;
             i.AssetTypes = dto.AssetTypes;
-            i.Tags = dto.Tags;
+            // Update tags: remove existing item-tags and reattach
+            // Load existing ItemTags
+            var existingTags = await _db.ItemTags.Where(it => it.ItemId == i.Id).ToListAsync();
+            if (existingTags.Any())
+            {
+                _db.ItemTags.RemoveRange(existingTags);
+            }
+            if (dto.Tags != null && dto.Tags.Any())
+            {
+                foreach (var t in dto.Tags.Select(tt => tt?.Trim()).Where(tt => !string.IsNullOrWhiteSpace(tt)))
+                {
+                    var tag = await _db.Tags.FirstOrDefaultAsync(x => x.Value == t);
+                    if (tag == null)
+                    {
+                        tag = new Tag { Value = t };
+                        _db.Tags.Add(tag);
+                    }
+                    _db.ItemTags.Add(new ItemTag { Item = i, Tag = tag });
+                }
+            }
             i.Domain = dto.Domain;
             i.Division = dto.Division;
             i.ServiceLine = dto.ServiceLine;

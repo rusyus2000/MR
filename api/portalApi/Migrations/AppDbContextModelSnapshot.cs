@@ -60,9 +60,7 @@ namespace portalApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TagsCsv")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    // TagsCsv removed; tags are normalized into Tags / ItemTags
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -75,6 +73,36 @@ namespace portalApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Items");
+                });
+
+            modelBuilder.Entity("SutterAnalyticsApi.Models.Tag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tags");
+                });
+
+            modelBuilder.Entity("SutterAnalyticsApi.Models.ItemTag", b =>
+                {
+                    b.Property<int>("ItemId").HasColumnType("int");
+                    b.Property<int>("TagId").HasColumnType("int");
+
+                    b.HasKey("ItemId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("ItemTags");
                 });
 
             modelBuilder.Entity("SutterAnalyticsApi.Models.LookupValue", b =>

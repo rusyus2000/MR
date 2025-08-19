@@ -90,6 +90,8 @@ namespace SutterAnalyticsApi.Controllers
 
                 // ?? Query matching items from DB
                 var matchedItems = await _db.Items
+                    .Include(i => i.ItemTags)
+                        .ThenInclude(it => it.Tag)
                     .Where(i => ids.Contains(i.Id))
                     .ToListAsync();
 
@@ -107,7 +109,7 @@ namespace SutterAnalyticsApi.Controllers
                             Description = match.Description,
                             Url = match.Url,
                             AssetTypes = match.AssetTypes,
-                            Tags = match.Tags,
+                            Tags = match.ItemTags.Select(it => it.Tag.Value).ToList(),
                             Domain = match.Domain,
                             Division = match.Division,
                             ServiceLine = match.ServiceLine,

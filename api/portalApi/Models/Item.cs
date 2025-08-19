@@ -18,11 +18,12 @@ namespace SutterAnalyticsApi.Models
         [Required, Url]
         public string Url { get; set; }
 
-        // Stored as comma-separated values in the DB
+        // Stored as comma-separated values in the DB for asset types
         public string AssetTypesCsv { get; set; }
 
-        // Stored as comma-separated values in the DB (tags). Kept separate from AssetTypesCsv.
-        public string TagsCsv { get; set; }
+        // Tags are normalized into a separate table (ItemTag -> Tag)
+        // The old TagsCsv column has been removed in migrations.
+        public ICollection<ItemTag> ItemTags { get; set; } = new List<ItemTag>();
 
         [Required]
         public string Domain { get; set; }
@@ -37,7 +38,7 @@ namespace SutterAnalyticsApi.Models
         // When this asset was added
         public DateTime DateAdded { get; set; }
 
-        // Not mapped helper
+        // Not mapped helper for asset types
         [NotMapped]
         public List<string> AssetTypes
         {
@@ -47,14 +48,16 @@ namespace SutterAnalyticsApi.Models
             set => AssetTypesCsv = string.Join(',', value);
         }
 
-        // Not mapped helper for tags
+        // Not mapped helper for tags (reads from normalized ItemTags relationship)
         [NotMapped]
         public List<string> Tags
         {
-            get => string.IsNullOrWhiteSpace(TagsCsv)
-                ? new List<string>()
-                : new List<string>(TagsCsv.Split(','));
-            set => TagsCsv = string.Join(',', value);
+            get => ItemTags == null ? new List<string>() : ItemTags.Select(it => it.Tag?.Value).Where(v => v != null).ToList();
+            set
+            {
+                // This helper is not used to persist tags; use controller logic to manage Tag entities.
+                // Keep setter as no-op to avoid accidental usage.
+            }
         }
     }
 }

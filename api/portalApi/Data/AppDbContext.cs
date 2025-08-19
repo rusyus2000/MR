@@ -6,6 +6,8 @@ namespace SutterAnalyticsApi.Data
     public class AppDbContext : DbContext
     {
         public DbSet<Item> Items { get; set; }
+        public DbSet<Tag> Tags { get; set; }
+        public DbSet<ItemTag> ItemTags { get; set; }
         public DbSet<LookupValue> LookupValues { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserFavorite> UserFavorites { get; set; }
@@ -32,6 +34,20 @@ namespace SutterAnalyticsApi.Data
                 .HasOne(uf => uf.Item)
                 .WithMany()
                 .HasForeignKey(uf => uf.ItemId);
+
+            // ItemTag many-to-many
+            modelBuilder.Entity<ItemTag>()
+                .HasKey(it => new { it.ItemId, it.TagId });
+
+            modelBuilder.Entity<ItemTag>()
+                .HasOne(it => it.Item)
+                .WithMany(i => i.ItemTags)
+                .HasForeignKey(it => it.ItemId);
+
+            modelBuilder.Entity<ItemTag>()
+                .HasOne(it => it.Tag)
+                .WithMany(t => t.ItemTags)
+                .HasForeignKey(it => it.TagId);
         }
     }
 }
