@@ -7,7 +7,7 @@
             </div>
             <div class="modal-body">
                 <p><strong>Description:</strong> {{ item.description }}</p>
-                <p><strong>URL:</strong> <a :href="item.url" target="_blank">{{ item.url }}</a></p>
+                <p><strong>URL:</strong> <a href="#" @click.prevent="openResource(item)">{{ item.url }}</a></p>
                 <p><strong>Asset Types:</strong> {{ item.assetTypes.join(', ') }}</p>
                 <p><strong>Domain:</strong> {{ item.domain }}</p>
                 <p><strong>Division:</strong> {{ item.division }}</p>
@@ -25,6 +25,18 @@
         name: 'ModalAssetDetails',
         props: {
             item: Object
+        }
+        ,
+        methods: {
+            async openResource(item) {
+                try {
+                    const api = await import('../services/api');
+                    await api.recordOpen(item.id);
+                } catch (err) {
+                    console.error('record open failed', err);
+                }
+                window.open(item.url, '_blank', 'noopener');
+            }
         }
     };
 </script>

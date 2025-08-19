@@ -99,6 +99,18 @@ export function toggleFavoriteApi(itemId) {
     });
 }
 
+/** Record that a user opened an asset (opens are logged server-side) */
+export function recordOpen(itemId) {
+    return fetch(`${API_BASE_URL}/useractions/recordopen/${itemId}`, {
+        method: 'POST',
+        credentials: 'include'
+    }).then(res => {
+        if (!res.ok && res.status !== 204) {
+            throw new Error(`Record open failed: ${res.status}`);
+        }
+    });
+}
+
 export async function fetchFavorites() {
     return fetch(`${API_BASE_URL}/useractions/favorites`, {
         credentials: 'include'

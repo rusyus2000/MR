@@ -121,6 +121,18 @@
                 };
                 return colorMap[assetType] || 'bg-teal';
             }
+            ,
+            async openResource() {
+                try {
+                    if (this.id) {
+                        const api = await import('../services/api');
+                        await api.recordOpen(this.id);
+                    }
+                } catch (err) {
+                    console.error('record open failed', err);
+                }
+                window.open(this.url, '_blank', 'noopener');
+            }
         }
     };
 </script>

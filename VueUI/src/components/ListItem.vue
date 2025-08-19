@@ -29,11 +29,10 @@
 
             <!-- External link icon -->
             <a v-if="item.url"
-               :href="item.url"
-               target="_blank"
-               rel="noopener"
+               href="#"
                class="link-icon"
-               title="Open Resource">
+               title="Open Resource"
+               @click.prevent="openResource(item)">
                 <i class="bi bi-box-arrow-up-right"></i>
             </a>
         </div>
@@ -94,6 +93,16 @@
                     Featured: 'bg-featured'
                 };
                 return colorMap[type] || 'bg-teal';
+            }
+            ,
+            async openResource(item) {
+                try {
+                    const api = await import('../services/api');
+                    await api.recordOpen(item.id);
+                } catch (err) {
+                    console.error('record open failed', err);
+                }
+                window.open(item.url, '_blank', 'noopener');
             }
         }
     };

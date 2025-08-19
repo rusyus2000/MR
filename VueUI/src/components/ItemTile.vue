@@ -36,10 +36,9 @@
             <!-- Open resource button -->
             <div class="request-access-wrapper">
                 <a v-if="item.url"
-                   :href="item.url"
-                   target="_blank"
-                   rel="noopener"
-                   class="btn btn-sm btn-outline-teal">
+                   href="#"
+                   class="btn btn-sm btn-outline-teal"
+                   @click.prevent="openResource(item)">
                     Open Resource
                 </a>
             </div>
@@ -92,6 +91,17 @@
         };
         return map[assetType] || 'bg-teal';
     };
+
+    async function openResource(item) {
+        try {
+            // best-effort record open
+            await (await import('../services/api')).recordOpen(item.id);
+        } catch (err) {
+            // ignore failures to record
+            console.error('record open failed', err);
+        }
+        window.open(item.url, '_blank', 'noopener');
+    }
 </script>
 
 

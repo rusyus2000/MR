@@ -106,6 +106,26 @@ namespace SutterAnalyticsApi.Controllers
         {
             var i = await _db.Items.FindAsync(id);
             if (i == null) return NotFound();
+            // record that the current user opened this asset
+            try
+            {
+                var user = CurrentUser;
+                if (user != null)
+                {
+                    _db.UserAssetOpenHistories.Add(new UserAssetOpenHistory
+                    {
+                        UserId = user.Id,
+                        ItemId = i.Id,
+                        OpenedAt = DateTime.UtcNow
+                    });
+                    await _db.SaveChangesAsync();
+                }
+            }
+            catch
+            {
+                // Ignore logging errors
+            }
+
             return Ok(new ItemDto
             {
                 Id = i.Id,

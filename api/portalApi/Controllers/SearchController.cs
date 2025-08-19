@@ -48,6 +48,26 @@ namespace SutterAnalyticsApi.Controllers
             if (string.IsNullOrWhiteSpace(q))
                 return BadRequest("Query parameter 'q' is required.");
 
+            // record search history for the current user (best-effort)
+            try
+            {
+                var user = CurrentUser;
+                if (user != null)
+                {
+                    _db.UserSearchHistories.Add(new UserSearchHistory
+                    {
+                        UserId = user.Id,
+                        Query = q,
+                        SearchedAt = DateTime.UtcNow
+                    });
+                    await _db.SaveChangesAsync();
+                }
+            }
+            catch
+            {
+                // ignore logging failures
+            }
+
             using var httpClient = new HttpClient();
             try
             {

@@ -47,6 +47,21 @@
 
                     // Make user available to the rest of the request
                     context.Items["AppUser"] = user;
+
+                    // Record a login history entry for auditing
+                    try
+                    {
+                        db.UserLoginHistories.Add(new SutterAnalyticsApi.Models.UserLoginHistory
+                        {
+                            UserId = user.Id,
+                            LoggedInAt = DateTime.UtcNow
+                        });
+                        await db.SaveChangesAsync();
+                    }
+                    catch
+                    {
+                        // Swallow any errors from logging to avoid breaking requests
+                    }
                 }
             }
 

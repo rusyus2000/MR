@@ -8,7 +8,7 @@
             <div class="modal-body">
                 <div class="details-grid">
                     <div class="label">Description:</div><div>{{ item.description }}</div>
-                    <div class="label">URL:</div><div><a :href="item.url" target="_blank">{{ item.url }}</a></div>
+                    <div class="label">URL:</div><div><a href="#" @click.prevent="openResource(item)">{{ item.url }}</a></div>
                     <div class="label">Asset Types:</div><div>{{ item.assetTypes.join(', ') }}</div>
                     <div class="label">Domain:</div><div>{{ item.domain }}</div>
                     <div class="label">Division:</div><div>{{ item.division }}</div>
@@ -56,6 +56,16 @@
                 } catch (err) {
                     console.error('Failed to toggle favorite', err);
                 }
+            }
+            ,
+            async openResource(item) {
+                try {
+                    const api = await import('../services/api');
+                    await api.recordOpen(item.id);
+                } catch (err) {
+                    console.error('record open failed', err);
+                }
+                window.open(item.url, '_blank', 'noopener');
             }
         }
     };

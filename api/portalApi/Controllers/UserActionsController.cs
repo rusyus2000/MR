@@ -63,5 +63,26 @@ namespace SutterAnalyticsApi.Controllers
             return NoContent();
         }
 
+        // POST /api/useractions/recordopen/{itemId}
+        [HttpPost("recordopen/{itemId:int}")]
+        public async Task<IActionResult> RecordOpen(int itemId)
+        {
+            var user = CurrentUser;
+            if (user == null) return Unauthorized("User not found");
+
+            var item = await _db.Items.FindAsync(itemId);
+            if (item == null) return NotFound("Item not found");
+
+            _db.UserAssetOpenHistories.Add(new UserAssetOpenHistory
+            {
+                UserId = user.Id,
+                ItemId = itemId,
+                OpenedAt = DateTime.UtcNow
+            });
+
+            await _db.SaveChangesAsync();
+            return NoContent();
+        }
+
     }
 }
