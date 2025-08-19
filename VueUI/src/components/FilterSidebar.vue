@@ -12,7 +12,7 @@
         </div>
 
         <!-- Asset Type -->
-        <div class="filter-category">
+        <div v-if="filterSections.assetTypes" class="filter-category">
             <h6>Asset Type</h6>
             <div v-for="(type, idx) in assetTypes"
                  :key="type.name"
@@ -33,7 +33,7 @@
         </div>
 
         <!-- Privacy -->
-        <div class="filter-category">
+        <div v-if="filterSections.privacy" class="filter-category">
             <h6>Privacy</h6>
             <div class="form-check">
                 <input class="form-check-input"
@@ -48,7 +48,7 @@
         </div>
 
         <!-- Domain -->
-        <div class="filter-category">
+        <div v-if="filterSections.domain" class="filter-category">
             <h6>Domain</h6>
             <div v-for="(domain, idx) in domains"
                  :key="domain.name"
@@ -69,7 +69,7 @@
         </div>
 
         <!-- Division -->
-        <div class="filter-category">
+        <div v-if="filterSections.division" class="filter-category">
             <h6>Division</h6>
             <div v-for="(division, idx) in divisions"
                  :key="division.name"
@@ -90,7 +90,7 @@
         </div>
 
         <!-- Service Line -->
-        <div class="filter-category">
+        <div v-if="filterSections.serviceLine" class="filter-category">
             <h6>Service Line</h6>
             <div v-for="(line, idx) in serviceLines"
                  :key="line.name"
@@ -111,7 +111,7 @@
         </div>
 
         <!-- Data Source -->
-        <div class="filter-category">
+        <div v-if="filterSections.dataSource" class="filter-category">
             <h6>Data Source</h6>
             <div v-for="(source, idx) in dataSources"
                  :key="source.name"
@@ -134,6 +134,8 @@
 </template>
 
 <script>
+    import { FILTER_SECTIONS } from '../config';
+
     export default {
         name: 'FilterSidebar',
         props: {
@@ -152,12 +154,13 @@
         },
         data() {
             return {
+                // control which filter sections are shown (config-driven)
+                filterSections: FILTER_SECTIONS,
                 assetTypes: [
                     { name: 'Dashboard', checked: false },
                     { name: 'Application', checked: false },
                     { name: 'Data Model', checked: false },
                     { name: 'Report', checked: false },
-                    { name: 'Featured', checked: false },
                 ],
                 filters: {
                     privacy: { phi: false },

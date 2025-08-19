@@ -16,15 +16,18 @@
             <!-- Title & description -->
             <div class="flex-grow-1 ps-4">
                 <a href="#" @click.prevent="$emit('show-details')" class="text-decoration-none">
-                    <h5 class="mb-0 card-title">{{ item.title }}</h5>
+                    <h5 class="mb-0 card-title">
+                        <i v-if="isFeatured" class="bi bi-star-fill featured-icon" title="Featured"></i>
+                        {{ item.title }}
+                    </h5>
                 </a>
                 <p class="mb-0 text-muted small">{{ truncatedDescription }}</p>
             </div>
 
 
             <!-- Asset type badge -->
-            <span class="badge mx-2" :class="getBadgeClass(item.assetTypes[0])">
-                {{ item.assetTypes[0] }}
+            <span v-if="(item.assetTypes || []).filter(t => t !== 'Featured').length > 0" class="badge mx-2" :class="getBadgeClass((item.assetTypes || []).filter(t => t !== 'Featured')[0])">
+                {{ (item.assetTypes || []).filter(t => t !== 'Featured')[0] }}
             </span>
 
             <!-- External link icon -->
@@ -55,7 +58,7 @@
                 default: false
             }
         },
-        computed: {
+    computed: {
             truncatedDescription() {
                 const max = 90;
                 return this.item.description.length > max
@@ -64,6 +67,9 @@
             },
             isFavorite() {
                 return this.item.isFavorite;
+            },
+            isFeatured() {
+                return (this.item.assetTypes || []).includes('Featured');
             },
             relevancePercent() {
                 if (typeof this.item.score !== 'number') return null;
@@ -202,5 +208,12 @@
 
     .card-body {
         padding: 7px 8px 7px 16px !important;
+    }
+
+    .featured-icon {
+        color: #FFD700;
+        font-size: 0.9rem;
+        position: relative;
+        top: -3px;
     }
 </style>

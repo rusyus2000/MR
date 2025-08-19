@@ -2,14 +2,17 @@
     <div class="modal-backdrop">
         <div class="modal-content shadow">
             <div class="modal-header custom-header">
-                <h5 class="modal-title">{{ item.title }}</h5>
+                <h5 class="modal-title">
+                    <i v-if="item && item.assetTypes && item.assetTypes.includes('Featured')" class="bi bi-star-fill featured-icon me-1" title="Featured"></i>
+                    {{ item.title }}
+                </h5>
                 <button class="btn-close" @click="$emit('close')"></button>
             </div>
             <div class="modal-body">
                 <div class="details-grid">
                     <div class="label">Description:</div><div>{{ item.description }}</div>
                     <div class="label">URL:</div><div><a href="#" @click.prevent="openResource(item)">{{ item.url }}</a></div>
-                    <div class="label">Asset Types:</div><div>{{ item.assetTypes.join(', ') }}</div>
+                    <div class="label">Asset Types:</div><div>{{ (item.assetTypes || []).filter(t => t !== 'Featured').join(', ') }}</div>
                     <div class="label">Domain:</div><div>{{ item.domain }}</div>
                     <div class="label">Division:</div><div>{{ item.division }}</div>
                     <div class="label">Service Line:</div><div>{{ item.serviceLine }}</div>
@@ -161,8 +164,14 @@
         background: transparent;
     }
 
-        .favorite-icon-btn:hover {
+    .favorite-icon-btn:hover {
             color: #d78418c7;
             border-color: #d78418c7;
         }
+
+    .featured-icon {
+        color: #FFD700;
+        font-size: 0.95rem;
+        vertical-align: text-bottom;
+    }
 </style>

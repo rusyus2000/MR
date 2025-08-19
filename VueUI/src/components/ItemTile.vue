@@ -15,9 +15,9 @@
 
             <!-- Asset type badges top-right -->
             <div class="asset-type-wrapper">
-                <span v-for="(type, idx) in item.assetTypes"
+                <span v-for="(type, idx) in (item.assetTypes || []).filter(t => t !== 'Featured')"
                       :key="idx"
-                      :class="['badge', getBadgeClass(type), { 'me-1': idx < item.assetTypes.length - 1 }]">
+                      :class="['badge', getBadgeClass(type), { 'me-1': idx < ((item.assetTypes || []).filter(t => t !== 'Featured').length - 1) }]">
                     {{ type }}
                 </span>
             </div>
@@ -25,7 +25,10 @@
             <!-- Title -->
             <a href="#" class="title-link d-block text-decoration-none mb-2 mt-1"
                @click.prevent="$emit('show-details')">
-                <h5 class="mb-0">{{ item.title }}</h5>
+                <h5 class="mb-0">
+                    <i v-if="isFeatured" class="bi bi-star-fill featured-icon" title="Featured"></i>
+                    {{ item.title }}
+                </h5>
             </a>
 
             <!-- Description -->
@@ -56,6 +59,7 @@
     });
 
     const isFavorite = computed(() => props.item.isFavorite);
+    const isFeatured = computed(() => (props.item.assetTypes || []).includes('Featured'));
 
     function toggleFavorite(item) {
         toggleFavoriteApi(item.id)
@@ -103,6 +107,15 @@
         window.open(item.url, '_blank', 'noopener');
     }
 </script>
+
+<style scoped>
+    .featured-icon {
+        color: #FFD700; /* gold */
+        font-size: 0.9rem;
+        position: relative;
+        top: -2px;
+    }
+</style>
 
 
 <style scoped>

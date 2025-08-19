@@ -12,6 +12,7 @@
                         v-model="sortBy"
                         style="width: auto;">
                     <option>Favorites</option>
+                    <option>Featured</option>
                     <option>Most Relevant</option>
                     <option>Alphabetical</option>
                 </select>
@@ -162,6 +163,12 @@
 
                 if (sortBy.value === 'Alphabetical') {
                     list = [...list].sort((a, b) => a.title.localeCompare(b.title));
+                } else if (sortBy.value === 'Featured') {
+                    list = [...list].sort((a, b) => {
+                        const aFeat = (a.assetTypes || []).includes('Featured') ? 0 : 1;
+                        const bFeat = (b.assetTypes || []).includes('Featured') ? 0 : 1;
+                        return aFeat - bFeat; // featured first
+                    });
                 } else if (sortBy.value === 'Favorites') {
                     list = [...list].sort((a, b) => {
                         const aFav = a.isFavorite ? 0 : 1;

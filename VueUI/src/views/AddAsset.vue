@@ -84,6 +84,16 @@
                                     <label class="form-check-label" for="privacyPhi">Contains PHI</label>
                                 </div>
                             </div>
+                            <div class="col mb-3">
+                                <label class="form-label fw-bold">Promotion</label>
+                                <div class="form-check">
+                                    <input v-model="form.featured"
+                                           class="form-check-input"
+                                           type="checkbox"
+                                           id="featured" />
+                                    <label class="form-check-label" for="featured">Featured</label>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Actions -->
@@ -122,6 +132,7 @@
                 description: '',
                 url: '',
                 assetTypes: [],
+                featured: false,
                 domain: '',
                 division: '',
                 serviceLine: '',
@@ -143,13 +154,19 @@
                 lookup.value.divisions = await fetchLookup('Division');
                 lookup.value.serviceLines = await fetchLookup('ServiceLine');
                 lookup.value.dataSources = await fetchLookup('DataSource');
-                lookup.value.assetTypes = await fetchLookup('AssetType');
+                lookup.value.assetTypes = (await fetchLookup('AssetType'))
+                    .filter(x => x.value !== 'Featured'); // remove Featured from asset type options
             });
 
             // submit handler
             const submitForm = async () => {
                 saving.value = true;
                 try {
+                    // Ensure 'Featured' is included in assetTypes when promoted
+                    if (form.value.featured) {
+                        form.value.assetTypes = form.value.assetTypes || [];
+                        if (!form.value.assetTypes.includes('Featured')) form.value.assetTypes.push('Featured');
+                    }
                     await createItem(form.value);
                     // Navigate back to dashboard
                     router.push({ name: 'Dashboard' });

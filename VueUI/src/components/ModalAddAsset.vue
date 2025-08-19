@@ -67,6 +67,11 @@
                             <input v-model="form.privacyPhi" class="form-check-input" type="checkbox" id="privacyPhi" />
                         </div>
 
+                        <div class="label">Promotion:</div>
+                        <div>
+                            <input v-model="form.featured" class="form-check-input" type="checkbox" id="featured" />
+                        </div>
+
                         <div class="label">Tags:</div>
                         <div>
                             <div class="d-flex mb-2">
@@ -109,6 +114,7 @@
         url: '',
         assetTypes: [],
         tags: [],
+        featured: false,
         domain: '',
         division: '',
         serviceLine: '',
@@ -129,12 +135,17 @@
         lookup.value.divisions = await fetchLookup('Division')
         lookup.value.serviceLines = await fetchLookup('ServiceLine')
         lookup.value.dataSources = await fetchLookup('DataSource')
-        lookup.value.assetTypes = await fetchLookup('AssetType')
+        lookup.value.assetTypes = (await fetchLookup('AssetType')).filter(x => x.value !== 'Featured')
     })
 
     async function submitForm() {
         saving.value = true
         try {
+            // ensure Featured is included if checked
+            if (form.value.featured) {
+                form.value.assetTypes = form.value.assetTypes || []
+                if (!form.value.assetTypes.includes('Featured')) form.value.assetTypes.push('Featured')
+            }
             await createItem(form.value)
             emit('saved') // will call ItemGrid.handleAssetSaved
         } catch (err) {
