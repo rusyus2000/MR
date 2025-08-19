@@ -1,10 +1,13 @@
 using System;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace portalApi.Migrations
 {
+    [Microsoft.EntityFrameworkCore.Infrastructure.DbContextAttribute(typeof(SutterAnalyticsApi.Data.AppDbContext))]
+    [Migration("20250816_NormalizeTags")]
     public partial class NormalizeTags : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
