@@ -72,9 +72,6 @@ artifacts/
 *.runtimeconfig.json
 *.runtimeconfig.dev.json
 
-# Entity Framework
-Migrations/
-
 # Tye
 .tye/
 

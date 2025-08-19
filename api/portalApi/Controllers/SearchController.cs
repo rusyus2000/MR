@@ -87,6 +87,7 @@ namespace SutterAnalyticsApi.Controllers
                             Description = match.Description,
                             Url = match.Url,
                             AssetTypes = match.AssetTypes,
+                            Tags = match.Tags,
                             Domain = match.Domain,
                             Division = match.Division,
                             ServiceLine = match.ServiceLine,
