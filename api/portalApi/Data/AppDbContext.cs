@@ -79,6 +79,48 @@ namespace SutterAnalyticsApi.Data
                 .WithMany()
                 .HasForeignKey(i => i.DataSourceId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            // Indexes to speed up lookup/filter queries and joins
+            modelBuilder.Entity<Item>()
+                .HasIndex(i => i.AssetTypeId);
+
+            modelBuilder.Entity<Item>()
+                .HasIndex(i => i.DomainId);
+
+            modelBuilder.Entity<Item>()
+                .HasIndex(i => i.DivisionId);
+
+            modelBuilder.Entity<Item>()
+                .HasIndex(i => i.ServiceLineId);
+
+            modelBuilder.Entity<Item>()
+                .HasIndex(i => i.DataSourceId);
+
+            // Common sorting/filtering columns
+            modelBuilder.Entity<Item>()
+                .HasIndex(i => i.DateAdded);
+
+            modelBuilder.Entity<Item>()
+                .HasIndex(i => i.Featured);
+
+            modelBuilder.Entity<Item>()
+                .HasIndex(i => i.PrivacyPhi);
+
+            // LookupValue: queries typically filter by Type and Value
+            modelBuilder.Entity<LookupValue>()
+                .HasIndex(l => new { l.Type, l.Value });
+
+            // Tags: lookup by Value when creating/attaching tags
+            modelBuilder.Entity<Tag>()
+                .HasIndex(t => t.Value);
+
+            // ItemTag many-to-many: primary key exists, add index on TagId for tag->items queries
+            modelBuilder.Entity<ItemTag>()
+                .HasIndex(it => it.TagId);
+
+            // Users: lookup by principal name
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.UserPrincipalName);
         }
     }
 }
