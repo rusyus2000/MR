@@ -48,6 +48,37 @@ namespace SutterAnalyticsApi.Data
                 .HasOne(it => it.Tag)
                 .WithMany(t => t.ItemTags)
                 .HasForeignKey(it => it.TagId);
+
+            // Lookup FK relationships on Item
+            modelBuilder.Entity<Item>()
+                .HasOne(i => i.AssetType)
+                .WithMany()
+                .HasForeignKey(i => i.AssetTypeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Item>()
+                .HasOne(i => i.DomainLookup)
+                .WithMany()
+                .HasForeignKey(i => i.DomainId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Item>()
+                .HasOne(i => i.DivisionLookup)
+                .WithMany()
+                .HasForeignKey(i => i.DivisionId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Item>()
+                .HasOne(i => i.ServiceLineLookup)
+                .WithMany()
+                .HasForeignKey(i => i.ServiceLineId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Item>()
+                .HasOne(i => i.DataSourceLookup)
+                .WithMany()
+                .HasForeignKey(i => i.DataSourceId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

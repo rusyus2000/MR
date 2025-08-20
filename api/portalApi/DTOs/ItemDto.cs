@@ -6,7 +6,11 @@ namespace SutterAnalyticsApi.DTOs
         public string Title { get; set; }
         public string Description { get; set; }
         public string Url { get; set; }
+        // Backwards-compatible: previous multi asset types
         public List<string> AssetTypes { get; set; }
+        // New: single asset type id + name
+        public int? AssetTypeId { get; set; }
+        public string AssetTypeName { get; set; }
         public string Domain { get; set; }
         public string Division { get; set; }
         public string ServiceLine { get; set; }

@@ -26,8 +26,8 @@
 
 
             <!-- Asset type badge -->
-            <span v-if="(item.assetTypes || []).filter(t => t !== 'Featured').length > 0" class="badge mx-2" :class="getBadgeClass((item.assetTypes || []).filter(t => t !== 'Featured')[0])">
-                {{ (item.assetTypes || []).filter(t => t !== 'Featured')[0] }}
+            <span v-if="item.assetTypeName || ((item.assetTypes || []).filter(t => t !== 'Featured').length > 0)" class="badge mx-2" :class="getBadgeClass(item.assetTypeName || (item.assetTypes || []).filter(t => t !== 'Featured')[0])">
+                {{ item.assetTypeName || (item.assetTypes || []).filter(t => t !== 'Featured')[0] }}
             </span>
 
             <!-- External link icon -->

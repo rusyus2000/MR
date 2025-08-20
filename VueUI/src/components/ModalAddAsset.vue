@@ -17,10 +17,10 @@
                         <div class="label">URL:</div>
                         <div><input v-model="form.url" type="url" class="form-control" required /></div>
 
-                        <div class="label">Asset Types:</div>
+                        <div class="label">Asset Type:</div>
                         <div>
-                            <select v-model="form.assetTypes" multiple class="form-select" required>
-                                <option v-for="opt in lookup.assetTypes" :key="opt.value" :value="opt.value">
+                            <select v-model.number="form.assetTypeId" class="form-select" required>
+                                <option v-for="opt in lookup.assetTypes" :key="opt.id" :value="opt.id">
                                     {{ opt.value }}
                                 </option>
                             </select>
@@ -28,8 +28,8 @@
 
                         <div class="label">Domain:</div>
                         <div>
-                            <select v-model="form.domain" class="form-select" required>
-                                <option v-for="opt in lookup.domains" :key="opt.value" :value="opt.value">
+                            <select v-model.number="form.domainId" @change="() => onLookupChange('domains','domainId','domain')" class="form-select" required>
+                                <option v-for="opt in lookup.domains" :key="opt.id" :value="opt.id">
                                     {{ opt.value }}
                                 </option>
                             </select>
@@ -37,8 +37,8 @@
 
                         <div class="label">Division:</div>
                         <div>
-                            <select v-model="form.division" class="form-select" required>
-                                <option v-for="opt in lookup.divisions" :key="opt.value" :value="opt.value">
+                            <select v-model.number="form.divisionId" @change="() => onLookupChange('divisions','divisionId','division')" class="form-select" required>
+                                <option v-for="opt in lookup.divisions" :key="opt.id" :value="opt.id">
                                     {{ opt.value }}
                                 </option>
                             </select>
@@ -46,8 +46,8 @@
 
                         <div class="label">Service Line:</div>
                         <div>
-                            <select v-model="form.serviceLine" class="form-select" required>
-                                <option v-for="opt in lookup.serviceLines" :key="opt.value" :value="opt.value">
+                            <select v-model.number="form.serviceLineId" @change="() => onLookupChange('serviceLines','serviceLineId','serviceLine')" class="form-select" required>
+                                <option v-for="opt in lookup.serviceLines" :key="opt.id" :value="opt.id">
                                     {{ opt.value }}
                                 </option>
                             </select>
@@ -55,8 +55,8 @@
 
                         <div class="label">Data Source:</div>
                         <div>
-                            <select v-model="form.dataSource" class="form-select" required>
-                                <option v-for="opt in lookup.dataSources" :key="opt.value" :value="opt.value">
+                            <select v-model.number="form.dataSourceId" @change="() => onLookupChange('dataSources','dataSourceId','dataSource')" class="form-select" required>
+                                <option v-for="opt in lookup.dataSources" :key="opt.id" :value="opt.id">
                                     {{ opt.value }}
                                 </option>
                             </select>
@@ -112,7 +112,7 @@
         title: '',
         description: '',
         url: '',
-        assetTypes: [],
+        assetTypeId: null,
         tags: [],
         featured: false,
         domain: '',
@@ -138,14 +138,18 @@
         lookup.value.assetTypes = (await fetchLookup('AssetType')).filter(x => x.value !== 'Featured')
     })
 
+    function onLookupChange(list, idField, textField, id) {
+        const sel = id || form.value[idField];
+        const item = lookup.value[list].find(x => x.id === sel);
+        if (item) {
+            form.value[idField] = sel;
+            form.value[textField] = item.value;
+        }
+    }
+
     async function submitForm() {
         saving.value = true
         try {
-            // ensure Featured is included if checked
-            if (form.value.featured) {
-                form.value.assetTypes = form.value.assetTypes || []
-                if (!form.value.assetTypes.includes('Featured')) form.value.assetTypes.push('Featured')
-            }
             await createItem(form.value)
             emit('saved') // will call ItemGrid.handleAssetSaved
         } catch (err) {

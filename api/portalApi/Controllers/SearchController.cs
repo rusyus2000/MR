@@ -92,6 +92,11 @@ namespace SutterAnalyticsApi.Controllers
                 var matchedItems = await _db.Items
                     .Include(i => i.ItemTags)
                         .ThenInclude(it => it.Tag)
+                    .Include(i => i.AssetType)
+                    .Include(i => i.DomainLookup)
+                    .Include(i => i.DivisionLookup)
+                    .Include(i => i.ServiceLineLookup)
+                    .Include(i => i.DataSourceLookup)
                     .Where(i => ids.Contains(i.Id))
                     .ToListAsync();
 

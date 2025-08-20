@@ -27,12 +27,11 @@
                         <!-- Two-column grid for the rest -->
                         <div class="row row-custom mb-4">
                             <div class="col asset-span-2 mb-3">
-                                <label class="form-label fw-bold">Asset Types</label>
-                                <select v-model="form.assetTypes"
-                                        multiple
-                                        class="form-select w-100 asset-select"
+                                <label class="form-label fw-bold">Asset Type</label>
+                                <select v-model.number="form.assetTypeId"
+                                        class="form-select w-100"
                                         required>
-                                    <option v-for="opt in lookup.assetTypes" :key="opt.value" :value="opt.value">
+                                    <option v-for="opt in lookup.assetTypes" :key="opt.id" :value="opt.id">
                                         {{ opt.value }}
                                     </option>
                                 </select>
@@ -40,8 +39,8 @@
 
                             <div class="col mb-3">
                                 <label class="form-label fw-bold">Domain</label>
-                                <select v-model="form.domain" class="form-select w-100" required>
-                                    <option v-for="opt in lookup.domains" :key="opt.value" :value="opt.value">
+                                <select v-model.number="form.domainId" @change="onLookupChange('domains','domainId','domain')" class="form-select w-100" required>
+                                    <option v-for="opt in lookup.domains" :key="opt.id" :value="opt.id">
                                         {{ opt.value }}
                                     </option>
                                 </select>
@@ -49,8 +48,8 @@
 
                             <div class="col mb-3">
                                 <label class="form-label fw-bold">Division</label>
-                                <select v-model="form.division" class="form-select w-100" required>
-                                    <option v-for="opt in lookup.divisions" :key="opt.value" :value="opt.value">
+                                <select v-model.number="form.divisionId" @change="onLookupChange('divisions','divisionId','division')" class="form-select w-100" required>
+                                    <option v-for="opt in lookup.divisions" :key="opt.id" :value="opt.id">
                                         {{ opt.value }}
                                     </option>
                                 </select>
@@ -58,8 +57,8 @@
 
                             <div class="col mb-3">
                                 <label class="form-label fw-bold">Service Line</label>
-                                <select v-model="form.serviceLine" class="form-select w-100" required>
-                                    <option v-for="opt in lookup.serviceLines" :key="opt.value" :value="opt.value">
+                                <select v-model.number="form.serviceLineId" @change="onLookupChange('serviceLines','serviceLineId','serviceLine')" class="form-select w-100" required>
+                                    <option v-for="opt in lookup.serviceLines" :key="opt.id" :value="opt.id">
                                         {{ opt.value }}
                                     </option>
                                 </select>
@@ -67,8 +66,8 @@
 
                             <div class="col mb-3">
                                 <label class="form-label fw-bold">Data Source</label>
-                                <select v-model="form.dataSource" class="form-select w-100" required>
-                                    <option v-for="opt in lookup.dataSources" :key="opt.value" :value="opt.value">
+                                <select v-model.number="form.dataSourceId" @change="onLookupChange('dataSources','dataSourceId','dataSource')" class="form-select w-100" required>
+                                    <option v-for="opt in lookup.dataSources" :key="opt.id" :value="opt.id">
                                         {{ opt.value }}
                                     </option>
                                 </select>
@@ -131,7 +130,7 @@
                 title: '',
                 description: '',
                 url: '',
-                assetTypes: [],
+                assetTypeId: null,
                 featured: false,
                 domain: '',
                 division: '',
@@ -159,14 +158,18 @@
             });
 
             // submit handler
+            const onLookupChange = (list, idField, textField) => (evt) => {
+                const id = Number(evt.target.value);
+                const item = lookup.value[list].find(x => x.id === id);
+                if (item) {
+                    form.value[idField] = id;
+                    form.value[textField] = item.value;
+                }
+            };
+
             const submitForm = async () => {
                 saving.value = true;
                 try {
-                    // Ensure 'Featured' is included in assetTypes when promoted
-                    if (form.value.featured) {
-                        form.value.assetTypes = form.value.assetTypes || [];
-                        if (!form.value.assetTypes.includes('Featured')) form.value.assetTypes.push('Featured');
-                    }
                     await createItem(form.value);
                     // Navigate back to dashboard
                     router.push({ name: 'Dashboard' });

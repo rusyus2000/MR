@@ -25,6 +25,23 @@ namespace SutterAnalyticsApi.Models
         // The old TagsCsv column has been removed in migrations.
         public ICollection<ItemTag> ItemTags { get; set; } = new List<ItemTag>();
 
+        // New lookup FK columns (code-first). We keep the original string fields
+        // for backward compatibility and to allow a smooth migration.
+        public int? AssetTypeId { get; set; }
+        public LookupValue AssetType { get; set; }
+
+        public int? DomainId { get; set; }
+        public LookupValue DomainLookup { get; set; }
+
+        public int? DivisionId { get; set; }
+        public LookupValue DivisionLookup { get; set; }
+
+        public int? ServiceLineId { get; set; }
+        public LookupValue ServiceLineLookup { get; set; }
+
+        public int? DataSourceId { get; set; }
+        public LookupValue DataSourceLookup { get; set; }
+
         [Required]
         public string Domain { get; set; }
 

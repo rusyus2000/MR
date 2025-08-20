@@ -57,6 +57,11 @@ namespace SutterAnalyticsApi.Controllers
             var query = _db.Items
                 .Include(i => i.ItemTags)
                     .ThenInclude(it => it.Tag)
+                .Include(i => i.AssetType)
+                .Include(i => i.DomainLookup)
+                .Include(i => i.DivisionLookup)
+                .Include(i => i.ServiceLineLookup)
+                .Include(i => i.DataSourceLookup)
                 .AsQueryable();
 
             // Filtering only (no search query)
@@ -90,6 +95,8 @@ namespace SutterAnalyticsApi.Controllers
                 Url = i.Url,
                 AssetTypes = i.AssetTypes,
                 Tags = i.ItemTags.Select(it => it.Tag.Value).ToList(),
+                AssetTypeId = i.AssetTypeId,
+                AssetTypeName = i.AssetType != null ? i.AssetType.Value : null,
                 Domain = i.Domain,
                 Division = i.Division,
                 ServiceLine = i.ServiceLine,
@@ -110,6 +117,11 @@ namespace SutterAnalyticsApi.Controllers
             var i = await _db.Items
                 .Include(it => it.ItemTags)
                     .ThenInclude(it => it.Tag)
+                .Include(it => it.AssetType)
+                .Include(it => it.DomainLookup)
+                .Include(it => it.DivisionLookup)
+                .Include(it => it.ServiceLineLookup)
+                .Include(it => it.DataSourceLookup)
                 .FirstOrDefaultAsync(it => it.Id == id);
             if (i == null) return NotFound();
             // record that the current user opened this asset
@@ -140,6 +152,8 @@ namespace SutterAnalyticsApi.Controllers
                 Url = i.Url,
                 AssetTypes = i.AssetTypes,
                 Tags = i.ItemTags.Select(it => it.Tag.Value).ToList(),
+                AssetTypeId = i.AssetTypeId,
+                AssetTypeName = i.AssetType != null ? i.AssetType.Value : null,
                 Domain = i.Domain,
                 Division = i.Division,
                 ServiceLine = i.ServiceLine,
@@ -164,6 +178,11 @@ namespace SutterAnalyticsApi.Controllers
                 Division = dto.Division,
                 ServiceLine = dto.ServiceLine,
                 DataSource = dto.DataSource,
+                AssetTypeId = dto.AssetTypeId,
+                DomainId = null,
+                DivisionId = null,
+                ServiceLineId = null,
+                DataSourceId = null,
                 PrivacyPhi = dto.PrivacyPhi,
                 DateAdded = DateTime.UtcNow
             };
@@ -181,6 +200,44 @@ namespace SutterAnalyticsApi.Controllers
                     }
                     i.ItemTags.Add(new ItemTag { Item = i, Tag = tag });
                 }
+            }
+
+            // If lookup IDs provided, populate string fields for compatibility
+            if (dto.Domain != null && !dto.DomainId.HasValue)
+            {
+                // keep domain string as provided
+            }
+            if (dto.DomainId.HasValue)
+            {
+                var lookup = await _db.LookupValues.FindAsync(dto.DomainId.Value);
+                if (lookup != null) { i.Domain = lookup.Value; i.DomainId = lookup.Id; }
+            }
+            if (dto.DivisionId.HasValue)
+            {
+                var lookup = await _db.LookupValues.FindAsync(dto.DivisionId.Value);
+                if (lookup != null) { i.Division = lookup.Value; i.DivisionId = lookup.Id; }
+            }
+            if (dto.ServiceLineId.HasValue)
+            {
+                var lookup = await _db.LookupValues.FindAsync(dto.ServiceLineId.Value);
+                if (lookup != null) { i.ServiceLine = lookup.Value; i.ServiceLineId = lookup.Id; }
+            }
+            if (dto.DataSourceId.HasValue)
+            {
+                var lookup = await _db.LookupValues.FindAsync(dto.DataSourceId.Value);
+                if (lookup != null) { i.DataSource = lookup.Value; i.DataSourceId = lookup.Id; }
+            }
+
+            if (dto.AssetTypeId.HasValue)
+            {
+                var at = await _db.LookupValues.FindAsync(dto.AssetTypeId.Value);
+                if (at != null) i.AssetTypesCsv = at.Value; // keep legacy CSV in sync
+            }
+            // Include Featured token in AssetTypesCsv when promoted
+            if (dto.Featured)
+            {
+                if (string.IsNullOrWhiteSpace(i.AssetTypesCsv)) i.AssetTypesCsv = "Featured";
+                else if (!i.AssetTypesCsv.Split(',').Select(s => s.Trim()).Contains("Featured")) i.AssetTypesCsv = i.AssetTypesCsv + ",Featured";
             }
 
             _db.Items.Add(i);
@@ -233,6 +290,11 @@ namespace SutterAnalyticsApi.Controllers
             i.Division = dto.Division;
             i.ServiceLine = dto.ServiceLine;
             i.DataSource = dto.DataSource;
+            if (dto.AssetTypeId.HasValue) i.AssetTypeId = dto.AssetTypeId;
+            if (dto.DomainId.HasValue) i.DomainId = dto.DomainId;
+            if (dto.DivisionId.HasValue) i.DivisionId = dto.DivisionId;
+            if (dto.ServiceLineId.HasValue) i.ServiceLineId = dto.ServiceLineId;
+            if (dto.DataSourceId.HasValue) i.DataSourceId = dto.DataSourceId;
             i.PrivacyPhi = dto.PrivacyPhi;
             // keep original DateAdded
 

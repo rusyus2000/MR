@@ -11,7 +11,7 @@
             <div class="modal-body">
                 <p><strong>Description:</strong> {{ item.description }}</p>
                 <p><strong>URL:</strong> <a href="#" @click.prevent="openResource(item)">{{ item.url }}</a></p>
-                <p><strong>Asset Types:</strong> {{ (item.assetTypes || []).filter(t => t !== 'Featured').join(', ') }}</p>
+                <p><strong>Asset Type:</strong> {{ item.assetTypeName || (item.assetTypes || []).filter(t => t !== 'Featured').join(', ') }}</p>
                 <p><strong>Domain:</strong> {{ item.domain }}</p>
                 <p><strong>Division:</strong> {{ item.division }}</p>
                 <p><strong>Service Line:</strong> {{ item.serviceLine }}</p>

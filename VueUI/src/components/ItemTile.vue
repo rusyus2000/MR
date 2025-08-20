@@ -15,7 +15,12 @@
 
             <!-- Asset type badges top-right -->
             <div class="asset-type-wrapper">
-                <span v-for="(type, idx) in (item.assetTypes || []).filter(t => t !== 'Featured')"
+                <span v-if="item.assetTypeName"
+                      class="badge"
+                      :class="getBadgeClass(item.assetTypeName)">
+                    {{ item.assetTypeName }}
+                </span>
+                <span v-else v-for="(type, idx) in (item.assetTypes || []).filter(t => t !== 'Featured')"
                       :key="idx"
                       :class="['badge', getBadgeClass(type), { 'me-1': idx < ((item.assetTypes || []).filter(t => t !== 'Featured').length - 1) }]">
                     {{ type }}

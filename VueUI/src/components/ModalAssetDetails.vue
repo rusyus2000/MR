@@ -12,7 +12,7 @@
                 <div class="details-grid">
                     <div class="label">Description:</div><div>{{ item.description }}</div>
                     <div class="label">URL:</div><div><a href="#" @click.prevent="openResource(item)">{{ item.url }}</a></div>
-                    <div class="label">Asset Types:</div><div>{{ (item.assetTypes || []).filter(t => t !== 'Featured').join(', ') }}</div>
+                    <div class="label">Asset Type:</div><div>{{ item.assetTypeName || (item.assetTypes || []).filter(t => t !== 'Featured').join(', ') }}</div>
                     <div class="label">Domain:</div><div>{{ item.domain }}</div>
                     <div class="label">Division:</div><div>{{ item.division }}</div>
                     <div class="label">Service Line:</div><div>{{ item.serviceLine }}</div>
