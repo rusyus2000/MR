@@ -52,6 +52,12 @@ namespace SutterAnalyticsApi.Controllers
      [FromQuery] string? dataSource,
      [FromQuery] string? assetType,
      [FromQuery] int? assetTypeId,
+     // ID-based filters (comma-separated ids)
+     [FromQuery] string? domainIds,
+     [FromQuery] string? divisionIds,
+     [FromQuery] string? serviceLineIds,
+     [FromQuery] string? dataSourceIds,
+     [FromQuery] string? assetTypeIds,
      [FromQuery] bool? phi)
         {
             var user = CurrentUser;
@@ -64,6 +70,39 @@ namespace SutterAnalyticsApi.Controllers
                 .Include(i => i.ServiceLineLookup)
                 .Include(i => i.DataSourceLookup)
                 .AsQueryable();
+
+            // Helper to parse comma-separated id lists into integers
+            List<int> ParseIds(string? ids)
+            {
+                if (string.IsNullOrWhiteSpace(ids)) return new List<int>();
+                return ids.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                          .Select(s => { bool ok = int.TryParse(s.Trim(), out var v); return (ok, v); })
+                          .Where(t => t.ok)
+                          .Select(t => t.v)
+                          .ToList();
+            }
+
+            // Apply ID-based filters first (preferred). These expect lookup FK ids.
+            var domainIdList = ParseIds(domainIds);
+            if (domainIdList.Any())
+                query = query.Where(i => i.DomainId.HasValue && domainIdList.Contains(i.DomainId.Value));
+
+            var divisionIdList = ParseIds(divisionIds);
+            if (divisionIdList.Any())
+                query = query.Where(i => i.DivisionId.HasValue && divisionIdList.Contains(i.DivisionId.Value));
+
+            var serviceLineIdList = ParseIds(serviceLineIds);
+            if (serviceLineIdList.Any())
+                query = query.Where(i => i.ServiceLineId.HasValue && serviceLineIdList.Contains(i.ServiceLineId.Value));
+
+            var dataSourceIdList = ParseIds(dataSourceIds);
+            if (dataSourceIdList.Any())
+                query = query.Where(i => i.DataSourceId.HasValue && dataSourceIdList.Contains(i.DataSourceId.Value));
+
+            var assetTypeIdList = ParseIds(assetTypeIds);
+            if (assetTypeIdList.Any())
+                query = query.Where(i => i.AssetTypeId.HasValue && assetTypeIdList.Contains(i.AssetTypeId.Value));
+
 
             // Filtering only (no search query)
             if (!string.IsNullOrWhiteSpace(domain))

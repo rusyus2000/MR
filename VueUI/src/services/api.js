@@ -82,6 +82,10 @@ export function fetchLookup(type) {
     return fetch(`${API_BASE_URL}/lookups/${type}`, { credentials: 'include' }).then(handleResponse);
 }
 
+export function fetchLookupWithCounts(type) {
+    return fetch(`${API_BASE_URL}/lookups/${type}/counts`, { credentials: 'include' }).then(handleResponse);
+}
+
 /** Search items by full-text query (parameter `q`) */
 export function searchItems(q) {
     return fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(q)}`, { credentials: 'include' })

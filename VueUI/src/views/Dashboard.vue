@@ -113,11 +113,27 @@
             }
 
             async function runFilter(filters) {
+                // Selected filters now contain lookup IDs (not names).
+                // If a search has been executed, preserve AI results and apply
+                // filters client-side to that result set rather than calling the API.
                 selectedFilters.value = filters;
-                //items.value = await fetchItems({
-                //    q: searchQuery.value,
-                //    ...flattenFilters(filters)
-                //});
+                if (searchExecuted.value) {
+                    // Let ItemGrid filter the current `items` in-memory.
+                    // Preserve the current sort (default was set to 'Most Relevant'
+                    // when the search executed). Do not override user's explicit
+                    // sort choice when filters change while search is active.
+                    return;
+                }
+
+                // Otherwise request filtered items from the API using ID-based query params.
+                try {
+                    items.value = await fetchItems({
+                        q: searchQuery.value || undefined,
+                        ...flattenFilters(filters)
+                    });
+                } catch (err) {
+                    console.error('Failed to fetch filtered items', err);
+                }
             }
 
             function clearFilters() {
@@ -129,18 +145,28 @@
                     serviceLines: [],
                     dataSources: []
                 };
-                itemGrid.value?.resetSort('Favorites');
+                // When a search is active, prefer 'Most Relevant' as the default
+                // sort; otherwise, fall back to 'Favorites'. Clearing filters
+                // then re-running the search will set the sort to Most Relevant
+                // within runSearch as well.
+                if (searchExecuted.value) {
+                    itemGrid.value?.resetSort('Most Relevant');
+                } else {
+                    itemGrid.value?.resetSort('Favorites');
+                }
                 runSearch(searchQuery.value);
             }
 
             function flattenFilters(f) {
+                // Build query params using lookup IDs. Use comma-separated lists
+                // so the backend can parse them into integer arrays.
                 const p = {};
-                if (f.assetTypes.length) p.assetType = f.assetTypes.join(',');
-                if (f.privacy.phi) p.phi = true;
-                if (f.domains.length) p.domain = f.domains.join(',');
-                if (f.divisions.length) p.division = f.divisions.join(',');
-                if (f.serviceLines.length) p.serviceLine = f.serviceLines.join(',');
-                if (f.dataSources.length) p.dataSource = f.dataSources.join(',');
+                if (f.assetTypes && f.assetTypes.length) p.assetTypeIds = f.assetTypes.join(',');
+                if (f.privacy && f.privacy.phi) p.phi = true;
+                if (f.domains && f.domains.length) p.domainIds = f.domains.join(',');
+                if (f.divisions && f.divisions.length) p.divisionIds = f.divisions.join(',');
+                if (f.serviceLines && f.serviceLines.length) p.serviceLineIds = f.serviceLines.join(',');
+                if (f.dataSources && f.dataSources.length) p.dataSourceIds = f.dataSources.join(',');
                 return p;
             }
 

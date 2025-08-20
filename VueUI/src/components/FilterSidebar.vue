@@ -15,16 +15,16 @@
         <div v-if="filterSections.assetTypes" class="filter-category">
             <h6>Asset Type</h6>
             <div v-for="(type, idx) in assetTypes"
-                 :key="type.name"
+                 :key="type.id"
                  class="form-check"
                  v-show="assetTypesShowAll || idx < 5">
                 <input class="form-check-input"
                        type="checkbox"
-                       :id="'asset-'+type.name"
+                       :id="'asset-'+type.id"
                        v-model="type.checked"
                        @change="emitFilters" />
-                <label class="form-check-label" :for="'asset-'+type.name">
-                    {{ type.name }} ({{ getCount('assetType', type.name) }})
+                <label class="form-check-label" :for="'asset-'+type.id">
+                    {{ type.name }} ({{ type.count }})
                 </label>
             </div>
             <a v-if="assetTypes.length > 5" href="#" class="text-teal small" @click.prevent="assetTypesShowAll = !assetTypesShowAll">
@@ -51,16 +51,16 @@
         <div v-if="filterSections.domain" class="filter-category">
             <h6>Domain</h6>
             <div v-for="(domain, idx) in domains"
-                 :key="domain.name"
+                 :key="domain.id"
                  class="form-check"
                  v-show="domainsShowAll || idx < 5">
                 <input class="form-check-input"
                        type="checkbox"
-                       :id="'domain-'+domain.name"
+                       :id="'domain-'+domain.id"
                        v-model="domain.checked"
                        @change="emitFilters" />
-                <label class="form-check-label" :for="'domain-'+domain.name">
-                    {{ domain.name }} ({{ getCount('domain', domain.name) }})
+                <label class="form-check-label" :for="'domain-'+domain.id">
+                    {{ domain.name }} ({{ domain.count }})
                 </label>
             </div>
             <a v-if="domains.length > 5" href="#" class="text-teal small" @click.prevent="domainsShowAll = !domainsShowAll">
@@ -72,16 +72,16 @@
         <div v-if="filterSections.division" class="filter-category">
             <h6>Division</h6>
             <div v-for="(division, idx) in divisions"
-                 :key="division.name"
+                 :key="division.id"
                  class="form-check"
                  v-show="divisionsShowAll || idx < 5">
                 <input class="form-check-input"
                        type="checkbox"
-                       :id="'division-'+division.name"
+                       :id="'division-'+division.id"
                        v-model="division.checked"
                        @change="emitFilters" />
-                <label class="form-check-label" :for="'division-'+division.name">
-                    {{ division.name }} ({{ getCount('division', division.name) }})
+                <label class="form-check-label" :for="'division-'+division.id">
+                    {{ division.name }} ({{ division.count }})
                 </label>
             </div>
             <a v-if="divisions.length > 5" href="#" class="text-teal small" @click.prevent="divisionsShowAll = !divisionsShowAll">
@@ -93,16 +93,16 @@
         <div v-if="filterSections.serviceLine" class="filter-category">
             <h6>Service Line</h6>
             <div v-for="(line, idx) in serviceLines"
-                 :key="line.name"
+                 :key="line.id"
                  class="form-check"
                  v-show="serviceLinesShowAll || idx < 5">
                 <input class="form-check-input"
                        type="checkbox"
-                       :id="'service-'+line.name"
+                       :id="'service-'+line.id"
                        v-model="line.checked"
                        @change="emitFilters" />
-                <label class="form-check-label" :for="'service-'+line.name">
-                    {{ line.name }} ({{ getCount('serviceLine', line.name) }})
+                <label class="form-check-label" :for="'service-'+line.id">
+                    {{ line.name }} ({{ line.count }})
                 </label>
             </div>
             <a v-if="serviceLines.length > 5" href="#" class="text-teal small" @click.prevent="serviceLinesShowAll = !serviceLinesShowAll">
@@ -114,16 +114,16 @@
         <div v-if="filterSections.dataSource" class="filter-category">
             <h6>Data Source</h6>
             <div v-for="(source, idx) in dataSources"
-                 :key="source.name"
+                 :key="source.id"
                  class="form-check"
                  v-show="dataSourcesShowAll || idx < 5">
                 <input class="form-check-input"
                        type="checkbox"
-                       :id="'source-'+source.name"
+                       :id="'source-'+source.id"
                        v-model="source.checked"
                        @change="emitFilters" />
-                <label class="form-check-label" :for="'source-'+source.name">
-                    {{ source.name }} ({{ getCount('dataSource', source.name) }})
+                <label class="form-check-label" :for="'source-'+source.id">
+                    {{ source.name }} ({{ source.count }})
                 </label>
             </div>
             <a v-if="dataSources.length > 5" href="#" class="text-teal small" @click.prevent="dataSourcesShowAll = !dataSourcesShowAll">
@@ -139,86 +139,81 @@
     export default {
         name: 'FilterSidebar',
         props: {
-            itemsAll: {
-                type: Array,
-                default: () => [],
-            },
-            currentDomain: {
-                type: String,
-                default: '',
-            },
-            filtersActive: {
-                type: Boolean,
-                default: false
-            }
+            itemsAll: { type: Array, default: () => [] },
+            currentDomain: { type: String, default: '' },
+            filtersActive: { type: Boolean, default: false }
         },
         data() {
             return {
-                // control which filter sections are shown (config-driven)
                 filterSections: FILTER_SECTIONS,
-                assetTypes: [
-                    { name: 'Dashboard', checked: false },
-                    { name: 'Application', checked: false },
-                    { name: 'Data Model', checked: false },
-                    { name: 'Report', checked: false },
-                ],
-                filters: {
-                    privacy: { phi: false },
-                },
-                domains: [
-                    { name: 'Strategy', checked: false },
-                    { name: 'Access to Care', checked: false },
-                    { name: 'Quality', checked: false },
-                    { name: 'People & Workforce', checked: false },
-                ],
-                divisions: [
-                    { name: 'Greater Central Valley', checked: false },
-                    { name: 'Greater East Bay', checked: false },
-                    { name: 'Greater Sacramento', checked: false },
-                    { name: 'Greater San Francisco', checked: false },
-                ],
-                serviceLines: [
-                    { name: 'Behavioral Health', checked: false },
-                    { name: 'Cardiology', checked: false },
-                    { name: 'Hospital', checked: false },
-                    { name: 'Oncology', checked: false },
-                    { name: 'Primary Care', checked: false },
-                    { name: 'Orthopedics', checked: false },
-                ],
-                dataSources: [
-                    { name: 'Power BI', checked: false },
-                    { name: 'Epic', checked: false },
-                    { name: 'Tableau', checked: false },
-                    { name: 'Web-Based', checked: false },
-                ],
+                assetTypes: [],
+                filters: { privacy: { phi: false } },
+                domains: [],
+                divisions: [],
+                serviceLines: [],
+                dataSources: [],
                 assetTypesShowAll: false,
                 domainsShowAll: false,
                 divisionsShowAll: false,
                 serviceLinesShowAll: false,
                 dataSourcesShowAll: false,
+                _initialDomain: null
             };
         },
         created() {
-            // Pre-check current domain if provided
-            if (this.currentDomain) {
-                const d = this.domains.find(x => x.name.toLowerCase() === this.currentDomain.toLowerCase());
-                if (d) d.checked = true;
-                else this.domains.push({ name: this.currentDomain, checked: true });
-            }
-            this.emitFilters();
+            this._initialDomain = this.currentDomain;
+            this.loadLookups();
+        },
+        mounted() {
+            this.$watch(() => ({
+                a: this.assetTypes.length,
+                d: this.domains.length,
+                v: this.divisions.length,
+                s: this.serviceLines.length,
+                ds: this.dataSources.length
+            }), () => this.emitFilters());
         },
         methods: {
+            async loadLookups() {
+                try {
+                    const [ats, doms, divs, sls, dss] = await Promise.all([
+                        (await import('../services/api')).fetchLookupWithCounts('AssetType'),
+                        (await import('../services/api')).fetchLookupWithCounts('Domain'),
+                        (await import('../services/api')).fetchLookupWithCounts('Division'),
+                        (await import('../services/api')).fetchLookupWithCounts('ServiceLine'),
+                        (await import('../services/api')).fetchLookupWithCounts('DataSource')
+                    ]);
+
+                    const norm = x => ({ id: x.id ?? x.Id, name: x.value ?? x.Value, count: x.count ?? x.Count });
+                    this.assetTypes = ats.map(norm).filter(x => x.count > 0).map(x => ({ id: x.id, name: x.name, checked: false, count: x.count }));
+                    this.domains = doms.map(norm).filter(x => x.count > 0).map(x => ({ id: x.id, name: x.name, checked: false, count: x.count }));
+                    this.divisions = divs.map(norm).filter(x => x.count > 0).map(x => ({ id: x.id, name: x.name, checked: false, count: x.count }));
+                    this.serviceLines = sls.map(norm).filter(x => x.count > 0).map(x => ({ id: x.id, name: x.name, checked: false, count: x.count }));
+                    this.dataSources = dss.map(norm).filter(x => x.count > 0).map(x => ({ id: x.id, name: x.name, checked: false, count: x.count }));
+
+                    if (this._initialDomain) {
+                        const found = this.domains.find(d => d.name.toLowerCase() === this._initialDomain.toLowerCase());
+                        if (found) found.checked = true;
+                    }
+                } catch (err) {
+                    console.error('Failed loading lookups', err);
+                }
+            },
+
             emitFilters() {
+                // Emit lookup IDs (numbers) instead of their display names.
+                // The backend will filter by FK IDs (e.g. DomainId) when provided.
                 const out = {
-                    assetTypes: this.assetTypes.filter(t => t.checked).map(t => t.name),
+                    assetTypes: this.assetTypes.filter(t => t.checked).map(t => t.id),
                     privacy: { phi: this.filters.privacy.phi },
-                    domains: this.domains.filter(d => d.checked).map(d => d.name),
-                    divisions: this.divisions.filter(d => d.checked).map(d => d.name),
-                    serviceLines: this.serviceLines.filter(s => s.checked).map(s => s.name),
-                    dataSources: this.dataSources.filter(ds => ds.checked).map(ds => ds.name),
+                    domains: this.domains.filter(d => d.checked).map(d => d.id),
+                    divisions: this.divisions.filter(d => d.checked).map(d => d.id),
+                    serviceLines: this.serviceLines.filter(s => s.checked).map(s => s.id),
+                    dataSources: this.dataSources.filter(ds => ds.checked).map(ds => ds.id),
                 };
                 this.$emit('update:filters', out);
             },
+
             clearAll() {
                 this.assetTypes.forEach(t => (t.checked = false));
                 this.filters.privacy.phi = false;
@@ -228,10 +223,11 @@
                 this.dataSources.forEach(ds => (ds.checked = false));
                 this.emitFilters();
             },
+
             getCount(type, val) {
                 return this.itemsAll.filter(item => {
                     switch (type) {
-                        case 'assetType': return (item.assetTypeName || (item.assetTypes||[])[0] || '').toString() === val;
+                        case 'assetType': return (item.assetTypeName || '').toString() === val;
                         case 'privacy': return val === 'phi' && item.privacyPhi;
                         case 'domain': return item.domain === val;
                         case 'division': return item.division === val;
@@ -239,8 +235,8 @@
                         case 'dataSource': return item.dataSource === val;
                     }
                 }).length;
-            },
-        },
+            }
+        }
     };
 </script>
 

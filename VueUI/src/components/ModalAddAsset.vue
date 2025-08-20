@@ -135,7 +135,8 @@
         lookup.value.divisions = await fetchLookup('Division')
         lookup.value.serviceLines = await fetchLookup('ServiceLine')
         lookup.value.dataSources = await fetchLookup('DataSource')
-        lookup.value.assetTypes = (await fetchLookup('AssetType'))
+        // Exclude any 'Featured' lookup from the selectable asset-type list
+        lookup.value.assetTypes = (await fetchLookup('AssetType')).filter(x => (x.value || x.Value) !== 'Featured')
     })
 
     function onLookupChange(list, idField, textField, id) {

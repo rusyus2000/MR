@@ -20,18 +20,33 @@ namespace SutterAnalyticsApi.Data
 
             var lookups = new[]
             {
+                // Domains
                 new LookupValue { Type = "Domain", Value = "Access to Care" },
                 new LookupValue { Type = "Domain", Value = "Quality" },
+                new LookupValue { Type = "Domain", Value = "Strategy" },
+                new LookupValue { Type = "Domain", Value = "People & Workforce" },
 
+                // Divisions
                 new LookupValue { Type = "Division", Value = "Greater Central Valley" },
                 new LookupValue { Type = "Division", Value = "Greater East Bay" },
+                new LookupValue { Type = "Division", Value = "Greater Sacramento" },
+                new LookupValue { Type = "Division", Value = "Greater San Francisco" },
 
-                new LookupValue { Type = "ServiceLine", Value = "Hospital" },
+                // Service Lines
+                new LookupValue { Type = "ServiceLine", Value = "Behavioral Health" },
                 new LookupValue { Type = "ServiceLine", Value = "Cardiology" },
+                new LookupValue { Type = "ServiceLine", Value = "Hospital" },
+                new LookupValue { Type = "ServiceLine", Value = "Oncology" },
+                new LookupValue { Type = "ServiceLine", Value = "Primary Care" },
+                new LookupValue { Type = "ServiceLine", Value = "Orthopedics" },
 
+                // Data Sources
                 new LookupValue { Type = "DataSource", Value = "Power BI" },
                 new LookupValue { Type = "DataSource", Value = "Epic" },
+                new LookupValue { Type = "DataSource", Value = "Tableau" },
+                new LookupValue { Type = "DataSource", Value = "Web-Based" },
 
+                // Asset Types
                 new LookupValue { Type = "AssetType", Value = "Dashboard" },
                 new LookupValue { Type = "AssetType", Value = "Report" },
                 new LookupValue { Type = "AssetType", Value = "Application" },
@@ -57,4 +72,3 @@ namespace SutterAnalyticsApi.Data
         }
     }
 }
-

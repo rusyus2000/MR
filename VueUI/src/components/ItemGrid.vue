@@ -144,12 +144,52 @@
             const filteredItems = computed(() =>
                 props.items.filter(item => {
                     const f = props.filters;
-                    if (f.assetTypes.length && !f.assetTypes.some(type => (item.assetTypeName || '') === type)) return false;
-                    if (f.privacy.phi && !item.privacyPhi) return false;
-                    if (f.domains.length && !f.domains.includes(item.domain)) return false;
-                    if (f.divisions.length && !f.divisions.includes(item.division)) return false;
-                    if (f.serviceLines.length && !f.serviceLines.includes(item.serviceLine)) return false;
-                    if (f.dataSources.length && !f.dataSources.includes(item.dataSource)) return false;
+
+                    // Helper: give a stringified list for loose comparisons
+                    const asStr = arr => (Array.isArray(arr) ? arr.map(x => String(x)) : []);
+
+                    // Asset types: item may have AssetTypeId (number) and AssetTypeName (string)
+                    if (f.assetTypes && f.assetTypes.length) {
+                        const arr = asStr(f.assetTypes);
+                        const matchesId = item.assetTypeId != null && arr.includes(String(item.assetTypeId));
+                        const matchesName = arr.includes(String(item.assetTypeName || ''));
+                        if (!matchesId && !matchesName) return false;
+                    }
+
+                    if (f.privacy && f.privacy.phi && !item.privacyPhi) return false;
+
+                    // Domain
+                    if (f.domains && f.domains.length) {
+                        const arr = asStr(f.domains);
+                        const matchesId = item.domainId != null && arr.includes(String(item.domainId));
+                        const matchesName = arr.includes(String(item.domain || ''));
+                        if (!matchesId && !matchesName) return false;
+                    }
+
+                    // Division
+                    if (f.divisions && f.divisions.length) {
+                        const arr = asStr(f.divisions);
+                        const matchesId = item.divisionId != null && arr.includes(String(item.divisionId));
+                        const matchesName = arr.includes(String(item.division || ''));
+                        if (!matchesId && !matchesName) return false;
+                    }
+
+                    // Service line
+                    if (f.serviceLines && f.serviceLines.length) {
+                        const arr = asStr(f.serviceLines);
+                        const matchesId = item.serviceLineId != null && arr.includes(String(item.serviceLineId));
+                        const matchesName = arr.includes(String(item.serviceLine || ''));
+                        if (!matchesId && !matchesName) return false;
+                    }
+
+                    // Data source
+                    if (f.dataSources && f.dataSources.length) {
+                        const arr = asStr(f.dataSources);
+                        const matchesId = item.dataSourceId != null && arr.includes(String(item.dataSourceId));
+                        const matchesName = arr.includes(String(item.dataSource || ''));
+                        if (!matchesId && !matchesName) return false;
+                    }
+
                     return true;
                 })
             );
