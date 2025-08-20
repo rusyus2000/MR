@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace SutterAnalyticsApi.Models
 {
@@ -18,8 +19,7 @@ namespace SutterAnalyticsApi.Models
         [Required, Url]
         public string Url { get; set; }
 
-        // Stored as comma-separated values in the DB for asset types
-        public string AssetTypesCsv { get; set; }
+        // (Legacy) previously asset types were stored as CSV; replaced by AssetTypeId
 
         // Tags are normalized into a separate table (ItemTag -> Tag)
         // The old TagsCsv column has been removed in migrations.
@@ -29,6 +29,9 @@ namespace SutterAnalyticsApi.Models
         // for backward compatibility and to allow a smooth migration.
         public int? AssetTypeId { get; set; }
         public LookupValue AssetType { get; set; }
+
+        // Promotion flag: admin can mark an item as featured
+        public bool Featured { get; set; }
 
         public int? DomainId { get; set; }
         public LookupValue DomainLookup { get; set; }
@@ -42,12 +45,20 @@ namespace SutterAnalyticsApi.Models
         public int? DataSourceId { get; set; }
         public LookupValue DataSourceLookup { get; set; }
 
-        [Required]
-        public string Domain { get; set; }
+        // Keep text properties available at the model level for compatibility
+        // but do not map them to database columns. Consumers should prefer
+        // the Lookup navigation properties (e.g. DomainLookup.Value).
+        [NotMapped]
+        public string Domain => DomainLookup?.Value;
 
-        public string Division { get; set; }
-        public string ServiceLine { get; set; }
-        public string DataSource { get; set; }
+        [NotMapped]
+        public string Division => DivisionLookup?.Value;
+
+        [NotMapped]
+        public string ServiceLine => ServiceLineLookup?.Value;
+
+        [NotMapped]
+        public string DataSource => DataSourceLookup?.Value;
 
         // Privacy: PHI or not
         public bool PrivacyPhi { get; set; }
@@ -55,15 +66,8 @@ namespace SutterAnalyticsApi.Models
         // When this asset was added
         public DateTime DateAdded { get; set; }
 
-        // Not mapped helper for asset types
-        [NotMapped]
-        public List<string> AssetTypes
-        {
-            get => string.IsNullOrWhiteSpace(AssetTypesCsv)
-                ? new List<string>()
-                : new List<string>(AssetTypesCsv.Split(','));
-            set => AssetTypesCsv = string.Join(',', value);
-        }
+        // No CSV-backed multi-value asset types anymore. Use the single
+        // AssetType lookup (AssetTypeId) and the boolean `Featured`.
 
         // Not mapped helper for tags (reads from normalized ItemTags relationship)
         [NotMapped]

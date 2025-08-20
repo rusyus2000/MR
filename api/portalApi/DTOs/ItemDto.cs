@@ -6,11 +6,15 @@ namespace SutterAnalyticsApi.DTOs
         public string Title { get; set; }
         public string Description { get; set; }
         public string Url { get; set; }
-        // Backwards-compatible: previous multi asset types
-        public List<string> AssetTypes { get; set; }
-        // New: single asset type id + name
+        // Single asset type (lookup)
         public int? AssetTypeId { get; set; }
         public string AssetTypeName { get; set; }
+        
+        // Lookup IDs for filters (referencing LookupValues)
+        public int? DomainId { get; set; }
+        public int? DivisionId { get; set; }
+        public int? ServiceLineId { get; set; }
+        public int? DataSourceId { get; set; }
         public string Domain { get; set; }
         public string Division { get; set; }
         public string ServiceLine { get; set; }
@@ -19,6 +23,7 @@ namespace SutterAnalyticsApi.DTOs
 
         // New field
         public DateTime DateAdded { get; set; }
+        public bool Featured { get; set; }
         public double? Score { get; set; }
         public bool IsFavorite { get; set; }
         // Tags associated with the item (free-form)

@@ -26,8 +26,8 @@
 
 
             <!-- Asset type badge -->
-            <span v-if="item.assetTypeName || ((item.assetTypes || []).filter(t => t !== 'Featured').length > 0)" class="badge mx-2" :class="getBadgeClass(item.assetTypeName || (item.assetTypes || []).filter(t => t !== 'Featured')[0])">
-                {{ item.assetTypeName || (item.assetTypes || []).filter(t => t !== 'Featured')[0] }}
+            <span v-if="item.assetTypeName" class="badge mx-2" :class="getBadgeClass(item.assetTypeName)">
+                {{ item.assetTypeName }}
             </span>
 
             <!-- External link icon -->
@@ -69,7 +69,7 @@
                 return this.item.isFavorite;
             },
             isFeatured() {
-                return (this.item.assetTypes || []).includes('Featured');
+                return !!this.item.featured;
             },
             relevancePercent() {
                 if (typeof this.item.score !== 'number') return null;

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SutterAnalyticsApi.Data;
 
@@ -11,9 +12,11 @@ using SutterAnalyticsApi.Data;
 namespace portalApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250820153055_AddLookupFks")]
+    partial class AddLookupFks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,13 +36,16 @@ namespace portalApi.Migrations
                     b.Property<int?>("AssetTypeId")
                         .HasColumnType("int");
 
-                    // AssetTypesCsv removed; asset type is now a single FK AssetTypeId
+                    b.Property<string>("AssetTypesCsv")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataSource")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("DataSourceId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("Featured")
-                        .HasColumnType("bit");
 
                     b.Property<DateTime>("DateAdded")
                         .HasColumnType("datetime2");
@@ -48,14 +54,26 @@ namespace portalApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Division")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("DivisionId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Domain")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("DomainId")
                         .HasColumnType("int");
 
                     b.Property<bool>("PrivacyPhi")
                         .HasColumnType("bit");
+
+                    b.Property<string>("ServiceLine")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("ServiceLineId")
                         .HasColumnType("int");

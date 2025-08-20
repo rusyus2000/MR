@@ -61,7 +61,7 @@
                     const f = selectedFilters.value;
                     if (
                         f.assetTypes.length &&
-                        !f.assetTypes.some(t => item.assetTypes.includes(t))
+                        !f.assetTypes.some(t => (item.assetTypeName || '') === t)
                     )
                         return false;
                     if (f.privacy.phi && !item.privacyPhi) return false;

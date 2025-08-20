@@ -231,7 +231,7 @@
             getCount(type, val) {
                 return this.itemsAll.filter(item => {
                     switch (type) {
-                        case 'assetType': return item.assetTypes.includes(val);
+                        case 'assetType': return (item.assetTypeName || (item.assetTypes||[])[0] || '').toString() === val;
                         case 'privacy': return val === 'phi' && item.privacyPhi;
                         case 'domain': return item.domain === val;
                         case 'division': return item.division === val;

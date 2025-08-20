@@ -135,7 +135,7 @@
         lookup.value.divisions = await fetchLookup('Division')
         lookup.value.serviceLines = await fetchLookup('ServiceLine')
         lookup.value.dataSources = await fetchLookup('DataSource')
-        lookup.value.assetTypes = (await fetchLookup('AssetType')).filter(x => x.value !== 'Featured')
+        lookup.value.assetTypes = (await fetchLookup('AssetType'))
     })
 
     function onLookupChange(list, idField, textField, id) {

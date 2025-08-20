@@ -51,6 +51,7 @@ namespace SutterAnalyticsApi.Controllers
      [FromQuery] string? serviceLine,
      [FromQuery] string? dataSource,
      [FromQuery] string? assetType,
+     [FromQuery] int? assetTypeId,
      [FromQuery] bool? phi)
         {
             var user = CurrentUser;
@@ -66,15 +67,45 @@ namespace SutterAnalyticsApi.Controllers
 
             // Filtering only (no search query)
             if (!string.IsNullOrWhiteSpace(domain))
-                query = query.Where(i => i.Domain == domain);
+            {
+                var lv = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "Domain" && l.Value == domain);
+                if (lv != null) query = query.Where(i => i.DomainId == lv.Id);
+                else return Ok(new List<ItemDto>()); // no matching lookup -> empty result
+            }
             if (!string.IsNullOrWhiteSpace(division))
-                query = query.Where(i => i.Division == division);
+            {
+                var lv = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "Division" && l.Value == division);
+                if (lv != null) query = query.Where(i => i.DivisionId == lv.Id);
+                else return Ok(new List<ItemDto>());
+            }
             if (!string.IsNullOrWhiteSpace(serviceLine))
-                query = query.Where(i => i.ServiceLine == serviceLine);
+            {
+                var lv = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "ServiceLine" && l.Value == serviceLine);
+                if (lv != null) query = query.Where(i => i.ServiceLineId == lv.Id);
+                else return Ok(new List<ItemDto>());
+            }
             if (!string.IsNullOrWhiteSpace(dataSource))
-                query = query.Where(i => i.DataSource == dataSource);
-            if (!string.IsNullOrWhiteSpace(assetType))
-                query = query.Where(i => i.AssetTypesCsv != null && i.AssetTypesCsv.Contains(assetType));
+            {
+                var lv = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "DataSource" && l.Value == dataSource);
+                if (lv != null) query = query.Where(i => i.DataSourceId == lv.Id);
+                else return Ok(new List<ItemDto>());
+            }
+            // AssetType filtering: accept numeric id or comma-separated names.
+            if (assetTypeId.HasValue)
+            {
+                query = query.Where(i => i.AssetTypeId.HasValue && i.AssetTypeId == assetTypeId.Value);
+            }
+            else if (!string.IsNullOrWhiteSpace(assetType))
+            {
+                var names = assetType.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                if (names.Count == 0) { /* no-op */ }
+                else
+                {
+                    var lvs = await _db.LookupValues.Where(l => l.Type == "AssetType" && names.Contains(l.Value)).Select(l => l.Id).ToListAsync();
+                    if (!lvs.Any()) return Ok(new List<ItemDto>());
+                    query = query.Where(i => i.AssetTypeId.HasValue && lvs.Contains(i.AssetTypeId.Value));
+                }
+            }
             if (phi.HasValue)
                 query = query.Where(i => i.PrivacyPhi == phi.Value);
 
@@ -93,14 +124,18 @@ namespace SutterAnalyticsApi.Controllers
                 Title = i.Title,
                 Description = i.Description,
                 Url = i.Url,
-                AssetTypes = i.AssetTypes,
                 Tags = i.ItemTags.Select(it => it.Tag.Value).ToList(),
                 AssetTypeId = i.AssetTypeId,
                 AssetTypeName = i.AssetType != null ? i.AssetType.Value : null,
-                Domain = i.Domain,
-                Division = i.Division,
-                ServiceLine = i.ServiceLine,
-                DataSource = i.DataSource,
+                Featured = i.Featured,
+                Domain = i.DomainLookup != null ? i.DomainLookup.Value : null,
+                Division = i.DivisionLookup != null ? i.DivisionLookup.Value : null,
+                ServiceLine = i.ServiceLineLookup != null ? i.ServiceLineLookup.Value : null,
+                DataSource = i.DataSourceLookup != null ? i.DataSourceLookup.Value : null,
+                DomainId = i.DomainId,
+                DivisionId = i.DivisionId,
+                ServiceLineId = i.ServiceLineId,
+                DataSourceId = i.DataSourceId,
                 PrivacyPhi = i.PrivacyPhi,
                 DateAdded = i.DateAdded,
                 IsFavorite = favoriteIds.Contains(i.Id)
@@ -150,16 +185,16 @@ namespace SutterAnalyticsApi.Controllers
                 Title = i.Title,
                 Description = i.Description,
                 Url = i.Url,
-                AssetTypes = i.AssetTypes,
                 Tags = i.ItemTags.Select(it => it.Tag.Value).ToList(),
                 AssetTypeId = i.AssetTypeId,
                 AssetTypeName = i.AssetType != null ? i.AssetType.Value : null,
-                Domain = i.Domain,
-                Division = i.Division,
-                ServiceLine = i.ServiceLine,
-                DataSource = i.DataSource,
+                Domain = i.DomainLookup != null ? i.DomainLookup.Value : null,
+                Division = i.DivisionLookup != null ? i.DivisionLookup.Value : null,
+                ServiceLine = i.ServiceLineLookup != null ? i.ServiceLineLookup.Value : null,
+                DataSource = i.DataSourceLookup != null ? i.DataSourceLookup.Value : null,
                 PrivacyPhi = i.PrivacyPhi,
-                DateAdded = i.DateAdded
+                DateAdded = i.DateAdded,
+                Featured = i.Featured
             });
         }
 
@@ -172,19 +207,16 @@ namespace SutterAnalyticsApi.Controllers
                 Title = dto.Title,
                 Description = dto.Description,
                 Url = dto.Url,
-                AssetTypes = dto.AssetTypes,
-                // tags will be attached via ItemTags below
-                Domain = dto.Domain,
-                Division = dto.Division,
-                ServiceLine = dto.ServiceLine,
-                DataSource = dto.DataSource,
+                // single AssetTypeId is used
                 AssetTypeId = dto.AssetTypeId,
+                // tags will be attached via ItemTags below
                 DomainId = null,
                 DivisionId = null,
                 ServiceLineId = null,
                 DataSourceId = null,
                 PrivacyPhi = dto.PrivacyPhi,
-                DateAdded = DateTime.UtcNow
+                DateAdded = DateTime.UtcNow,
+                Featured = dto.Featured
             };
 
             // Attach tags: find existing Tag entities or create new ones
@@ -203,42 +235,85 @@ namespace SutterAnalyticsApi.Controllers
             }
 
             // If lookup IDs provided, populate string fields for compatibility
-            if (dto.Domain != null && !dto.DomainId.HasValue)
-            {
-                // keep domain string as provided
-            }
+            // Map lookup ids or text to LookupValue FKs. If caller provided only text
+            // (e.g., legacy clients), try to find an existing lookup and create one
+            // if necessary, then assign the corresponding FK id.
             if (dto.DomainId.HasValue)
             {
                 var lookup = await _db.LookupValues.FindAsync(dto.DomainId.Value);
-                if (lookup != null) { i.Domain = lookup.Value; i.DomainId = lookup.Id; }
+                if (lookup != null) { i.DomainId = lookup.Id; }
             }
+            else if (!string.IsNullOrWhiteSpace(dto.Domain))
+            {
+                var lookup = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "Domain" && l.Value == dto.Domain);
+                if (lookup == null)
+                {
+                    lookup = new LookupValue { Type = "Domain", Value = dto.Domain };
+                    _db.LookupValues.Add(lookup);
+                    await _db.SaveChangesAsync();
+                }
+                i.DomainId = lookup.Id;
+            }
+
             if (dto.DivisionId.HasValue)
             {
                 var lookup = await _db.LookupValues.FindAsync(dto.DivisionId.Value);
-                if (lookup != null) { i.Division = lookup.Value; i.DivisionId = lookup.Id; }
+                if (lookup != null) { i.DivisionId = lookup.Id; }
             }
+            else if (!string.IsNullOrWhiteSpace(dto.Division))
+            {
+                var lookup = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "Division" && l.Value == dto.Division);
+                if (lookup == null)
+                {
+                    lookup = new LookupValue { Type = "Division", Value = dto.Division };
+                    _db.LookupValues.Add(lookup);
+                    await _db.SaveChangesAsync();
+                }
+                i.DivisionId = lookup.Id;
+            }
+
             if (dto.ServiceLineId.HasValue)
             {
                 var lookup = await _db.LookupValues.FindAsync(dto.ServiceLineId.Value);
-                if (lookup != null) { i.ServiceLine = lookup.Value; i.ServiceLineId = lookup.Id; }
+                if (lookup != null) { i.ServiceLineId = lookup.Id; }
             }
+            else if (!string.IsNullOrWhiteSpace(dto.ServiceLine))
+            {
+                var lookup = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "ServiceLine" && l.Value == dto.ServiceLine);
+                if (lookup == null)
+                {
+                    lookup = new LookupValue { Type = "ServiceLine", Value = dto.ServiceLine };
+                    _db.LookupValues.Add(lookup);
+                    await _db.SaveChangesAsync();
+                }
+                i.ServiceLineId = lookup.Id;
+            }
+
             if (dto.DataSourceId.HasValue)
             {
                 var lookup = await _db.LookupValues.FindAsync(dto.DataSourceId.Value);
-                if (lookup != null) { i.DataSource = lookup.Value; i.DataSourceId = lookup.Id; }
+                if (lookup != null) { i.DataSourceId = lookup.Id; }
+            }
+            else if (!string.IsNullOrWhiteSpace(dto.DataSource))
+            {
+                var lookup = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "DataSource" && l.Value == dto.DataSource);
+                if (lookup == null)
+                {
+                    lookup = new LookupValue { Type = "DataSource", Value = dto.DataSource };
+                    _db.LookupValues.Add(lookup);
+                    await _db.SaveChangesAsync();
+                }
+                i.DataSourceId = lookup.Id;
             }
 
             if (dto.AssetTypeId.HasValue)
             {
                 var at = await _db.LookupValues.FindAsync(dto.AssetTypeId.Value);
-                if (at != null) i.AssetTypesCsv = at.Value; // keep legacy CSV in sync
+                // nothing else required; AssetTypeId is stored
             }
-            // Include Featured token in AssetTypesCsv when promoted
-            if (dto.Featured)
-            {
-                if (string.IsNullOrWhiteSpace(i.AssetTypesCsv)) i.AssetTypesCsv = "Featured";
-                else if (!i.AssetTypesCsv.Split(',').Select(s => s.Trim()).Contains("Featured")) i.AssetTypesCsv = i.AssetTypesCsv + ",Featured";
-            }
+
+            // Set featured flag
+            i.Featured = dto.Featured;
 
             _db.Items.Add(i);
             await _db.SaveChangesAsync();
@@ -265,7 +340,7 @@ namespace SutterAnalyticsApi.Controllers
             i.Title = dto.Title;
             i.Description = dto.Description;
             i.Url = dto.Url;
-            i.AssetTypes = dto.AssetTypes;
+            // asset types are now single-valued; update AssetTypeId/Featured below
             // Update tags: remove existing item-tags and reattach
             // Load existing ItemTags
             var existingTags = await _db.ItemTags.Where(it => it.ItemId == i.Id).ToListAsync();
@@ -286,16 +361,65 @@ namespace SutterAnalyticsApi.Controllers
                     _db.ItemTags.Add(new ItemTag { Item = i, Tag = tag });
                 }
             }
-            i.Domain = dto.Domain;
-            i.Division = dto.Division;
-            i.ServiceLine = dto.ServiceLine;
-            i.DataSource = dto.DataSource;
             if (dto.AssetTypeId.HasValue) i.AssetTypeId = dto.AssetTypeId;
-            if (dto.DomainId.HasValue) i.DomainId = dto.DomainId;
-            if (dto.DivisionId.HasValue) i.DivisionId = dto.DivisionId;
-            if (dto.ServiceLineId.HasValue) i.ServiceLineId = dto.ServiceLineId;
-            if (dto.DataSourceId.HasValue) i.DataSourceId = dto.DataSourceId;
+            // Map domain/division/serviceLine/dataSource to lookup ids when provided
+            if (dto.DomainId.HasValue)
+                i.DomainId = dto.DomainId;
+            else if (!string.IsNullOrWhiteSpace(dto.Domain))
+            {
+                var lookup = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "Domain" && l.Value == dto.Domain);
+                if (lookup == null)
+                {
+                    lookup = new LookupValue { Type = "Domain", Value = dto.Domain };
+                    _db.LookupValues.Add(lookup);
+                    await _db.SaveChangesAsync();
+                }
+                i.DomainId = lookup.Id;
+            }
+
+            if (dto.DivisionId.HasValue)
+                i.DivisionId = dto.DivisionId;
+            else if (!string.IsNullOrWhiteSpace(dto.Division))
+            {
+                var lookup = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "Division" && l.Value == dto.Division);
+                if (lookup == null)
+                {
+                    lookup = new LookupValue { Type = "Division", Value = dto.Division };
+                    _db.LookupValues.Add(lookup);
+                    await _db.SaveChangesAsync();
+                }
+                i.DivisionId = lookup.Id;
+            }
+
+            if (dto.ServiceLineId.HasValue)
+                i.ServiceLineId = dto.ServiceLineId;
+            else if (!string.IsNullOrWhiteSpace(dto.ServiceLine))
+            {
+                var lookup = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "ServiceLine" && l.Value == dto.ServiceLine);
+                if (lookup == null)
+                {
+                    lookup = new LookupValue { Type = "ServiceLine", Value = dto.ServiceLine };
+                    _db.LookupValues.Add(lookup);
+                    await _db.SaveChangesAsync();
+                }
+                i.ServiceLineId = lookup.Id;
+            }
+
+            if (dto.DataSourceId.HasValue)
+                i.DataSourceId = dto.DataSourceId;
+            else if (!string.IsNullOrWhiteSpace(dto.DataSource))
+            {
+                var lookup = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "DataSource" && l.Value == dto.DataSource);
+                if (lookup == null)
+                {
+                    lookup = new LookupValue { Type = "DataSource", Value = dto.DataSource };
+                    _db.LookupValues.Add(lookup);
+                    await _db.SaveChangesAsync();
+                }
+                i.DataSourceId = lookup.Id;
+            }
             i.PrivacyPhi = dto.PrivacyPhi;
+            i.Featured = dto.Featured;
             // keep original DateAdded
 
             await _db.SaveChangesAsync();

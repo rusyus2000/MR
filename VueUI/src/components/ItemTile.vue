@@ -20,10 +20,8 @@
                       :class="getBadgeClass(item.assetTypeName)">
                     {{ item.assetTypeName }}
                 </span>
-                <span v-else v-for="(type, idx) in (item.assetTypes || []).filter(t => t !== 'Featured')"
-                      :key="idx"
-                      :class="['badge', getBadgeClass(type), { 'me-1': idx < ((item.assetTypes || []).filter(t => t !== 'Featured').length - 1) }]">
-                    {{ type }}
+                <span v-else class="badge" :class="getBadgeClass(item.assetTypeName)">
+                    {{ item.assetTypeName }}
                 </span>
             </div>
 
@@ -64,7 +62,7 @@
     });
 
     const isFavorite = computed(() => props.item.isFavorite);
-    const isFeatured = computed(() => (props.item.assetTypes || []).includes('Featured'));
+    const isFeatured = computed(() => !!props.item.featured);
 
     function toggleFavorite(item) {
         toggleFavoriteApi(item.id)

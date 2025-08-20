@@ -3,9 +3,8 @@ public class CreateItemDto
     public string Title { get; set; }
     public string Description { get; set; }
     public string Url { get; set; }
-    // New: single AssetTypeId (references LookupValues)
+    // Single AssetTypeId (references LookupValues)
     public int? AssetTypeId { get; set; }
-    public List<string> AssetTypes { get; set; } = new();
     // New lookup id fields (reference LookupValues.Id)
     public int? DomainId { get; set; }
     public int? DivisionId { get; set; }

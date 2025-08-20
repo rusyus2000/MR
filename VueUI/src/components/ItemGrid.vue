@@ -144,7 +144,7 @@
             const filteredItems = computed(() =>
                 props.items.filter(item => {
                     const f = props.filters;
-                    if (f.assetTypes.length && !f.assetTypes.some(type => item.assetTypes.includes(type))) return false;
+                    if (f.assetTypes.length && !f.assetTypes.some(type => (item.assetTypeName || '') === type)) return false;
                     if (f.privacy.phi && !item.privacyPhi) return false;
                     if (f.domains.length && !f.domains.includes(item.domain)) return false;
                     if (f.divisions.length && !f.divisions.includes(item.division)) return false;
@@ -165,8 +165,8 @@
                     list = [...list].sort((a, b) => a.title.localeCompare(b.title));
                 } else if (sortBy.value === 'Featured') {
                     list = [...list].sort((a, b) => {
-                        const aFeat = (a.assetTypes || []).includes('Featured') ? 0 : 1;
-                        const bFeat = (b.assetTypes || []).includes('Featured') ? 0 : 1;
+                        const aFeat = a.featured ? 0 : 1;
+                        const bFeat = b.featured ? 0 : 1;
                         return aFeat - bFeat; // featured first
                     });
                 } else if (sortBy.value === 'Favorites') {

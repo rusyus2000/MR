@@ -3,7 +3,7 @@
         <div class="modal-content shadow">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i v-if="item && item.assetTypes && item.assetTypes.includes('Featured')" class="bi bi-star-fill featured-icon me-1" title="Featured"></i>
+                    <i v-if="item && item.featured" class="bi bi-star-fill featured-icon me-1" title="Featured"></i>
                     {{ item.title }}
                 </h5>
                 <button class="btn-close" @click="$emit('close')"></button>
@@ -11,7 +11,7 @@
             <div class="modal-body">
                 <p><strong>Description:</strong> {{ item.description }}</p>
                 <p><strong>URL:</strong> <a href="#" @click.prevent="openResource(item)">{{ item.url }}</a></p>
-                <p><strong>Asset Type:</strong> {{ item.assetTypeName || (item.assetTypes || []).filter(t => t !== 'Featured').join(', ') }}</p>
+                <p><strong>Asset Type:</strong> {{ item.assetTypeName }}</p>
                 <p><strong>Domain:</strong> {{ item.domain }}</p>
                 <p><strong>Division:</strong> {{ item.division }}</p>
                 <p><strong>Service Line:</strong> {{ item.serviceLine }}</p>
