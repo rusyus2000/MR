@@ -9,7 +9,7 @@
                @click.stop="toggleFavorite(item)"></i>
 
             <!-- Relevance Score -->
-            <span v-if="showMatch" class="match-label text-muted small">
+            <span v-if="showMatch" class="match-label text-muted small" :style="matchStyle">
                 {{ relevancePercent }}% match
             </span>
 
@@ -88,6 +88,25 @@
         return searchExecuted.value && typeof props.item.score === 'number';
     });
 
+    const matchStyle = computed(() => {
+        const p = relevancePercent.value;
+        if (p == null) return {};
+        // Quantize to 5% steps
+        const step = Math.max(0, Math.min(100, Math.round(p / 5) * 5));
+        // Map 0% -> red (hue=0), 100% -> green (hue=120)
+        const hue = Math.round((step / 100) * 120);
+        // Solid color for border and text decision
+        const solid = `hsl(${hue}deg 90% 40%)`;
+        // Background: same color at 10% opacity
+        const bgWithAlpha = `hsl(${hue}deg 90% 40% / 0.1)`;
+        // Choose text color for contrast based on lightness (40 -> use white)
+        const textColor = 40 >= 50 ? '#000' : '#fff';
+        return {
+            backgroundColor: bgWithAlpha,
+            borderColor: solid
+        };
+    });
+
     const getBadgeClass = (assetType) => {
         const map = {
             Dashboard: 'bg-dashboard',
@@ -141,7 +160,7 @@
         top: -5px;
         left: 40px;
         background-color: #e7f1ff;
-        color: #0056b3;
+        color: var(--bs-secondary-color) !important;
         font-size: 0.75rem;
         font-weight: 500;
         padding: 2px 6px;

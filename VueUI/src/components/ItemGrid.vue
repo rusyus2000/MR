@@ -131,7 +131,7 @@
         },
         setup(props, { emit }) {
             const viewMode = ref('grid');
-            const sortBy = ref('Favorites');
+            const sortBy = ref('Featured');
             const itemsPerPage = ref(15);
             const currentPage = ref(1);
             const showAddModal = ref(false);
@@ -140,6 +140,8 @@
             const resetSort = (to = 'Most Relevant') => {
                 sortBy.value = to;
             };
+
+            const getSort = () => sortBy.value;
 
             const filteredItems = computed(() =>
                 props.items.filter(item => {
@@ -253,6 +255,7 @@
                 selectedItem,
                 openDetails,
                 resetSort,
+                getSort,
                 filtersActive,
                 searchExecuted
             };

@@ -65,6 +65,7 @@
             const searchTerm = ref('');
             const searchQuery = ref('');
             const searchExecuted = ref(false);
+            const previousSort = ref(null);
             const searching = ref(false);
             const itemGrid = ref(null);
 
@@ -93,11 +94,16 @@
                 searching.value = true;
                 try {
                     console.log('[runSearch]', q);
+                    // Save previous sort only if a search is not already active
+                    if (!searchExecuted.value) {
+                        previousSort.value = itemGrid.value?.getSort ? itemGrid.value.getSort() : 'Featured';
+                    }
                     searchExecuted.value = true;
                     const result = await searchItems(q);
                     items.value = result;
                     console.log('[runSearch] → searchExecuted is now', searchExecuted.value);
                     searchQuery.value = q;
+                    // Default sort while search is active should be Most Relevant
                     itemGrid.value?.resetSort('Most Relevant');
                     searchTerm.value = '';
                 } finally {
@@ -109,6 +115,10 @@
                 searchExecuted.value = false;
                 searchQuery.value = '';
                 searchTerm.value = '';
+                // Restore the sort that was active prior to the search
+                const prev = previousSort.value || 'Featured';
+                itemGrid.value?.resetSort(prev);
+                previousSort.value = null;
                 loadItems();
             }
 
@@ -152,7 +162,7 @@
                 if (searchExecuted.value) {
                     itemGrid.value?.resetSort('Most Relevant');
                 } else {
-                    itemGrid.value?.resetSort('Favorites');
+                    itemGrid.value?.resetSort('Featured');
                 }
                 runSearch(searchQuery.value);
             }

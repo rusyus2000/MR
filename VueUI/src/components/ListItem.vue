@@ -9,7 +9,8 @@
 
             <!-- Relevance Score below bookmark -->
             <span v-if="searchExecuted && item.score !== undefined"
-                  class="match-score-badge">
+                  class="match-score-badge"
+                  :style="matchStyle">
                 {{ relevancePercent }}<small>%</small>
             </span>
 
@@ -76,6 +77,19 @@
                 const max = 2.5;
                 const normalized = 1 - (this.item.score / max);
                 return Math.round(normalized * 100);
+            },
+            matchStyle() {
+                const p = this.relevancePercent;
+                if (p == null) return {};
+                const step = Math.max(0, Math.min(100, Math.round(p / 5) * 5));
+                const hue = Math.round((step / 100) * 120);
+                const solid = `hsl(${hue}deg 90% 40%)`;
+                const bgWithAlpha = `hsl(${hue}deg 90% 40% / 0.1)`;
+                const textColor = 40 >= 50 ? '#000' : '#fff';
+                return {
+                    backgroundColor: bgWithAlpha,
+                    borderColor: solid
+                };
             },
             showMatch() {
                 return this.searchExecuted && typeof this.item.score === 'number';
@@ -145,7 +159,7 @@
         top: 25px; /* 14px lower */
         left: 8px;
         background-color: #e7f1ff;
-        color: #0056b3;
+        color: var(--bs-secondary-color) !important;
         font-weight: 600;
         /* padding: 4px;*/
         width: 27px;

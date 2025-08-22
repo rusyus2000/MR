@@ -8,6 +8,12 @@
             <div class="modal-body">
                 <form @submit.prevent="submitForm">
                     <div class="details-grid">
+
+                        <div class="label">Featured</div>
+                        <div>
+                            <input v-model="form.featured" class="form-check-input" type="checkbox" id="featured" />
+                        </div>
+
                         <div class="label">Title:</div>
                         <div><input v-model="form.title" type="text" class="form-control" required /></div>
 
@@ -65,11 +71,6 @@
                         <div class="label">Contains PHI:</div>
                         <div>
                             <input v-model="form.privacyPhi" class="form-check-input" type="checkbox" id="privacyPhi" />
-                        </div>
-
-                        <div class="label">Promotion:</div>
-                        <div>
-                            <input v-model="form.featured" class="form-check-input" type="checkbox" id="featured" />
                         </div>
 
                         <div class="label">Tags:</div>
