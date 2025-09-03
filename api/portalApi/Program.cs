@@ -47,6 +47,32 @@ app.UseRouting();
 // Move UseCors early
 app.UseCors();
 
+// Handle CORS preflight for PUT/DELETE under Windows Auth (adds CORS headers + skips auth)
+app.Use(async (context, next) =>
+{
+    if (HttpMethods.Options.Equals(context.Request.Method, StringComparison.OrdinalIgnoreCase))
+    {
+        var origin = context.Request.Headers["Origin"].ToString();
+        if (!string.IsNullOrEmpty(origin))
+        {
+            var allowed = builder.Environment.IsDevelopment()
+                ? devOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase)
+                : prodOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase);
+            if (allowed)
+            {
+                context.Response.Headers["Access-Control-Allow-Origin"] = origin;
+                context.Response.Headers["Vary"] = "Origin";
+                context.Response.Headers["Access-Control-Allow-Credentials"] = "true";
+                context.Response.Headers["Access-Control-Allow-Headers"] = context.Request.Headers["Access-Control-Request-Headers"].ToString();
+                context.Response.Headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS";
+            }
+        }
+        context.Response.StatusCode = StatusCodes.Status204NoContent;
+        return;
+    }
+    await next();
+});
+
 // Apply auth middleware AFTER CORS
 app.UseAuthentication();
 app.UseAuthorization();

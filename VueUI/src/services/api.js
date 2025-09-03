@@ -6,7 +6,16 @@ async function handleResponse(res) {
         const text = await res.text();
         throw new Error(`API error ${res.status}: ${text}`);
     }
-    return res.json();
+    if (res.status === 204) return null;
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.toLowerCase().includes('application/json')) {
+        // No JSON body; return null to indicate success without payload
+        return null;
+    }
+    // Some servers may send empty body with JSON content-type; guard it
+    const text = await res.text();
+    if (!text) return null;
+    try { return JSON.parse(text); } catch { return null; }
 }
 
 /**
@@ -37,14 +46,32 @@ export function fetchItem(id) {
 //}
 export function createItem(payload) {
     const form = new FormData();
-    for (const key in payload) {
-        const value = payload[key];
-        if (Array.isArray(value)) {
-            value.forEach(v => form.append(key, v));
-        } else {
-            form.append(key, value);
+    const appendField = (k, v) => {
+        if (v === null || v === undefined) return; // skip null/undefined to avoid sending literal "null"
+        if (typeof v === 'string') {
+            const t = v.trim();
+            if (t.length === 0) return; // skip empty strings
+            form.append(k, t);
+            return;
         }
-    }
+        if (typeof v === 'number' && Number.isFinite(v)) {
+            form.append(k, String(v));
+            return;
+        }
+        if (typeof v === 'boolean') {
+            form.append(k, v ? 'true' : 'false');
+            return;
+        }
+        // arrays
+        if (Array.isArray(v)) {
+            v.forEach((entry) => appendField(k, entry));
+            return;
+        }
+        // fallback: stringify
+        form.append(k, String(v));
+    };
+
+    Object.keys(payload).forEach((key) => appendField(key, payload[key]));
 
     return fetch(`${API_BASE_URL}/items`, {
         method: 'POST',
@@ -55,11 +82,27 @@ export function createItem(payload) {
 
 /** Update an existing item */
 export function updateItem(id, payload) {
-    return fetch(`${API_BASE_URL}/items/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+    // Use FormData to avoid CORS preflight (multipart/form-data is a simple content-type)
+    const form = new FormData();
+    const appendField = (k, v) => {
+        if (v === null || v === undefined) return;
+        if (typeof v === 'string') {
+            const t = v.trim();
+            if (t.length === 0) return;
+            form.append(k, t);
+            return;
+        }
+        if (typeof v === 'number' && Number.isFinite(v)) { form.append(k, String(v)); return; }
+        if (typeof v === 'boolean') { form.append(k, v ? 'true' : 'false'); return; }
+        if (Array.isArray(v)) { v.forEach(entry => appendField(k, entry)); return; }
+        form.append(k, String(v));
+    };
+    Object.keys(payload || {}).forEach(key => appendField(key, payload[key]));
+    // Use a POST compatibility route to avoid CORS preflight on IIS Express
+    return fetch(`${API_BASE_URL}/items/${id}/edit`, {
+        method: 'POST',
         credentials: 'include',
-        body: JSON.stringify(payload),
+        body: form,
     }).then(handleResponse);
 }
 

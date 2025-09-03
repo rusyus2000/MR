@@ -451,7 +451,7 @@ namespace SutterAnalyticsApi.Controllers
 
         // PUT /api/items/{id}
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] CreateItemDto dto)
+        public async Task<IActionResult> Update(int id, [FromForm] CreateItemDto dto)
         {
             // Admin-only update
             if (CurrentUser?.UserType != "Admin")
@@ -579,6 +579,14 @@ namespace SutterAnalyticsApi.Controllers
 
             await _db.SaveChangesAsync();
             return NoContent();
+        }
+
+        // POST /api/items/{id}/edit  — dev-friendly alternative to avoid CORS preflight under IIS Express
+        [HttpPost("{id:int}/edit")]
+        public async Task<IActionResult> EditCompat(int id, [FromForm] CreateItemDto dto)
+        {
+            // Reuse Update logic
+            return await Update(id, dto);
         }
 
         // DELETE /api/items/{id}
