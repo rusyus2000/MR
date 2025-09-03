@@ -16,7 +16,7 @@
 
     <script>
         import { ref, onMounted, computed } from 'vue';
-        import { fetchCurrentUser, fetchIntranetUser, updateCurrentUserProfile } from '../services/api';
+        import { getCurrentUserCached, fetchIntranetUser, updateCurrentUserProfile } from '../services/api';
 
         export default {
             name: 'Navbar',
@@ -24,14 +24,14 @@
                 const me = ref(null);
                 onMounted(async () => {
                     try {
-                        me.value = await fetchCurrentUser();
+                        me.value = await getCurrentUserCached();
                         // If missing display name or email, try intranet API and push to server
                         if (!me.value || !me.value.displayName || !me.value.email) {
                             const intranet = await fetchIntranetUser();
                             const u = intranet?.user;
                             if (u && (u.name || u.email || u.networkId)) {
                                 await updateCurrentUserProfile({ displayName: u.name, email: u.email, networkId: u.networkId }).catch(() => {});
-                                me.value = await fetchCurrentUser();
+                                me.value = await getCurrentUserCached(true);
                             }
                         }
                     } catch { me.value = null; }

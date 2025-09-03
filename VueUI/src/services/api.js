@@ -23,7 +23,14 @@ async function handleResponse(res) {
  *   q, domain, division, serviceLine, dataSource, assetType, phi (boolean), top (number)
  */
 export function fetchItems(params = {}) {
-    const qs = new URLSearchParams(params).toString();
+    const usp = new URLSearchParams();
+    for (const [k, v] of Object.entries(params || {})) {
+        if (v === undefined || v === null) continue;
+        const s = String(v);
+        if (!s || s === 'undefined') continue;
+        usp.append(k, s);
+    }
+    const qs = usp.toString();
     return fetch(`${API_BASE_URL}/items?${qs}`, { credentials: 'include' }).then(handleResponse);
 }
 
@@ -134,6 +141,23 @@ export function fetchLookupsBulk(types = ['AssetType','Domain','Division','Servi
     return fetch(`${API_BASE_URL}/lookups/bulk?${qs}`, { credentials: 'include' }).then(handleResponse);
 }
 
+// Cached bulk lookups (by types key)
+const __bulkLookupsCache = new Map();
+export function getLookupsBulkCached(types = ['AssetType','Domain','Division','ServiceLine','DataSource','Status'], force = false) {
+    const key = (types || []).map(t => String(t).toLowerCase()).sort().join(',');
+    if (!force && __bulkLookupsCache.has(key)) {
+        return __bulkLookupsCache.get(key);
+    }
+    const p = fetchLookupsBulk(types);
+    __bulkLookupsCache.set(key, p);
+    return p;
+}
+
+export function fetchLookupsCountsBulk(types = ['AssetType','Domain','Division','ServiceLine','DataSource','Status']) {
+    const qs = new URLSearchParams({ types: types.join(',') }).toString();
+    return fetch(`${API_BASE_URL}/lookups/bulk-counts?${qs}`, { credentials: 'include' }).then(handleResponse);
+}
+
 /** Search items by full-text query (parameter `q`) */
 export function searchItems(q) {
     return fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(q)}`, { credentials: 'include' })
@@ -184,6 +208,15 @@ export function fetchCurrentUser() {
         if (res.status === 401) return null;
         return res.json();
     });
+}
+
+// In-memory cached current user to avoid duplicate calls per page
+let __meCachePromise;
+export function getCurrentUserCached(force = false) {
+    if (force || !__meCachePromise) {
+        __meCachePromise = fetchCurrentUser();
+    }
+    return __meCachePromise;
 }
 
 // Intranet user API (Windows-auth) called from browser

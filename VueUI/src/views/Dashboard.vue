@@ -79,8 +79,9 @@
             });
 
             const loadItems = async () => {
-                items.value = await fetchItems();
-                allItems.value = items.value;
+                const data = await fetchItems();
+                items.value = data;
+                allItems.value = data;
             };
 
             
@@ -126,6 +127,7 @@
                 // Selected filters now contain lookup IDs (not names).
                 // If a search has been executed, preserve AI results and apply
                 // filters client-side to that result set rather than calling the API.
+                const hadActive = filtersActive.value;
                 selectedFilters.value = filters;
                 if (searchExecuted.value) {
                     // Let ItemGrid filter the current `items` in-memory.
@@ -137,9 +139,19 @@
 
                 // Otherwise request filtered items from the API using ID-based query params.
                 try {
+                    const flattened = flattenFilters(filters);
+                    const isEmpty = !flattened.assetTypeIds && !flattened.domainIds && !flattened.divisionIds && !flattened.serviceLineIds && !flattened.dataSourceIds && !flattened.phi;
+                    if (isEmpty) {
+                        // If filters were previously active and now cleared, reload full list
+                        if (hadActive) {
+                            await loadItems();
+                        }
+                        return;
+                    }
+                    const qParam = searchQuery.value && searchQuery.value.trim() ? { q: searchQuery.value.trim() } : {};
                     items.value = await fetchItems({
-                        q: searchQuery.value || undefined,
-                        ...flattenFilters(filters)
+                        ...qParam,
+                        ...flattened
                     });
                 } catch (err) {
                     console.error('Failed to fetch filtered items', err);

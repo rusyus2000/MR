@@ -93,7 +93,7 @@
 
         <!-- Modals -->
         <ModalAddAsset v-if="showAddModal" :edit-item="editItem" @close="closeAdd" @saved="handleAssetSaved" />
-        <ModalAssetDetails v-if="selectedItem" :item="selectedItem" :is-admin="isAdmin" @edit="openEditFromDetails" @close="selectedItem = null" />
+        <ModalAssetDetails v-if="selectedItem || detailsLoading" :item="selectedItem" :is-admin="isAdmin" :is-loading="detailsLoading" @edit="openEditFromDetails" @close="closeDetails" />
     </div>
 </template>
 
@@ -104,6 +104,7 @@
     import ModalAddAsset from './ModalAddAsset.vue';
     import ModalAssetDetails from './ModalAssetDetails.vue';
     import { favorites } from '../composables/favorites';
+    import { fetchItem } from '../services/api';
     import { fetchCurrentUser } from '../services/api';
 
     export default {
@@ -137,6 +138,7 @@
             const currentPage = ref(1);
             const showAddModal = ref(false);
             const selectedItem = ref(null);
+            const detailsLoading = ref(false);
             const editItem = ref(null);
             const isAdmin = ref(false);
             const searchExecuted = toRef(props, 'searchExecuted');
@@ -240,8 +242,21 @@
                 editItem.value = null;
             };
 
-            const openDetails = (item) => {
-                selectedItem.value = item;
+            const openDetails = async (item) => {
+                detailsLoading.value = true;
+                selectedItem.value = null;
+                try {
+                    const full = await fetchItem(item.id);
+                    selectedItem.value = full || item;
+                } catch (e) {
+                    selectedItem.value = item;
+                } finally {
+                    detailsLoading.value = false;
+                }
+            };
+
+            const closeDetails = () => {
+                selectedItem.value = null;
             };
 
             onMounted(async () => {
@@ -279,7 +294,9 @@
                 showAddModal,
                 handleAssetSaved,
                 selectedItem,
+                detailsLoading,
                 openDetails,
+                closeDetails,
                 editItem,
                 isAdmin,
                 openAdd,

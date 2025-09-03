@@ -21,7 +21,7 @@
 
 <script>
     import { ref, computed, onMounted } from 'vue';
-    import { fetchCurrentUser, fetchIntranetUser, updateCurrentUserProfile } from '../services/api';
+    import { getCurrentUserCached, fetchIntranetUser, updateCurrentUserProfile } from '../services/api';
 
     export default {
         name: 'HeroSection',
@@ -46,13 +46,13 @@
             });
             onMounted(async () => {
                 try {
-                    me.value = await fetchCurrentUser();
+                    me.value = await getCurrentUserCached();
                     if (!me.value || !me.value.displayName || !me.value.email) {
                         const intranet = await fetchIntranetUser();
                         const u = intranet?.user;
                         if (u && (u.name || u.email || u.networkId)) {
                             await updateCurrentUserProfile({ displayName: u.name, email: u.email, networkId: u.networkId }).catch(() => {});
-                            me.value = await fetchCurrentUser();
+                            me.value = await getCurrentUserCached(true);
                         }
                     }
                 } catch { me.value = null; }

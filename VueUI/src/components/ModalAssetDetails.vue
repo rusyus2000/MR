@@ -2,22 +2,36 @@
     <div class="modal-backdrop">
         <div class="modal-content shadow">
             <div class="modal-header custom-header">
-                <h5 class="modal-title">
-                    <i v-if="item && item.featured" class="bi bi-star-fill featured-icon me-1" title="Featured"></i>
-                    {{ item.title }}
+                <h5 class="modal-title d-flex align-items-center gap-2">
+                    <i v-if="!isLoading && item && item.featured" class="bi bi-star-fill featured-icon" title="Featured"></i>
+                    <span>{{ isLoading ? 'Loading…' : (item ? item.title : '') }}</span>
+                    <button v-if="!isLoading && isAdmin" class="btn btn-link text-primary p-0 ms-2" title="Edit Item" @click="$emit('edit')">
+                        <i class="bi bi-pencil-square fs-4"></i>
+                    </button>
                 </h5>
                 <div class="d-flex align-items-center gap-2">
-                    <button v-if="isAdmin" class="btn btn-sm btn-outline-secondary" title="Edit" @click="$emit('edit')">
-                        <i class="bi bi-pencil-square"></i>
-                    </button>
                     <button class="btn-close" @click="$emit('close')"></button>
                 </div>
             </div>
             <div class="modal-body">
-                <div class="details-grid">
+                <div v-if="isLoading" class="d-flex justify-content-center align-items-center" style="min-height:160px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <div v-else class="details-grid">
                     <div class="label">Description:</div><div>{{ item.description }}</div>
                     <div class="label">URL:</div><div><a href="#" @click.prevent="openResource(item)">{{ item.url }}</a></div>
                     <div class="label">Asset Type:</div><div>{{ item.assetTypeName }}</div>
+                    <div class="label">Owner:</div>
+                    <div>
+                        <template v-if="item.ownerEmail">
+                            <a :href="`mailto:${item.ownerEmail}`">{{ item.ownerName || item.ownerEmail }}</a>
+                        </template>
+                        <template v-else>
+                            {{ item.ownerName || '—' }}
+                        </template>
+                    </div>
                     <div class="label">Domain:</div><div>{{ item.domain }}</div>
                     <div class="label">Division:</div><div>{{ item.division }}</div>
                     <div class="label">Service Line:</div><div>{{ item.serviceLine }}</div>
@@ -39,7 +53,7 @@
                     </div>
                 </div>
             </div>
-            <div class="d-flex justify-content-end mt-3 px-4 pb-3">
+            <div v-if="!isLoading && item" class="d-flex justify-content-end mt-3 px-4 pb-3">
                 <button class="btn btn-sm favorite-icon-btn" @click="toggleFavorite(item)">
                     {{ item.isFavorite ? '★ Remove from Favorites' : '☆ Add to Favorites' }}
                 </button>
@@ -55,11 +69,13 @@
         name: 'ModalAssetDetails',
         props: {
             item: Object,
-            isAdmin: { type: Boolean, default: false }
+            isAdmin: { type: Boolean, default: false },
+            isLoading: { type: Boolean, default: false }
         },
         emits: ['close','edit'],
         methods: {
             async toggleFavorite(item) {
+                if (!item) return;
                 try {
                     await toggleFavoriteApi(item.id);
                     item.isFavorite = !item.isFavorite;

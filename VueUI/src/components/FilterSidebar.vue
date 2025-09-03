@@ -176,20 +176,15 @@
         methods: {
             async loadLookups() {
                 try {
-                    const [ats, doms, divs, sls, dss] = await Promise.all([
-                        (await import('../services/api')).fetchLookupWithCounts('AssetType'),
-                        (await import('../services/api')).fetchLookupWithCounts('Domain'),
-                        (await import('../services/api')).fetchLookupWithCounts('Division'),
-                        (await import('../services/api')).fetchLookupWithCounts('ServiceLine'),
-                        (await import('../services/api')).fetchLookupWithCounts('DataSource')
-                    ]);
-
+                    const api = await import('../services/api');
+                    const bulk = await api.fetchLookupsCountsBulk(['AssetType','Domain','Division','ServiceLine','DataSource']);
                     const norm = x => ({ id: x.id ?? x.Id, name: x.value ?? x.Value, count: x.count ?? x.Count });
-                    this.assetTypes = ats.map(norm).filter(x => x.count > 0).map(x => ({ id: x.id, name: x.name, checked: false, count: x.count }));
-                    this.domains = doms.map(norm).filter(x => x.count > 0).map(x => ({ id: x.id, name: x.name, checked: false, count: x.count }));
-                    this.divisions = divs.map(norm).filter(x => x.count > 0).map(x => ({ id: x.id, name: x.name, checked: false, count: x.count }));
-                    this.serviceLines = sls.map(norm).filter(x => x.count > 0).map(x => ({ id: x.id, name: x.name, checked: false, count: x.count }));
-                    this.dataSources = dss.map(norm).filter(x => x.count > 0).map(x => ({ id: x.id, name: x.name, checked: false, count: x.count }));
+                    const mapArr = arr => (arr || []).map(norm).filter(x => x.count > 0).map(x => ({ id: x.id, name: x.name, checked: false, count: x.count }));
+                    this.assetTypes = mapArr(bulk.AssetType);
+                    this.domains = mapArr(bulk.Domain);
+                    this.divisions = mapArr(bulk.Division);
+                    this.serviceLines = mapArr(bulk.ServiceLine);
+                    this.dataSources = mapArr(bulk.DataSource);
 
                     if (this._initialDomain) {
                         const found = this.domains.find(d => d.name.toLowerCase() === this._initialDomain.toLowerCase());

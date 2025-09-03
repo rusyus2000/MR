@@ -120,13 +120,12 @@ namespace SutterAnalyticsApi.Controllers
                         var match = matchedItems.FirstOrDefault(i => i.Id == r.Id);
                         if (match == null) return null;
 
-                        return new ItemDto
+                        return new ItemListDto
                         {
                             Id = match.Id,
                             Title = match.Title,
                             Description = match.Description,
                             Url = match.Url,
-                            Tags = match.ItemTags.Select(it => it.Tag.Value).ToList(),
                             AssetTypeId = match.AssetTypeId,
                             AssetTypeName = match.AssetType != null ? match.AssetType.Value : null,
                             Featured = match.Featured,
@@ -134,15 +133,6 @@ namespace SutterAnalyticsApi.Controllers
                             DivisionId = match.DivisionId,
                             ServiceLineId = match.ServiceLineId,
                             DataSourceId = match.DataSourceId,
-                            Domain = match.DomainLookup != null ? match.DomainLookup.Value : null,
-                            Division = match.DivisionLookup != null ? match.DivisionLookup.Value : null,
-                            ServiceLine = match.ServiceLineLookup != null ? match.ServiceLineLookup.Value : null,
-                            DataSource = match.DataSourceLookup != null ? match.DataSourceLookup.Value : null,
-                            StatusId = match.StatusId,
-                            Status = match.StatusLookup != null ? match.StatusLookup.Value : null,
-                            OwnerId = match.OwnerId,
-                            OwnerName = match.Owner != null ? match.Owner.Name : null,
-                            OwnerEmail = match.Owner != null ? match.Owner.Email : null,
                             PrivacyPhi = match.PrivacyPhi,
                             DateAdded = match.DateAdded,
                             Score = r.Score,

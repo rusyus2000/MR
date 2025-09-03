@@ -188,7 +188,7 @@
         const me = await fetchCurrentUser()
         isAdmin.value = !!me && me.userType === 'Admin'
         // Bulk-load all lookups in one call
-        const bulk = await fetchLookupsBulk()
+        const bulk = await (await import('../services/api')).getLookupsBulkCached()
         const norm = (arr) => (arr || []).map(x => ({ id: x.id ?? x.Id, value: x.value ?? x.Value }))
         lookup.value.domains = norm(bulk.Domain)
         lookup.value.divisions = norm(bulk.Division)
@@ -217,6 +217,7 @@
             form.value.ownerId = it.ownerId || null
             form.value.ownerName = it.ownerName || ''
             form.value.ownerEmail = it.ownerEmail || ''
+            form.value.tags = Array.isArray(it.tags) ? [...it.tags] : []
             if (it.ownerName || it.ownerEmail) {
                 ownerQuery.value = `${it.ownerName || ''}${it.ownerEmail ? ` (${it.ownerEmail})` : ''}`.trim()
             }

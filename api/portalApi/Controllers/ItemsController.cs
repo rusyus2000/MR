@@ -44,7 +44,7 @@ namespace SutterAnalyticsApi.Controllers
 
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ItemDto>>> GetAll(
+        public async Task<ActionResult<IEnumerable<ItemListDto>>> GetAll(
      [FromQuery] int? top,
      [FromQuery] string? domain,
      [FromQuery] string? division,
@@ -61,17 +61,7 @@ namespace SutterAnalyticsApi.Controllers
      [FromQuery] bool? phi)
         {
             var user = CurrentUser;
-            var query = _db.Items
-                .Include(i => i.ItemTags)
-                    .ThenInclude(it => it.Tag)
-                .Include(i => i.AssetType)
-                .Include(i => i.DomainLookup)
-                .Include(i => i.DivisionLookup)
-                .Include(i => i.ServiceLineLookup)
-                .Include(i => i.DataSourceLookup)
-                .Include(i => i.Owner)
-                .Include(i => i.StatusLookup)
-                .AsQueryable();
+            var query = _db.Items.AsQueryable();
 
             // Restrict visibility: non-admins see only Published items
             var isAdmin = user?.UserType == "Admin";
@@ -170,29 +160,19 @@ namespace SutterAnalyticsApi.Controllers
                 .Select(f => f.ItemId)
                 .ToListAsync();
 
-            var list = await query.Select(i => new ItemDto
+            var list = await query.Select(i => new ItemListDto
             {
                 Id = i.Id,
                 Title = i.Title,
                 Description = i.Description,
                 Url = i.Url,
-                Tags = i.ItemTags.Select(it => it.Tag.Value).ToList(),
                 AssetTypeId = i.AssetTypeId,
                 AssetTypeName = i.AssetType != null ? i.AssetType.Value : null,
                 Featured = i.Featured,
-                Domain = i.DomainLookup != null ? i.DomainLookup.Value : null,
-                Division = i.DivisionLookup != null ? i.DivisionLookup.Value : null,
-                ServiceLine = i.ServiceLineLookup != null ? i.ServiceLineLookup.Value : null,
-                DataSource = i.DataSourceLookup != null ? i.DataSourceLookup.Value : null,
                 DomainId = i.DomainId,
                 DivisionId = i.DivisionId,
                 ServiceLineId = i.ServiceLineId,
                 DataSourceId = i.DataSourceId,
-                StatusId = i.StatusId,
-                Status = i.StatusLookup != null ? i.StatusLookup.Value : null,
-                OwnerId = i.OwnerId,
-                OwnerName = i.Owner != null ? i.Owner.Name : null,
-                OwnerEmail = i.Owner != null ? i.Owner.Email : null,
                 PrivacyPhi = i.PrivacyPhi,
                 DateAdded = i.DateAdded,
                 IsFavorite = favoriteIds.Contains(i.Id)
@@ -258,6 +238,10 @@ namespace SutterAnalyticsApi.Controllers
                 Tags = i.ItemTags.Select(it => it.Tag.Value).ToList(),
                 AssetTypeId = i.AssetTypeId,
                 AssetTypeName = i.AssetType != null ? i.AssetType.Value : null,
+                DomainId = i.DomainId,
+                DivisionId = i.DivisionId,
+                ServiceLineId = i.ServiceLineId,
+                DataSourceId = i.DataSourceId,
                 Domain = i.DomainLookup != null ? i.DomainLookup.Value : null,
                 Division = i.DivisionLookup != null ? i.DivisionLookup.Value : null,
                 ServiceLine = i.ServiceLineLookup != null ? i.ServiceLineLookup.Value : null,

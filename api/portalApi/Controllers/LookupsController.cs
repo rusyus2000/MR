@@ -101,5 +101,45 @@ namespace SutterAnalyticsApi.Controllers
 
             return Ok(result);
         }
+
+        // GET /api/lookups/bulk-counts?types=AssetType,Domain,Division,ServiceLine,DataSource,Status
+        // Returns an object keyed by type with arrays of { id, value, count }
+        [HttpGet("bulk-counts")]
+        public async Task<ActionResult<object>> GetBulkWithCounts([FromQuery] string? types)
+        {
+            var defaultTypes = new[] { "AssetType", "Domain", "Division", "ServiceLine", "DataSource", "Status" };
+            var typeList = string.IsNullOrWhiteSpace(types)
+                ? defaultTypes
+                : types.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var lowerSet = typeList.Select(t => t.ToLower()).ToHashSet();
+
+            var lookups = await _db.LookupValues
+                .Where(l => lowerSet.Contains(l.Type.ToLower()))
+                .ToListAsync();
+
+            var result = new Dictionary<string, List<object>>(StringComparer.OrdinalIgnoreCase);
+            foreach (var t in typeList)
+            {
+                var list = lookups.Where(l => l.Type.Equals(t, StringComparison.OrdinalIgnoreCase)).ToList();
+                var withCounts = new List<object>(list.Count);
+                foreach (var lv in list)
+                {
+                    int count = t switch
+                    {
+                        "AssetType" => _db.Items.Count(i => i.AssetTypeId == lv.Id),
+                        "Domain" => _db.Items.Count(i => i.DomainId == lv.Id),
+                        "Division" => _db.Items.Count(i => i.DivisionId == lv.Id),
+                        "ServiceLine" => _db.Items.Count(i => i.ServiceLineId == lv.Id),
+                        "DataSource" => _db.Items.Count(i => i.DataSourceId == lv.Id),
+                        "Status" => _db.Items.Count(i => i.StatusId == lv.Id),
+                        _ => 0
+                    };
+                    withCounts.Add(new { Id = lv.Id, Value = lv.Value, Count = count });
+                }
+                result[t] = withCounts;
+            }
+
+            return Ok(result);
+        }
     }
 }
