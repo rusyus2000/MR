@@ -129,6 +129,11 @@ export function fetchLookupWithCounts(type) {
     return fetch(`${API_BASE_URL}/lookups/${type}/counts`, { credentials: 'include' }).then(handleResponse);
 }
 
+export function fetchLookupsBulk(types = ['AssetType','Domain','Division','ServiceLine','DataSource','Status']) {
+    const qs = new URLSearchParams({ types: types.join(',') }).toString();
+    return fetch(`${API_BASE_URL}/lookups/bulk?${qs}`, { credentials: 'include' }).then(handleResponse);
+}
+
 /** Search items by full-text query (parameter `q`) */
 export function searchItems(q) {
     return fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(q)}`, { credentials: 'include' })
@@ -179,4 +184,23 @@ export function fetchCurrentUser() {
         if (res.status === 401) return null;
         return res.json();
     });
+}
+
+// Intranet user API (Windows-auth) called from browser
+export function fetchIntranetUser() {
+    return fetch('http://fbs.sutterhealth.org/user_api/user/getusername', {
+        credentials: 'include'
+    }).then(res => res.ok ? res.json() : null).catch(() => null);
+}
+
+export function updateCurrentUserProfile({ displayName, email, networkId }) {
+    const form = new FormData();
+    if (displayName) form.append('DisplayName', displayName);
+    if (email) form.append('Email', email);
+    if (networkId) form.append('NetworkId', networkId);
+    return fetch(`${API_BASE_URL}/users/profile`, {
+        method: 'POST',
+        credentials: 'include',
+        body: form
+    }).then(res => { if (!res.ok && res.status !== 204) throw new Error('Failed to update profile'); });
 }

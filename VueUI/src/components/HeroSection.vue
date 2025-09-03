@@ -2,7 +2,7 @@
     <div class="hero-section">
         <div class="container">
             <h1 class="text-white mb-4">
-                Hello Yusup, what would you like to search for today?
+                Hello {{ firstName }}, what would you like to search for today?
             </h1>
             <div class="input-group w-50">
                 <span class="input-group-text bg-white border-0">
@@ -20,6 +20,9 @@
 </template>
 
 <script>
+    import { ref, computed, onMounted } from 'vue';
+    import { fetchCurrentUser, fetchIntranetUser, updateCurrentUserProfile } from '../services/api';
+
     export default {
         name: 'HeroSection',
         props: {
@@ -29,6 +32,33 @@
             },
         },
         emits: ['update:search', 'search-submit'],
+        setup() {
+            const me = ref(null);
+            const firstName = computed(() => {
+                const dn = me.value?.displayName || me.value?.userPrincipalName || '';
+                if (!dn) return 'there';
+                // Expected format: "LastName, FirstName ..." → take part after comma, then first token
+                const parts = dn.split(',');
+                let given = parts.length > 1 ? parts[1].trim() : dn.trim();
+                // Take first token of given name (handles middle names)
+                given = given.split(/\s+/)[0] || given;
+                return given;
+            });
+            onMounted(async () => {
+                try {
+                    me.value = await fetchCurrentUser();
+                    if (!me.value || !me.value.displayName || !me.value.email) {
+                        const intranet = await fetchIntranetUser();
+                        const u = intranet?.user;
+                        if (u && (u.name || u.email || u.networkId)) {
+                            await updateCurrentUserProfile({ displayName: u.name, email: u.email, networkId: u.networkId }).catch(() => {});
+                            me.value = await fetchCurrentUser();
+                        }
+                    }
+                } catch { me.value = null; }
+            });
+            return { firstName };
+        }
     };
 </script>
 

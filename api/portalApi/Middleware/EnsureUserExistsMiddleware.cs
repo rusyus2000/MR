@@ -28,12 +28,11 @@ namespace portalApi.Middleware
 
                     if (user == null)
                     {
-                        // Attempt to get email/full name from claims
                         var claimsPrincipal = context.User;
                         string email = claimsPrincipal.FindFirst(ClaimTypes.Email)?.Value
                                         ?? claimsPrincipal.FindFirst("email")?.Value ?? string.Empty;
                         string fullName = claimsPrincipal.FindFirst(ClaimTypes.Name)?.Value
-                                        ?? upn;
+                                        ?? claimsPrincipal.FindFirst("displayname")?.Value ?? string.Empty;
 
                         user = new User
                         {
@@ -48,7 +47,8 @@ namespace portalApi.Middleware
                         await db.SaveChangesAsync();
                     }
 
-                    // Dev-only admin bootstrap: treat specific UPN as Admin
+                    // UI now populates profile via /api/users/profile; no server-side external calls here
+
                     var isDevAdmin = string.Equals(upn, "adzhiey", StringComparison.OrdinalIgnoreCase);
                     var desiredType = isDevAdmin ? "Admin" : "User";
                     if (!string.Equals(user.UserType, desiredType, StringComparison.Ordinal))
@@ -58,10 +58,8 @@ namespace portalApi.Middleware
                         await db.SaveChangesAsync();
                     }
 
-                    // Make user available to the rest of the request
                     context.Items["AppUser"] = user;
 
-                    // Record a login history entry for auditing (best-effort)
                     try
                     {
                         db.UserLoginHistories.Add(new UserLoginHistory
@@ -77,6 +75,7 @@ namespace portalApi.Middleware
 
             await _next(context);
         }
+
+        // Profile is enriched by the UI via /api/users/profile
     }
 }
-

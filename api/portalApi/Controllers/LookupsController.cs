@@ -72,5 +72,34 @@ namespace SutterAnalyticsApi.Controllers
 
             return Ok(result);
         }
+
+        // GET /api/lookups/bulk?types=AssetType,Domain,Division,ServiceLine,DataSource,Status
+        // Returns an object keyed by type with arrays of { id, value }
+        [HttpGet("bulk")]
+        public async Task<ActionResult<object>> GetBulk([FromQuery] string? types)
+        {
+            var defaultTypes = new[] { "AssetType", "Domain", "Division", "ServiceLine", "DataSource", "Status" };
+            var typeSet = string.IsNullOrWhiteSpace(types)
+                ? defaultTypes
+                : types.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            var lowerSet = typeSet.Select(t => t.ToLower()).ToHashSet();
+
+            var all = await _db.LookupValues
+                .Where(l => lowerSet.Contains(l.Type.ToLower()))
+                .ToListAsync();
+
+            var result = new Dictionary<string, IEnumerable<LookupDto>>(StringComparer.OrdinalIgnoreCase);
+            foreach (var t in typeSet)
+            {
+                var list = all
+                    .Where(l => l.Type.Equals(t, StringComparison.OrdinalIgnoreCase))
+                    .Select(l => new LookupDto { Id = l.Id, Value = l.Value })
+                    .ToList();
+                result[t] = list;
+            }
+
+            return Ok(result);
+        }
     }
 }

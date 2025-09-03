@@ -15,6 +15,42 @@ namespace SutterAnalyticsApi.Controllers
             if (u == null) return Unauthorized();
             return Ok(new { u.Id, u.UserPrincipalName, u.DisplayName, u.Email, u.UserType });
         }
+
+        public class UserProfileDto
+        {
+            public string? DisplayName { get; set; }
+            public string? Email { get; set; }
+            public string? NetworkId { get; set; }
+        }
+
+        // Update current user's profile (from client-sourced intranet API)
+        [HttpPost("profile")]
+        public async Task<IActionResult> UpdateProfile([FromForm] UserProfileDto dto, [FromServices] Data.AppDbContext db)
+        {
+            var u = CurrentUser;
+            if (u == null) return Unauthorized();
+            bool changed = false;
+            if (!string.IsNullOrWhiteSpace(dto.DisplayName) && dto.DisplayName != u.DisplayName)
+            {
+                u.DisplayName = dto.DisplayName;
+                changed = true;
+            }
+            if (!string.IsNullOrWhiteSpace(dto.Email) && dto.Email != u.Email)
+            {
+                u.Email = dto.Email;
+                changed = true;
+            }
+            if (!string.IsNullOrWhiteSpace(dto.NetworkId) && dto.NetworkId != u.UserPrincipalName)
+            {
+                u.UserPrincipalName = dto.NetworkId;
+                changed = true;
+            }
+            if (changed)
+            {
+                db.Users.Update(u);
+                await db.SaveChangesAsync();
+            }
+            return NoContent();
+        }
     }
 }
-

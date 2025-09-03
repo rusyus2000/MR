@@ -26,9 +26,19 @@
                         <div class="label">Owner:</div>
                         <div>
                             <div class="owner-suggest">
-                                <input v-model="ownerQuery" @input="onOwnerQuery" type="text" placeholder="Search owner by name or email" class="form-control mb-2" :disabled="!!form.ownerId" />
-                                <div v-if="ownerSuggestions.length && !form.ownerId" class="suggest-box list-group">
-                                    <button type="button" v-for="o in ownerSuggestions" :key="o.id" class="list-group-item list-group-item-action"
+                                <input v-model="ownerQuery"
+                                       @input="onOwnerQuery"
+                                       @keydown="onOwnerKeydown"
+                                       type="text"
+                                       placeholder="Search owner by name or email"
+                                       class="form-control mb-2"
+                                       :disabled="!!form.ownerId" />
+                                <div v-if="ownerSuggestions.length && !form.ownerId" class="suggest-box list-group" ref="ownerSuggestBox">
+                                    <button type="button"
+                                            v-for="(o, idx) in ownerSuggestions"
+                                            :key="o.id"
+                                            class="list-group-item list-group-item-action"
+                                            :class="{ active: idx === ownerActiveIndex }"
                                             @click="selectOwner(o)">
                                         {{ o.name }} ({{ o.email }})
                                     </button>
@@ -127,8 +137,8 @@
 </template>
 
 <script setup>
-    import { ref, onMounted, watch, computed } from 'vue'
-    import { fetchLookup, createItem, updateItem, searchOwners, fetchCurrentUser } from '../services/api'
+    import { ref, onMounted, watch, computed, nextTick } from 'vue'
+    import { fetchLookup, fetchLookupsBulk, createItem, updateItem, searchOwners, fetchCurrentUser } from '../services/api'
 
     const emit = defineEmits(['close', 'saved'])
     const props = defineProps({
@@ -171,17 +181,21 @@
     const isAdmin = ref(false)
     const ownerQuery = ref('')
     const ownerSuggestions = ref([])
+    const ownerActiveIndex = ref(-1)
+    const ownerSuggestBox = ref(null)
 
     onMounted(async () => {
         const me = await fetchCurrentUser()
         isAdmin.value = !!me && me.userType === 'Admin'
-        lookup.value.domains = await fetchLookup('Domain')
-        lookup.value.divisions = await fetchLookup('Division')
-        lookup.value.serviceLines = await fetchLookup('ServiceLine')
-        lookup.value.dataSources = await fetchLookup('DataSource')
-        // Exclude any 'Featured' lookup from the selectable asset-type list
-        lookup.value.assetTypes = (await fetchLookup('AssetType')).filter(x => (x.value || x.Value) !== 'Featured')
-        lookup.value.statuses = await fetchLookup('Status')
+        // Bulk-load all lookups in one call
+        const bulk = await fetchLookupsBulk()
+        const norm = (arr) => (arr || []).map(x => ({ id: x.id ?? x.Id, value: x.value ?? x.Value }))
+        lookup.value.domains = norm(bulk.Domain)
+        lookup.value.divisions = norm(bulk.Division)
+        lookup.value.serviceLines = norm(bulk.ServiceLine)
+        lookup.value.dataSources = norm(bulk.DataSource)
+        lookup.value.assetTypes = norm(bulk.AssetType).filter(x => (x.value) !== 'Featured')
+        lookup.value.statuses = norm(bulk.Status)
         // Prefill when editing
         if (props.editItem) {
             const it = props.editItem
@@ -263,6 +277,7 @@
         if (!q) { ownerSuggestions.value = []; return }
         try {
             ownerSuggestions.value = await searchOwners(q, 10)
+            ownerActiveIndex.value = ownerSuggestions.value.length ? 0 : -1
         } catch (e) { ownerSuggestions.value = [] }
     }
 
@@ -272,11 +287,45 @@
         form.value.ownerEmail = o.email
         ownerSuggestions.value = []
         ownerQuery.value = `${o.name} (${o.email})`
+        ownerActiveIndex.value = -1
     }
 
     function clearOwner() {
         form.value.ownerId = null
         ownerQuery.value = ''
+    }
+
+    function onOwnerKeydown(e) {
+        if (form.value.ownerId) return;
+        if (!ownerSuggestions.value.length) return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault()
+            ownerActiveIndex.value = (ownerActiveIndex.value + 1) % ownerSuggestions.value.length
+            ensureOwnerActiveVisible()
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault()
+            ownerActiveIndex.value = (ownerActiveIndex.value <= 0)
+                ? ownerSuggestions.value.length - 1
+                : ownerActiveIndex.value - 1
+            ensureOwnerActiveVisible()
+        } else if (e.key === 'Enter') {
+            if (ownerActiveIndex.value >= 0) {
+                e.preventDefault()
+                const o = ownerSuggestions.value[ownerActiveIndex.value]
+                if (o) selectOwner(o)
+            }
+        }
+    }
+
+    function ensureOwnerActiveVisible() {
+        nextTick(() => {
+            const box = ownerSuggestBox.value
+            if (!box) return
+            const idx = ownerActiveIndex.value
+            if (idx < 0) return
+            const btn = box.querySelectorAll('.list-group-item')[idx]
+            if (btn && btn.scrollIntoView) btn.scrollIntoView({ block: 'nearest' })
+        })
     }
 
     // If user starts typing manual owner fields, treat as new owner (clear selected id)
