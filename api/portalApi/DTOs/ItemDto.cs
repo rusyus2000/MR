@@ -28,5 +28,14 @@ namespace SutterAnalyticsApi.DTOs
         public bool IsFavorite { get; set; }
         // Tags associated with the item (free-form)
         public List<string> Tags { get; set; } = new();
+
+        // Status (lookup)
+        public int? StatusId { get; set; }
+        public string Status { get; set; }
+
+        // Owner
+        public int? OwnerId { get; set; }
+        public string OwnerName { get; set; }
+        public string OwnerEmail { get; set; }
     }
 }

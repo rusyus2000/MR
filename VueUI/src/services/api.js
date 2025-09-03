@@ -123,3 +123,17 @@ export async function fetchFavorites() {
         return res.json();
     });
 }
+
+// Owners
+export function searchOwners(search, top = 10) {
+    const qs = new URLSearchParams({ search: search || '', top });
+    return fetch(`${API_BASE_URL}/owners?${qs}`, { credentials: 'include' }).then(handleResponse);
+}
+
+// Current user (to detect admins)
+export function fetchCurrentUser() {
+    return fetch(`${API_BASE_URL}/users/me`, { credentials: 'include' }).then(res => {
+        if (res.status === 401) return null;
+        return res.json();
+    });
+}

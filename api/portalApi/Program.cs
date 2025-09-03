@@ -52,5 +52,25 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<EnsureUserExistsMiddleware>();
 
+// Dev convenience: ensure Status lookup values exist
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var statuses = new[] { "Published", "Offline" };
+        foreach (var s in statuses)
+        {
+            var exists = db.LookupValues.Any(l => l.Type == "Status" && l.Value == s);
+            if (!exists)
+            {
+                db.LookupValues.Add(new SutterAnalyticsApi.Models.LookupValue { Type = "Status", Value = s });
+            }
+        }
+        db.SaveChanges();
+    }
+    catch { }
+}
+
 app.MapControllers();
 app.Run();

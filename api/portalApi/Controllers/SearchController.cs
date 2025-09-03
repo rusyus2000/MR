@@ -97,8 +97,21 @@ namespace SutterAnalyticsApi.Controllers
                     .Include(i => i.DivisionLookup)
                     .Include(i => i.ServiceLineLookup)
                     .Include(i => i.DataSourceLookup)
+                    .Include(i => i.Owner)
+                    .Include(i => i.StatusLookup)
                     .Where(i => ids.Contains(i.Id))
                     .ToListAsync();
+
+                // Restrict visibility: non-admins see only Published
+                var isAdmin = user?.UserType == "Admin";
+                if (!isAdmin)
+                {
+                    var published = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "Status" && l.Value == "Published");
+                    if (published != null)
+                    {
+                        matchedItems = matchedItems.Where(i => !i.StatusId.HasValue || i.StatusId == published.Id).ToList();
+                    }
+                }
 
                 // ?? Preserve AI sort order, and include IsFavorite
                 var ordered = aiResults
@@ -125,6 +138,11 @@ namespace SutterAnalyticsApi.Controllers
                             Division = match.DivisionLookup != null ? match.DivisionLookup.Value : null,
                             ServiceLine = match.ServiceLineLookup != null ? match.ServiceLineLookup.Value : null,
                             DataSource = match.DataSourceLookup != null ? match.DataSourceLookup.Value : null,
+                            StatusId = match.StatusId,
+                            Status = match.StatusLookup != null ? match.StatusLookup.Value : null,
+                            OwnerId = match.OwnerId,
+                            OwnerName = match.Owner != null ? match.Owner.Name : null,
+                            OwnerEmail = match.Owner != null ? match.Owner.Email : null,
                             PrivacyPhi = match.PrivacyPhi,
                             DateAdded = match.DateAdded,
                             Score = r.Score,

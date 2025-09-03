@@ -45,6 +45,14 @@ namespace SutterAnalyticsApi.Models
         public int? DataSourceId { get; set; }
         public LookupValue DataSourceLookup { get; set; }
 
+        // Status (e.g., Published, Offline) via LookupValue of Type="Status"
+        public int? StatusId { get; set; }
+        public LookupValue StatusLookup { get; set; }
+
+        // Product Owner (separate entity). One owner per item.
+        public int? OwnerId { get; set; }
+        public Owner Owner { get; set; }
+
         // Keep text properties available at the model level for compatibility
         // but do not map them to database columns. Consumers should prefer
         // the Lookup navigation properties (e.g. DomainLookup.Value).
@@ -59,6 +67,9 @@ namespace SutterAnalyticsApi.Models
 
         [NotMapped]
         public string DataSource => DataSourceLookup?.Value;
+
+        [NotMapped]
+        public string Status => StatusLookup?.Value;
 
         // Privacy: PHI or not
         public bool PrivacyPhi { get; set; }

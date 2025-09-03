@@ -51,6 +51,9 @@ namespace SutterAnalyticsApi.Data
                 new LookupValue { Type = "AssetType", Value = "Report" },
                 new LookupValue { Type = "AssetType", Value = "Application" },
                 new LookupValue { Type = "AssetType", Value = "Data Model" },
+                // Statuses
+                new LookupValue { Type = "Status", Value = "Published" },
+                new LookupValue { Type = "Status", Value = "Offline" },
             };
 
             _db.LookupValues.AddRange(lookups);
@@ -63,8 +66,8 @@ namespace SutterAnalyticsApi.Data
 
             var samples = new[]
             {
-                new Item { Title = "Patient Flow Dashboard", Description = "Visualizes patient wait times.", Url = "https://dashboard.healthorg.com/patient-flow", AssetTypeId = L("AssetType","Dashboard"), DomainId = L("Domain","Access to Care"), DivisionId = L("Division","Greater Central Valley"), ServiceLineId = L("ServiceLine","Hospital"), DataSourceId = L("DataSource","Power BI"), PrivacyPhi = true, DateAdded = now.AddDays(-1) },
-                new Item { Title = "Leadership KPI Dashboard", Description = "Executive-level dashboard.", Url = "https://dashboard.healthorg.com/leadership-kpi", AssetTypeId = L("AssetType","Dashboard"), Featured = true, DomainId = L("Domain","Quality"), DivisionId = L("Division","Greater East Bay"), ServiceLineId = L("ServiceLine","Cardiology"), DataSourceId = L("DataSource","Epic"), PrivacyPhi = false, DateAdded = now.AddDays(-3) }
+                new Item { Title = "Patient Flow Dashboard", Description = "Visualizes patient wait times.", Url = "https://dashboard.healthorg.com/patient-flow", AssetTypeId = L("AssetType","Dashboard"), DomainId = L("Domain","Access to Care"), DivisionId = L("Division","Greater Central Valley"), ServiceLineId = L("ServiceLine","Hospital"), DataSourceId = L("DataSource","Power BI"), StatusId = L("Status","Published"), PrivacyPhi = true, DateAdded = now.AddDays(-1) },
+                new Item { Title = "Leadership KPI Dashboard", Description = "Executive-level dashboard.", Url = "https://dashboard.healthorg.com/leadership-kpi", AssetTypeId = L("AssetType","Dashboard"), Featured = true, DomainId = L("Domain","Quality"), DivisionId = L("Division","Greater East Bay"), ServiceLineId = L("ServiceLine","Cardiology"), DataSourceId = L("DataSource","Epic"), StatusId = L("Status","Published"), PrivacyPhi = false, DateAdded = now.AddDays(-3) }
             };
 
             _db.Items.AddRange(samples);

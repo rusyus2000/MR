@@ -14,6 +14,7 @@ namespace SutterAnalyticsApi.Data
         public DbSet<UserAssetOpenHistory> UserAssetOpenHistories { get; set; }
         public DbSet<UserSearchHistory> UserSearchHistories { get; set; }
         public DbSet<UserLoginHistory> UserLoginHistories { get; set; }
+        public DbSet<Owner> Owners { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
@@ -80,6 +81,20 @@ namespace SutterAnalyticsApi.Data
                 .HasForeignKey(i => i.DataSourceId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            // Item -> Status (LookupValue Type="Status")
+            modelBuilder.Entity<Item>()
+                .HasOne(i => i.StatusLookup)
+                .WithMany()
+                .HasForeignKey(i => i.StatusId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Item -> Owner (separate entity); optional
+            modelBuilder.Entity<Item>()
+                .HasOne(i => i.Owner)
+                .WithMany(o => o.Items)
+                .HasForeignKey(i => i.OwnerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             // Indexes to speed up lookup/filter queries and joins
             modelBuilder.Entity<Item>()
                 .HasIndex(i => i.AssetTypeId);
@@ -95,6 +110,12 @@ namespace SutterAnalyticsApi.Data
 
             modelBuilder.Entity<Item>()
                 .HasIndex(i => i.DataSourceId);
+
+            modelBuilder.Entity<Item>()
+                .HasIndex(i => i.StatusId);
+
+            modelBuilder.Entity<Item>()
+                .HasIndex(i => i.OwnerId);
 
             // Common sorting/filtering columns
             modelBuilder.Entity<Item>()

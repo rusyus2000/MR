@@ -60,6 +60,9 @@ namespace SutterAnalyticsApi.Controllers
                     case "DataSource":
                         count = await _db.Items.CountAsync(i => i.DataSourceId == lv.Id);
                         break;
+                    case "Status":
+                        count = await _db.Items.CountAsync(i => i.StatusId == lv.Id);
+                        break;
                     default:
                         count = 0; break;
                 }

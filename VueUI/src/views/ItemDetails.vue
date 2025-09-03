@@ -12,6 +12,8 @@
                 <p><strong>Description:</strong> {{ item.description }}</p>
                 <p><strong>URL:</strong> <a href="#" @click.prevent="openResource(item)">{{ item.url }}</a></p>
                 <p><strong>Asset Type:</strong> {{ item.assetTypeName }}</p>
+                <p><strong>Status:</strong> {{ item.status || '—' }}</p>
+                <p><strong>Owner:</strong> {{ item.ownerName }}<span v-if="item.ownerEmail"> ({{ item.ownerEmail }})</span></p>
                 <p><strong>Domain:</strong> {{ item.domain }}</p>
                 <p><strong>Division:</strong> {{ item.division }}</p>
                 <p><strong>Service Line:</strong> {{ item.serviceLine }}</p>

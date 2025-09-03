@@ -48,6 +48,21 @@
                     // Make user available to the rest of the request
                     context.Items["AppUser"] = user;
 
+                    // Dev-only admin bootstrap: treat specific UPN as Admin
+                    try
+                    {
+                        var isDevAdmin = string.Equals(upn, "adzhiey", StringComparison.OrdinalIgnoreCase);
+                        var desiredType = isDevAdmin ? "Admin" : "User";
+                        if (!string.Equals(user.UserType, desiredType, StringComparison.Ordinal))
+                        {
+                            user.UserType = desiredType;
+                            db.Users.Update(user);
+                            await db.SaveChangesAsync();
+                            context.Items["AppUser"] = user;
+                        }
+                    }
+                    catch { }
+
                     // Record a login history entry for auditing
                     try
                     {

@@ -19,4 +19,12 @@ public class CreateItemDto
     public List<string> Tags { get; set; } = new();
     // Promotion flag
     public bool Featured { get; set; }
+
+    // Status (lookup) - respected only for admins; defaults to Published
+    public int? StatusId { get; set; }
+
+    // Owner - prefer OwnerId; if not provided, backend may create using Name/Email
+    public int? OwnerId { get; set; }
+    public string OwnerName { get; set; }
+    public string OwnerEmail { get; set; }
 }

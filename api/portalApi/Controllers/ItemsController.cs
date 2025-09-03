@@ -69,7 +69,20 @@ namespace SutterAnalyticsApi.Controllers
                 .Include(i => i.DivisionLookup)
                 .Include(i => i.ServiceLineLookup)
                 .Include(i => i.DataSourceLookup)
+                .Include(i => i.Owner)
+                .Include(i => i.StatusLookup)
                 .AsQueryable();
+
+            // Restrict visibility: non-admins see only Published items
+            var isAdmin = user?.UserType == "Admin";
+            if (!isAdmin)
+            {
+                var published = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "Status" && l.Value == "Published");
+                if (published != null)
+                {
+                    query = query.Where(i => !i.StatusId.HasValue || i.StatusId == published.Id);
+                }
+            }
 
             // Helper to parse comma-separated id lists into integers
             List<int> ParseIds(string? ids)
@@ -175,6 +188,11 @@ namespace SutterAnalyticsApi.Controllers
                 DivisionId = i.DivisionId,
                 ServiceLineId = i.ServiceLineId,
                 DataSourceId = i.DataSourceId,
+                StatusId = i.StatusId,
+                Status = i.StatusLookup != null ? i.StatusLookup.Value : null,
+                OwnerId = i.OwnerId,
+                OwnerName = i.Owner != null ? i.Owner.Name : null,
+                OwnerEmail = i.Owner != null ? i.Owner.Email : null,
                 PrivacyPhi = i.PrivacyPhi,
                 DateAdded = i.DateAdded,
                 IsFavorite = favoriteIds.Contains(i.Id)
@@ -196,17 +214,30 @@ namespace SutterAnalyticsApi.Controllers
                 .Include(it => it.DivisionLookup)
                 .Include(it => it.ServiceLineLookup)
                 .Include(it => it.DataSourceLookup)
+                .Include(it => it.Owner)
+                .Include(it => it.StatusLookup)
                 .FirstOrDefaultAsync(it => it.Id == id);
             if (i == null) return NotFound();
+            // Non-admins cannot view non-Published items
+            var user = CurrentUser;
+            var isAdmin = user?.UserType == "Admin";
+            if (!isAdmin)
+            {
+                var published = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "Status" && l.Value == "Published");
+                if (published != null && i.StatusId.HasValue && i.StatusId.Value != published.Id)
+                {
+                    return NotFound();
+                }
+            }
             // record that the current user opened this asset
             try
             {
-                var user = CurrentUser;
-                if (user != null)
+                var u = CurrentUser;
+                if (u != null)
                 {
                     _db.UserAssetOpenHistories.Add(new UserAssetOpenHistory
                     {
-                        UserId = user.Id,
+                        UserId = u.Id,
                         ItemId = i.Id,
                         OpenedAt = DateTime.UtcNow
                     });
@@ -231,6 +262,11 @@ namespace SutterAnalyticsApi.Controllers
                 Division = i.DivisionLookup != null ? i.DivisionLookup.Value : null,
                 ServiceLine = i.ServiceLineLookup != null ? i.ServiceLineLookup.Value : null,
                 DataSource = i.DataSourceLookup != null ? i.DataSourceLookup.Value : null,
+                StatusId = i.StatusId,
+                Status = i.StatusLookup != null ? i.StatusLookup.Value : null,
+                OwnerId = i.OwnerId,
+                OwnerName = i.Owner != null ? i.Owner.Name : null,
+                OwnerEmail = i.Owner != null ? i.Owner.Email : null,
                 PrivacyPhi = i.PrivacyPhi,
                 DateAdded = i.DateAdded,
                 Featured = i.Featured
@@ -354,6 +390,47 @@ namespace SutterAnalyticsApi.Controllers
             // Set featured flag
             i.Featured = dto.Featured;
 
+            // Owner assignment
+            if (dto.OwnerId.HasValue)
+            {
+                var owner = await _db.Owners.FindAsync(dto.OwnerId.Value);
+                if (owner != null) i.OwnerId = owner.Id;
+            }
+            else if (!string.IsNullOrWhiteSpace(dto.OwnerEmail) || !string.IsNullOrWhiteSpace(dto.OwnerName))
+            {
+                var email = (dto.OwnerEmail ?? string.Empty).Trim();
+                var name = (dto.OwnerName ?? string.Empty).Trim();
+                var existing = !string.IsNullOrEmpty(email)
+                    ? await _db.Owners.FirstOrDefaultAsync(o => o.Email == email)
+                    : await _db.Owners.FirstOrDefaultAsync(o => o.Name == name);
+                if (existing == null)
+                {
+                    if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(email))
+                    {
+                        return BadRequest("Both OwnerName and OwnerEmail are required to create a new owner.");
+                    }
+                    existing = new Owner { Name = name, Email = email };
+                    _db.Owners.Add(existing);
+                    await _db.SaveChangesAsync();
+                }
+                i.OwnerId = existing.Id;
+            }
+
+            // Status assignment: default to Published; admins may override via dto.StatusId
+            var currentUser = CurrentUser;
+            var admin = currentUser?.UserType == "Admin";
+            var publishedLv = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "Status" && l.Value == "Published");
+            if (admin && dto.StatusId.HasValue)
+            {
+                var st = await _db.LookupValues.FindAsync(dto.StatusId.Value);
+                if (st != null) i.StatusId = st.Id;
+                else if (publishedLv != null) i.StatusId = publishedLv.Id;
+            }
+            else if (publishedLv != null)
+            {
+                i.StatusId = publishedLv.Id;
+            }
+
             _db.Items.Add(i);
             await _db.SaveChangesAsync();
 
@@ -456,6 +533,39 @@ namespace SutterAnalyticsApi.Controllers
                     await _db.SaveChangesAsync();
                 }
                 i.DataSourceId = lookup.Id;
+            }
+            // Owner update
+            if (dto.OwnerId.HasValue)
+            {
+                var owner = await _db.Owners.FindAsync(dto.OwnerId.Value);
+                if (owner != null) i.OwnerId = owner.Id;
+            }
+            else if (!string.IsNullOrWhiteSpace(dto.OwnerEmail) || !string.IsNullOrWhiteSpace(dto.OwnerName))
+            {
+                var email = (dto.OwnerEmail ?? string.Empty).Trim();
+                var name = (dto.OwnerName ?? string.Empty).Trim();
+                var existing = !string.IsNullOrEmpty(email)
+                    ? await _db.Owners.FirstOrDefaultAsync(o => o.Email == email)
+                    : await _db.Owners.FirstOrDefaultAsync(o => o.Name == name);
+                if (existing == null)
+                {
+                    if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(email))
+                    {
+                        return BadRequest("Both OwnerName and OwnerEmail are required to create a new owner.");
+                    }
+                    existing = new Owner { Name = name, Email = email };
+                    _db.Owners.Add(existing);
+                    await _db.SaveChangesAsync();
+                }
+                i.OwnerId = existing.Id;
+            }
+
+            // Status update (admin only)
+            var currentUser = CurrentUser;
+            if (currentUser?.UserType == "Admin" && dto.StatusId.HasValue)
+            {
+                var st = await _db.LookupValues.FindAsync(dto.StatusId.Value);
+                if (st != null) i.StatusId = st.Id;
             }
             i.PrivacyPhi = dto.PrivacyPhi;
             i.Featured = dto.Featured;

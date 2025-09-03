@@ -23,6 +23,31 @@
                         <div class="label">URL:</div>
                         <div><input v-model="form.url" type="url" class="form-control" required /></div>
 
+                        <div class="label">Owner:</div>
+                        <div>
+                            <div class="owner-suggest">
+                                <input v-model="ownerQuery" @input="onOwnerQuery" type="text" placeholder="Search owner by name or email" class="form-control mb-2" :disabled="!!form.ownerId" />
+                                <div v-if="ownerSuggestions.length && !form.ownerId" class="suggest-box list-group">
+                                    <button type="button" v-for="o in ownerSuggestions" :key="o.id" class="list-group-item list-group-item-action"
+                                            @click="selectOwner(o)">
+                                        {{ o.name }} ({{ o.email }})
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2 align-items-center mb-2">
+                                <input v-model="form.ownerName" type="text" placeholder="Owner name" class="form-control" :disabled="!!form.ownerId" />
+                                <input v-model="form.ownerEmail" type="email" placeholder="Owner email" class="form-control" :disabled="!!form.ownerId" />
+                                <button v-if="form.ownerId" type="button" class="btn btn-outline-secondary" @click="clearOwner">Clear</button>
+                            </div>
+                        </div>
+
+                        <div v-if="isAdmin" class="label">Status:</div>
+                        <div v-if="isAdmin">
+                            <select v-model.number="form.statusId" class="form-select">
+                                <option v-for="opt in lookup.statuses" :key="opt.id" :value="opt.id">{{ opt.value }}</option>
+                            </select>
+                        </div>
+
                         <div class="label">Asset Type:</div>
                         <div>
                             <select v-model.number="form.assetTypeId" class="form-select" required>
@@ -103,7 +128,7 @@
 
 <script setup>
     import { ref, onMounted } from 'vue'
-    import { fetchLookup, createItem } from '../services/api'
+    import { fetchLookup, createItem, searchOwners, fetchCurrentUser } from '../services/api'
 
     const emit = defineEmits(['close', 'saved'])
 
@@ -121,6 +146,10 @@
         serviceLine: '',
         dataSource: '',
         privacyPhi: false,
+        ownerId: null,
+        ownerName: '',
+        ownerEmail: '',
+        statusId: null,
     })
 
     const lookup = ref({
@@ -129,15 +158,23 @@
         serviceLines: [],
         dataSources: [],
         assetTypes: [],
+        statuses: [],
     })
 
+    const isAdmin = ref(false)
+    const ownerQuery = ref('')
+    const ownerSuggestions = ref([])
+
     onMounted(async () => {
+        const me = await fetchCurrentUser()
+        isAdmin.value = !!me && me.userType === 'Admin'
         lookup.value.domains = await fetchLookup('Domain')
         lookup.value.divisions = await fetchLookup('Division')
         lookup.value.serviceLines = await fetchLookup('ServiceLine')
         lookup.value.dataSources = await fetchLookup('DataSource')
         // Exclude any 'Featured' lookup from the selectable asset-type list
         lookup.value.assetTypes = (await fetchLookup('AssetType')).filter(x => (x.value || x.Value) !== 'Featured')
+        lookup.value.statuses = await fetchLookup('Status')
     })
 
     function onLookupChange(list, idField, textField, id) {
@@ -175,6 +212,27 @@
     function removeTag(i) {
         form.value.tags.splice(i, 1)
     }
+
+    async function onOwnerQuery() {
+        const q = (ownerQuery.value || '').trim()
+        if (!q) { ownerSuggestions.value = []; return }
+        try {
+            ownerSuggestions.value = await searchOwners(q, 10)
+        } catch (e) { ownerSuggestions.value = [] }
+    }
+
+    function selectOwner(o) {
+        form.value.ownerId = o.id
+        form.value.ownerName = o.name
+        form.value.ownerEmail = o.email
+        ownerSuggestions.value = []
+        ownerQuery.value = `${o.name} (${o.email})`
+    }
+
+    function clearOwner() {
+        form.value.ownerId = null
+        ownerQuery.value = ''
+    }
 </script>
 
 <style scoped>
@@ -210,6 +268,9 @@
     .modal-body {
         padding: 1.5rem;
     }
+
+    .owner-suggest { position: relative; }
+    .suggest-box { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #dee2e6; z-index: 10; max-height: 200px; overflow: auto; }
 
     .details-grid {
         display: grid;
