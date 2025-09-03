@@ -9,15 +9,35 @@
                 <div class="d-flex align-items-center">
                     <a href="#" class="text-dark me-3">My Library</a>
                     <a href="#" class="text-dark me-3">My Requests</a>
-                    <img src="../assets/user.jpg" alt="User Profile" class="rounded-circle" style="width: 40px; height: 40px;" />
+                    <img src="../assets/user.jpg"
+                         :title="userTitle"
+                         alt="User Profile"
+                         class="rounded-circle"
+                         style="width: 40px; height: 40px; cursor: help;" />
                 </div>
             </div>
         </nav>
     </template>
 
     <script>
+        import { ref, onMounted, computed } from 'vue';
+        import { fetchCurrentUser } from '../services/api';
+
         export default {
             name: 'Navbar',
+            setup() {
+                const me = ref(null);
+                onMounted(async () => {
+                    try { me.value = await fetchCurrentUser(); } catch { me.value = null; }
+                });
+                const userTitle = computed(() => {
+                    if (!me.value) return 'Not signed in';
+                    const name = me.value.displayName || me.value.userPrincipalName || 'User';
+                    const role = me.value.userType || 'User';
+                    return `${name}\nRole: ${role}`;
+                });
+                return { userTitle };
+            }
         };
     </script>
 

@@ -127,10 +127,13 @@
 </template>
 
 <script setup>
-    import { ref, onMounted } from 'vue'
-    import { fetchLookup, createItem, searchOwners, fetchCurrentUser } from '../services/api'
+    import { ref, onMounted, watch, computed } from 'vue'
+    import { fetchLookup, createItem, updateItem, searchOwners, fetchCurrentUser } from '../services/api'
 
     const emit = defineEmits(['close', 'saved'])
+    const props = defineProps({
+        editItem: { type: Object, default: null }
+    })
 
     const saving = ref(false)
 
@@ -145,6 +148,10 @@
         division: '',
         serviceLine: '',
         dataSource: '',
+        domainId: null,
+        divisionId: null,
+        serviceLineId: null,
+        dataSourceId: null,
         privacyPhi: false,
         ownerId: null,
         ownerName: '',
@@ -175,6 +182,31 @@
         // Exclude any 'Featured' lookup from the selectable asset-type list
         lookup.value.assetTypes = (await fetchLookup('AssetType')).filter(x => (x.value || x.Value) !== 'Featured')
         lookup.value.statuses = await fetchLookup('Status')
+        // Prefill when editing
+        if (props.editItem) {
+            const it = props.editItem
+            form.value.title = it.title
+            form.value.description = it.description
+            form.value.url = it.url
+            form.value.assetTypeId = it.assetTypeId || null
+            form.value.featured = !!it.featured
+            form.value.domain = it.domain || ''
+            form.value.division = it.division || ''
+            form.value.serviceLine = it.serviceLine || ''
+            form.value.dataSource = it.dataSource || ''
+            form.value.domainId = it.domainId || null
+            form.value.divisionId = it.divisionId || null
+            form.value.serviceLineId = it.serviceLineId || null
+            form.value.dataSourceId = it.dataSourceId || null
+            form.value.privacyPhi = !!it.privacyPhi
+            form.value.statusId = it.statusId || null
+            form.value.ownerId = it.ownerId || null
+            form.value.ownerName = it.ownerName || ''
+            form.value.ownerEmail = it.ownerEmail || ''
+            if (it.ownerName || it.ownerEmail) {
+                ownerQuery.value = `${it.ownerName || ''}${it.ownerEmail ? ` (${it.ownerEmail})` : ''}`.trim()
+            }
+        }
     })
 
     function onLookupChange(list, idField, textField, id) {
@@ -189,7 +221,20 @@
     async function submitForm() {
         saving.value = true
         try {
-            await createItem(form.value)
+            // If no existing owner selected, require both name and email when any owner info is provided
+            if (!form.value.ownerId) {
+                const hasAny = (form.value.ownerName || '').trim() || (form.value.ownerEmail || '').trim()
+                const hasBoth = (form.value.ownerName || '').trim() && (form.value.ownerEmail || '').trim()
+                if (hasAny && !hasBoth) {
+                    alert('Please provide both Owner Name and Owner Email, or select an existing owner.')
+                    return
+                }
+            }
+            if (props.editItem && props.editItem.id) {
+                await updateItem(props.editItem.id, form.value)
+            } else {
+                await createItem(form.value)
+            }
             emit('saved') // will call ItemGrid.handleAssetSaved
         } catch (err) {
             alert('Error saving asset: ' + err.message)
@@ -233,6 +278,20 @@
         form.value.ownerId = null
         ownerQuery.value = ''
     }
+
+    // If user starts typing manual owner fields, treat as new owner (clear selected id)
+    watch(() => form.value.ownerName, (v) => {
+        if (form.value.ownerId && (v || '').trim()) {
+            form.value.ownerId = null
+            ownerQuery.value = ''
+        }
+    })
+    watch(() => form.value.ownerEmail, (v) => {
+        if (form.value.ownerId && (v || '').trim()) {
+            form.value.ownerId = null
+            ownerQuery.value = ''
+        }
+    })
 </script>
 
 <style scoped>

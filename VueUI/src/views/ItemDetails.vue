@@ -6,7 +6,12 @@
                     <i v-if="item && item.featured" class="bi bi-star-fill featured-icon me-1" title="Featured"></i>
                     {{ item.title }}
                 </h5>
-                <button class="btn-close" @click="$emit('close')"></button>
+                <div class="d-flex align-items-center gap-2">
+                    <button v-if="isAdmin" class="btn btn-sm btn-outline-secondary" title="Edit" @click="$emit('edit')">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="btn-close" @click="$emit('close')"></button>
+                </div>
             </div>
             <div class="modal-body">
                 <p><strong>Description:</strong> {{ item.description }}</p>
@@ -29,9 +34,10 @@
     export default {
         name: 'ModalAssetDetails',
         props: {
-            item: Object
-        }
-        ,
+            item: Object,
+            isAdmin: { type: Boolean, default: false }
+        },
+        emits: ['close','edit'],
         methods: {
             async openResource(item) {
                 try {

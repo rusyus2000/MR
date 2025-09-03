@@ -30,7 +30,7 @@
                     <i class="bi bi-list"></i>
                 </button>
 
-                <button class="btn btn-sm add-asset-btn" title="Add New Asset" @click="showAddModal = true">
+                <button v-if="isAdmin" class="btn btn-sm add-asset-btn" title="Add New Asset" @click="openAdd()">
                     <i class="bi bi-plus-lg"></i>
                 </button>
             </div>
@@ -92,18 +92,19 @@
         </div>
 
         <!-- Modals -->
-        <ModalAddAsset v-if="showAddModal" @close="showAddModal = false" @saved="handleAssetSaved" />
-        <ModalAssetDetails v-if="selectedItem" :item="selectedItem" @close="selectedItem = null" />
+        <ModalAddAsset v-if="showAddModal" :edit-item="editItem" @close="closeAdd" @saved="handleAssetSaved" />
+        <ModalAssetDetails v-if="selectedItem" :item="selectedItem" :is-admin="isAdmin" @edit="openEditFromDetails" @close="selectedItem = null" />
     </div>
 </template>
 
 <script>
-    import { ref, computed, watch, toRef } from 'vue';
+    import { ref, computed, watch, toRef, onMounted } from 'vue';
     import ItemTile from './ItemTile.vue';
     import ListItem from './ListItem.vue';
     import ModalAddAsset from './ModalAddAsset.vue';
     import ModalAssetDetails from './ModalAssetDetails.vue';
     import { favorites } from '../composables/favorites';
+    import { fetchCurrentUser } from '../services/api';
 
     export default {
         name: 'ItemGrid',
@@ -136,6 +137,8 @@
             const currentPage = ref(1);
             const showAddModal = ref(false);
             const selectedItem = ref(null);
+            const editItem = ref(null);
+            const isAdmin = ref(false);
             const searchExecuted = toRef(props, 'searchExecuted');
             const resetSort = (to = 'Most Relevant') => {
                 sortBy.value = to;
@@ -234,10 +237,33 @@
             const handleAssetSaved = () => {
                 emit('refresh');
                 showAddModal.value = false;
+                editItem.value = null;
             };
 
             const openDetails = (item) => {
                 selectedItem.value = item;
+            };
+
+            onMounted(async () => {
+                const me = await fetchCurrentUser().catch(() => null);
+                isAdmin.value = !!me && me.userType === 'Admin';
+            });
+
+            const openAdd = () => {
+                editItem.value = null;
+                showAddModal.value = true;
+            };
+
+            const openEditFromDetails = () => {
+                if (!isAdmin.value) return;
+                editItem.value = selectedItem.value;
+                selectedItem.value = null;
+                showAddModal.value = true;
+            };
+
+            const closeAdd = () => {
+                showAddModal.value = false;
+                editItem.value = null;
             };
 
             const filtersActive = computed(() => filteredItems.value.length < props.items.length);
@@ -254,6 +280,11 @@
                 handleAssetSaved,
                 selectedItem,
                 openDetails,
+                editItem,
+                isAdmin,
+                openAdd,
+                openEditFromDetails,
+                closeAdd,
                 resetSort,
                 getSort,
                 filtersActive,

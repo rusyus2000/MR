@@ -277,6 +277,9 @@ namespace SutterAnalyticsApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] CreateItemDto dto)
         {
+            // Admin-only create
+            if (CurrentUser?.UserType != "Admin")
+                return Forbid();
             var i = new Item
             {
                 Title = dto.Title,
@@ -450,6 +453,9 @@ namespace SutterAnalyticsApi.Controllers
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] CreateItemDto dto)
         {
+            // Admin-only update
+            if (CurrentUser?.UserType != "Admin")
+                return Forbid();
             var i = await _db.Items.FindAsync(id);
             if (i == null) return NotFound();
 
@@ -579,6 +585,9 @@ namespace SutterAnalyticsApi.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
+            // Admin-only delete
+            if (CurrentUser?.UserType != "Admin")
+                return Forbid();
             var i = await _db.Items.FindAsync(id);
             if (i == null) return NotFound();
             _db.Items.Remove(i);
