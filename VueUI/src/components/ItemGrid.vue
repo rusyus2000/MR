@@ -105,7 +105,7 @@
     import ModalAssetDetails from './ModalAssetDetails.vue';
     import { favorites } from '../composables/favorites';
     import { fetchItem } from '../services/api';
-    import { fetchCurrentUser } from '../services/api';
+    import { getCurrentUserCached } from '../services/api';
 
     export default {
         name: 'ItemGrid',
@@ -260,7 +260,7 @@
             };
 
             onMounted(async () => {
-                const me = await fetchCurrentUser().catch(() => null);
+                const me = await getCurrentUserCached().catch(() => null);
                 isAdmin.value = !!me && me.userType === 'Admin';
             });
 

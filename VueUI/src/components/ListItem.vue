@@ -74,9 +74,8 @@
             },
             relevancePercent() {
                 if (typeof this.item.score !== 'number') return null;
-                const max = 2.5;
-                const normalized = 1 - (this.item.score / max);
-                return Math.round(normalized * 100);
+                const clamped = Math.max(0, Math.min(1, this.item.score));
+                return Math.round(clamped * 100);
             },
             matchStyle() {
                 const p = this.relevancePercent;
@@ -215,13 +214,25 @@
         background-color: #00A89E;
     }
 
+    .link-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
     .link-icon i {
         font-size: 1.2rem;
         color: #00A89E;
+        transition: color 0.15s ease, filter 0.15s ease, text-shadow 0.15s ease;
+    }
+    .link-icon:hover i {
+        color: #007a72; /* darker teal */
+        /* subtle glow + drop shadow around the icon only */
+        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
+        text-shadow: 0 0 6px rgba(0, 168, 158, 0.45);
     }
 
     .card-body {
-        padding: 7px 8px 7px 16px !important;
+        padding: 3px 8px 3px 16px !important;
     }
 
     .featured-icon {

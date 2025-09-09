@@ -10,7 +10,7 @@
                 </span>
                 <input type="text"
                        class="form-control border-0 py-2"
-                       placeholder="Search by keyword, domain, asset type, etc... (press Enter)"
+                       placeholder="Search by keyword, phrase, description, etc... (press Enter)"
                        :value="search"
                        @input="$emit('update:search', $event.target.value)"
                        @keyup.enter="$emit('search-submit', $event.target.value)" />

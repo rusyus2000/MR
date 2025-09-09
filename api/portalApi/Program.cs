@@ -94,6 +94,13 @@ using (var scope = app.Services.CreateScope())
             }
         }
         db.SaveChanges();
+
+        // Seed sample data (only if none exists)
+        if (!db.Items.Any())
+        {
+            var seeder = new SampleDataSeeder(db);
+            seeder.Seed(100);
+        }
     }
     catch { }
 }

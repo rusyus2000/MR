@@ -51,8 +51,8 @@
                             </div>
                         </div>
 
-                        <div v-if="isAdmin" class="label">Status:</div>
-                        <div v-if="isAdmin">
+                        <div class="label">Status:</div>
+                        <div>
                             <select v-model.number="form.statusId" class="form-select">
                                 <option v-for="opt in lookup.statuses" :key="opt.id" :value="opt.id">{{ opt.value }}</option>
                             </select>
@@ -178,15 +178,13 @@
         statuses: [],
     })
 
-    const isAdmin = ref(false)
+    // Admin-only access to this modal is enforced by parent; no admin checks here
     const ownerQuery = ref('')
     const ownerSuggestions = ref([])
     const ownerActiveIndex = ref(-1)
     const ownerSuggestBox = ref(null)
 
     onMounted(async () => {
-        const me = await fetchCurrentUser()
-        isAdmin.value = !!me && me.userType === 'Admin'
         // Bulk-load all lookups in one call
         const bulk = await (await import('../services/api')).getLookupsBulkCached()
         const norm = (arr) => (arr || []).map(x => ({ id: x.id ?? x.Id, value: x.value ?? x.Value }))

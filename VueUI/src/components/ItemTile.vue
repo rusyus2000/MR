@@ -77,9 +77,9 @@
     const relevancePercent = computed(() => {
         const score = props.item.score;
         if (typeof score !== 'number') return null;
-        const max = 2.5;
-        const normalized = 1 - (score / max);
-        return Math.round(normalized * 100);
+        // New scale: score in [0,1], higher is better
+        const clamped = Math.max(0, Math.min(1, score));
+        return Math.round(clamped * 100);
     });
 
     const searchExecuted = toRef(props, 'searchExecuted');
