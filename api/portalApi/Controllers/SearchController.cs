@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SutterAnalyticsApi.Data;
 using SutterAnalyticsApi.DTOs;
 using SutterAnalyticsApi.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace SutterAnalyticsApi.Controllers
 {
@@ -11,7 +12,12 @@ namespace SutterAnalyticsApi.Controllers
     public class SearchController : MpBaseController
     {
         private readonly AppDbContext _db;
-        public SearchController(AppDbContext db) => _db = db;
+        private readonly IConfiguration _config;
+        public SearchController(AppDbContext db, IConfiguration config)
+        {
+            _db = db;
+            _config = config;
+        }
 
         // GET /api/search?q=term
         //[HttpGet]
@@ -71,7 +77,8 @@ namespace SutterAnalyticsApi.Controllers
             using var httpClient = new HttpClient();
             try
             {
-                var response = await httpClient.GetAsync($"http://127.0.0.1:8000/search?query={Uri.EscapeDataString(q)}");
+                var searchApiUrl = _config["SearchApiUrl"] ?? "http://localhost:8000";
+                var response = await httpClient.GetAsync($"{searchApiUrl}/search?query={Uri.EscapeDataString(q)}");
                 if (!response.IsSuccessStatusCode)
                     return StatusCode((int)response.StatusCode, "AI search service failed.");
 

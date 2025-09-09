@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SutterAnalyticsApi.Data;
@@ -16,7 +17,12 @@ namespace SutterAnalyticsApi.Controllers
     public class ItemsController : MpBaseController
     {
         private readonly AppDbContext _db;
-        public ItemsController(AppDbContext db) => _db = db;
+        private readonly IConfiguration _config;
+        public ItemsController(AppDbContext db, IConfiguration config)
+        {
+            _db = db;
+            _config = config;
+        }
 
         //[HttpGet]
         //public async Task<IActionResult> GetAll()
@@ -421,13 +427,11 @@ namespace SutterAnalyticsApi.Controllers
             _db.Items.Add(i);
             await _db.SaveChangesAsync();
 
-            // Call FastAPI /rebuild-index endpoint
-            using (var http = new HttpClient()) 
-                {
-                // Replace with your FastAPI base URL as appropriate!
-                var apiBaseUrl = "http://localhost:8000"; // e.g., if running locally on port 8000
-                var response = await http.PostAsync($"{apiBaseUrl}/rebuild-index", null);
-                // Optionally: check response.IsSuccessStatusCode and handle errors/logging
+            // Call AI index service: create index entry for this item
+            using (var http = new HttpClient())
+            {
+                var searchApiUrl = _config["SearchApiUrl"] ?? "http://localhost:8000";
+                try { await http.PostAsync($"{searchApiUrl}/items/{i.Id}", null); } catch { /* swallow */ }
             }
 
             return Ok(new { id = i.Id });
@@ -562,6 +566,13 @@ namespace SutterAnalyticsApi.Controllers
             // keep original DateAdded
 
             await _db.SaveChangesAsync();
+
+            // Call AI index service: update index entry for this item (soft delete + add internally)
+            using (var http = new HttpClient())
+            {
+                var searchApiUrl = _config["SearchApiUrl"] ?? "http://localhost:8000";
+                try { await http.PutAsync($"{searchApiUrl}/items/{i.Id}", null); } catch { /* swallow */ }
+            }
             return NoContent();
         }
 
@@ -584,6 +595,13 @@ namespace SutterAnalyticsApi.Controllers
             if (i == null) return NotFound();
             _db.Items.Remove(i);
             await _db.SaveChangesAsync();
+
+            // Call AI index service: delete index entry for this item
+            using (var http = new HttpClient())
+            {
+                var searchApiUrl = _config["SearchApiUrl"] ?? "http://localhost:8000";
+                try { await http.DeleteAsync($"{searchApiUrl}/items/{id}"); } catch { /* swallow */ }
+            }
             return NoContent();
         }
     }
