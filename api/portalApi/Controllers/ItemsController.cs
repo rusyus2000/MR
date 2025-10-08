@@ -18,10 +18,12 @@ namespace SutterAnalyticsApi.Controllers
     {
         private readonly AppDbContext _db;
         private readonly IConfiguration _config;
-        public ItemsController(AppDbContext db, IConfiguration config)
+        private readonly IHttpClientFactory _httpFactory;
+        public ItemsController(AppDbContext db, IConfiguration config, IHttpClientFactory httpFactory)
         {
             _db = db;
             _config = config;
+            _httpFactory = httpFactory;
         }
 
         //[HttpGet]
@@ -428,11 +430,7 @@ namespace SutterAnalyticsApi.Controllers
             await _db.SaveChangesAsync();
 
             // Call AI index service: create index entry for this item
-            using (var http = new HttpClient())
-            {
-                var searchApiUrl = _config["SearchApiUrl"] ?? "http://localhost:8000";
-                try { await http.PostAsync($"{searchApiUrl}/items/{i.Id}", null); } catch { /* swallow */ }
-            }
+            try { await _httpFactory.CreateClient("SearchApi").PostAsync($"items/{i.Id}", null); } catch { /* swallow */ }
 
             return Ok(new { id = i.Id });
         }
@@ -568,11 +566,7 @@ namespace SutterAnalyticsApi.Controllers
             await _db.SaveChangesAsync();
 
             // Call AI index service: update index entry for this item (soft delete + add internally)
-            using (var http = new HttpClient())
-            {
-                var searchApiUrl = _config["SearchApiUrl"] ?? "http://localhost:8000";
-                try { await http.PutAsync($"{searchApiUrl}/items/{i.Id}", null); } catch { /* swallow */ }
-            }
+            try { await _httpFactory.CreateClient("SearchApi").PutAsync($"items/{i.Id}", null); } catch { /* swallow */ }
             return NoContent();
         }
 
@@ -597,11 +591,7 @@ namespace SutterAnalyticsApi.Controllers
             await _db.SaveChangesAsync();
 
             // Call AI index service: delete index entry for this item
-            using (var http = new HttpClient())
-            {
-                var searchApiUrl = _config["SearchApiUrl"] ?? "http://localhost:8000";
-                try { await http.DeleteAsync($"{searchApiUrl}/items/{id}"); } catch { /* swallow */ }
-            }
+            try { await _httpFactory.CreateClient("SearchApi").DeleteAsync($"items/{id}"); } catch { /* swallow */ }
             return NoContent();
         }
     }

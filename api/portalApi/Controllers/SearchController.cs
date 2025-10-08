@@ -13,10 +13,12 @@ namespace SutterAnalyticsApi.Controllers
     {
         private readonly AppDbContext _db;
         private readonly IConfiguration _config;
-        public SearchController(AppDbContext db, IConfiguration config)
+        private readonly IHttpClientFactory _httpFactory;
+        public SearchController(AppDbContext db, IConfiguration config, IHttpClientFactory httpFactory)
         {
             _db = db;
             _config = config;
+            _httpFactory = httpFactory;
         }
 
         // GET /api/search?q=term
@@ -74,11 +76,10 @@ namespace SutterAnalyticsApi.Controllers
                 // ignore logging failures
             }
 
-            using var httpClient = new HttpClient();
             try
             {
-                var searchApiUrl = _config["SearchApiUrl"] ?? "http://localhost:8000";
-                var response = await httpClient.GetAsync($"{searchApiUrl}/search?query={Uri.EscapeDataString(q)}");
+                var client = _httpFactory.CreateClient("SearchApi");
+                var response = await client.GetAsync($"search?query={Uri.EscapeDataString(q)}");
                 if (!response.IsSuccessStatusCode)
                     return StatusCode((int)response.StatusCode, "AI search service failed.");
 
@@ -95,59 +96,56 @@ namespace SutterAnalyticsApi.Controllers
                     .Select(f => f.ItemId)
                     .ToListAsync();
 
-                // ?? Query matching items from DB
-                var matchedItems = await _db.Items
-                    .Include(i => i.ItemTags)
-                        .ThenInclude(it => it.Tag)
-                    .Include(i => i.AssetType)
-                    .Include(i => i.DomainLookup)
-                    .Include(i => i.DivisionLookup)
-                    .Include(i => i.ServiceLineLookup)
-                    .Include(i => i.DataSourceLookup)
-                    .Include(i => i.Owner)
-                    .Include(i => i.StatusLookup)
-                    .Where(i => ids.Contains(i.Id))
-                    .ToListAsync();
+                // ?? Visibility restriction & lean projection
+                var scoreMap = aiResults.ToDictionary(r => r.Id, r => (double?)r.Score);
 
-                // Restrict visibility: non-admins see only Published
                 var isAdmin = user?.UserType == "Admin";
+                int? publishedId = null;
                 if (!isAdmin)
                 {
-                    var published = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "Status" && l.Value == "Published");
-                    if (published != null)
-                    {
-                        matchedItems = matchedItems.Where(i => !i.StatusId.HasValue || i.StatusId == published.Id).ToList();
-                    }
+                    var pub = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "Status" && l.Value == "Published");
+                    publishedId = pub?.Id;
                 }
 
-                // ?? Preserve AI sort order, and include IsFavorite
-                var ordered = aiResults
-                    .Select(r =>
-                    {
-                        var match = matchedItems.FirstOrDefault(i => i.Id == r.Id);
-                        if (match == null) return null;
+                var query = _db.Items.AsNoTracking().Where(i => ids.Contains(i.Id));
+                if (!isAdmin && publishedId.HasValue)
+                {
+                    query = query.Where(i => !i.StatusId.HasValue || i.StatusId == publishedId.Value);
+                }
 
-                        return new ItemListDto
-                        {
-                            Id = match.Id,
-                            Title = match.Title,
-                            Description = match.Description,
-                            Url = match.Url,
-                            AssetTypeId = match.AssetTypeId,
-                            AssetTypeName = match.AssetType != null ? match.AssetType.Value : null,
-                            Featured = match.Featured,
-                            DomainId = match.DomainId,
-                            DivisionId = match.DivisionId,
-                            ServiceLineId = match.ServiceLineId,
-                            DataSourceId = match.DataSourceId,
-                            PrivacyPhi = match.PrivacyPhi,
-                            DateAdded = match.DateAdded,
-                            Score = r.Score,
-                            IsFavorite = favoriteIds.Contains(match.Id)
-                        };
+                var matchedItems = await query
+                    .Select(i => new ItemListDto
+                    {
+                        Id = i.Id,
+                        Title = i.Title,
+                        Description = i.Description,
+                        Url = i.Url,
+                        AssetTypeId = i.AssetTypeId,
+                        AssetTypeName = i.AssetType != null ? i.AssetType.Value : null,
+                        Featured = i.Featured,
+                        DomainId = i.DomainId,
+                        DivisionId = i.DivisionId,
+                        ServiceLineId = i.ServiceLineId,
+                        DataSourceId = i.DataSourceId,
+                        PrivacyPhi = i.PrivacyPhi,
+                        DateAdded = i.DateAdded,
+                        Score = 0
                     })
-                    .Where(dto => dto != null)
-                    .ToList();
+                    .ToListAsync();
+
+                // ?? Preserve AI sort order, and include IsFavorite
+                // Merge and preserve AI order
+                var map = matchedItems.ToDictionary(m => m.Id);
+                var ordered = new List<ItemListDto>(matchedItems.Count);
+                foreach (var r in aiResults)
+                {
+                    if (map.TryGetValue(r.Id, out var m))
+                    {
+                        m.Score = scoreMap[r.Id];
+                        m.IsFavorite = favoriteIds.Contains(m.Id);
+                        ordered.Add(m);
+                    }
+                }
 
                 return Ok(ordered);
             }

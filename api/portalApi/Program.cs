@@ -40,6 +40,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddControllers();
 
+// HttpClient for Search API (reused, pooled)
+builder.Services.AddHttpClient("SearchApi", (sp, client) =>
+{
+    var cfg = sp.GetRequiredService<IConfiguration>();
+    var baseUrl = cfg["SearchApiUrl"] ?? "http://localhost:8000";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
+
 var app = builder.Build();
 
 app.UseRouting();

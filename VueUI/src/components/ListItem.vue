@@ -155,7 +155,7 @@
 
     .match-score-badge {
         position: absolute;
-        top: 25px; /* 14px lower */
+        top: 22px; /* 14px lower */
         left: 8px;
         background-color: #e7f1ff;
         color: var(--bs-secondary-color) !important;
