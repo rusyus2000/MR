@@ -139,9 +139,10 @@ namespace SutterAnalyticsApi.Data
             modelBuilder.Entity<ItemTag>()
                 .HasIndex(it => it.TagId);
 
-            // Users: lookup by principal name
+            // Users: lookup by principal name (unique)
             modelBuilder.Entity<User>()
-                .HasIndex(u => u.UserPrincipalName);
+                .HasIndex(u => u.UserPrincipalName)
+                .IsUnique();
         }
     }
 }

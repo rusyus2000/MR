@@ -25,7 +25,7 @@ namespace SutterAnalyticsApi.Controllers
 
         // Update current user's profile (from client-sourced intranet API)
         [HttpPost("profile")]
-        public async Task<IActionResult> UpdateProfile([FromForm] UserProfileDto dto, [FromServices] Data.AppDbContext db)
+        public async Task<IActionResult> UpdateProfile([FromForm] UserProfileDto dto, [FromServices] Data.AppDbContext db, [FromServices] Microsoft.Extensions.Caching.Memory.IMemoryCache cache)
         {
             var u = CurrentUser;
             if (u == null) return Unauthorized();
@@ -49,6 +49,12 @@ namespace SutterAnalyticsApi.Controllers
             {
                 db.Users.Update(u);
                 await db.SaveChangesAsync();
+                // Invalidate per-UPN cache
+                var upn = u.UserPrincipalName;
+                if (!string.IsNullOrWhiteSpace(upn))
+                {
+                    cache.Remove($"user:{upn}");
+                }
             }
             return NoContent();
         }

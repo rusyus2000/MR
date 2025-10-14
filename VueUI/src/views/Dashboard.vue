@@ -16,13 +16,15 @@
                            @update:filters="runFilter" />
 
             <!-- Asset grid/list -->
-            <div class="asset-col">
+            <div class="asset-col position-relative">
                 <div v-if="searchExecuted" class="mb-3">
                     <span class="search-tag badge d-inline-flex align-items-center">
                         <span class="me-2">Search: <strong>{{ searchQuery }}</strong></span>
                         <button @click="clearSearch" class="btn-close btn-close-sm" aria-label="Close"></button>
                     </span>
                 </div>
+                <LoadingOverlay v-if="itemsLoading || searching"
+                                :message="itemsLoading ? 'Loading reports…' : (searching ? 'Searching…' : '')" />
                 <ItemGrid ref="itemGrid"
                           :filters="selectedFilters"
                           :items="items"
@@ -41,11 +43,12 @@
     import HeroSection from '../components/HeroSection.vue';
     import FilterSidebar from '../components/FilterSidebar.vue';
     import ItemGrid from '../components/ItemGrid.vue';
+    import LoadingOverlay from '../components/LoadingOverlay.vue';
     import { fetchItems, searchItems, fetchFavorites } from '../services/api';
   
     export default {
         name: 'Dashboard',
-        components: { Navbar, HeroSection, FilterSidebar, ItemGrid },
+        components: { Navbar, HeroSection, FilterSidebar, ItemGrid, LoadingOverlay },
         setup() {
 
             const filtersActive = computed(() => {
@@ -68,6 +71,7 @@
             const previousSort = ref(null);
             const searching = ref(false);
             const itemGrid = ref(null);
+            const itemsLoading = ref(false);
 
             const selectedFilters = ref({
                 assetTypes: [],
@@ -79,9 +83,14 @@
             });
 
             const loadItems = async () => {
-                const data = await fetchItems();
-                items.value = data;
-                allItems.value = data;
+                itemsLoading.value = true;
+                try {
+                    const data = await fetchItems();
+                    items.value = data || [];
+                    allItems.value = data || [];
+                } finally {
+                    itemsLoading.value = false;
+                }
             };
 
             
@@ -199,6 +208,7 @@
                 searchQuery,
                 searchExecuted,
                 searching,
+                itemsLoading,
                 selectedFilters,
                 runSearch,
                 runFilter,

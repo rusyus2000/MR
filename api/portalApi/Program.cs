@@ -9,6 +9,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAuthentication(); // No AddNegotiate on IIS
 
 builder.Services.AddAuthorization();
+// Shared in-proc cache for user lookups
+builder.Services.AddMemoryCache();
+builder.Services.Configure<SutterAnalyticsApi.Options.UserCacheOptions>(
+    builder.Configuration.GetSection("UserCache"));
+builder.Services.Configure<SutterAnalyticsApi.Options.AdminOptions>(
+    builder.Configuration.GetSection("Admin"));
 
 // CORS configuration based on environment
 string[] devOrigins = { "http://localhost:5174" };
