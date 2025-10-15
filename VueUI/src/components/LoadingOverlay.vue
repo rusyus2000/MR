@@ -18,14 +18,13 @@ export default {
 
 <style scoped>
 .loading-overlay {
-  position: absolute;
+  position: fixed; /* pin to viewport so it stays visible while scrolling */
   inset: 0;
   background: rgba(255, 255, 255, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
+  z-index: 2000; /* above page content, below modals if any */
 }
 .loading-content { text-align: center; }
 </style>
-
