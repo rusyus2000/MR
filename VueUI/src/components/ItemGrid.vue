@@ -17,11 +17,6 @@
                     <option>Alphabetical</option>
                 </select>
 
-                <button v-if="isAdmin" class="btn btn-sm download-btn me-2" title="Download All"
-                        @click="exportAll">
-                    <i class="bi bi-download"></i>
-                </button>
-
                 <button class="btn btn-sm me-2"
                         :class="{ 'btn-primary': viewMode==='grid', 'btn-outline-secondary': viewMode!=='grid' }"
                         @click="viewMode='grid'"
@@ -33,6 +28,11 @@
                         @click="viewMode='list'"
                         title="List View">
                     <i class="bi bi-list"></i>
+                </button>
+
+                <button v-if="isAdmin" class="btn btn-sm download-btn me-2" title="Download All"
+                        @click="exportAll">
+                    <i class="bi bi-download"></i>
                 </button>
 
                 <button v-if="isAdmin" class="btn btn-sm add-asset-btn" title="Add New Asset" @click="openAdd()">
