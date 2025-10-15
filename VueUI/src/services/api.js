@@ -196,6 +196,27 @@ export async function fetchFavorites() {
     });
 }
 
+// Export items (admin only). Sends IDs and downloads CSV.
+export async function exportItemsCsv(ids) {
+    let fetchOptions = { method: 'POST', credentials: 'include' };
+    if (Array.isArray(ids) && ids.length > 0) {
+        const form = new FormData();
+        ids.forEach(id => form.append('ids', String(id)));
+        fetchOptions.body = form;
+    }
+    const res = await fetch(`${API_BASE_URL}/items/export`, fetchOptions);
+    if (!res.ok) throw new Error('Export failed');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'reports-export.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+
 // Owners
 export function searchOwners(search, top = 10) {
     const qs = new URLSearchParams({ search: search || '', top });

@@ -17,6 +17,11 @@
                     <option>Alphabetical</option>
                 </select>
 
+                <button v-if="isAdmin" class="btn btn-sm download-btn me-2" title="Download All"
+                        @click="exportAll">
+                    <i class="bi bi-download"></i>
+                </button>
+
                 <button class="btn btn-sm me-2"
                         :class="{ 'btn-primary': viewMode==='grid', 'btn-outline-secondary': viewMode!=='grid' }"
                         @click="viewMode='grid'"
@@ -106,6 +111,7 @@
     import { favorites } from '../composables/favorites';
     import { fetchItem } from '../services/api';
     import { getCurrentUserCached } from '../services/api';
+    import { exportItemsCsv } from '../services/api';
 
     export default {
         name: 'ItemGrid',
@@ -259,6 +265,15 @@
                 selectedItem.value = null;
             };
 
+            const exportAll = async () => {
+                try {
+                    // No IDs => export all items (admin-only)
+                    await exportItemsCsv();
+                } catch (e) {
+                    console.error('Export failed', e);
+                }
+            };
+
             onMounted(async () => {
                 const me = await getCurrentUserCached().catch(() => null);
                 isAdmin.value = !!me && me.userType === 'Admin';
@@ -305,7 +320,8 @@
                 resetSort,
                 getSort,
                 filtersActive,
-                searchExecuted
+                searchExecuted,
+                exportAll
             };
         }
     };
@@ -333,5 +349,14 @@
             background-color: #218838 !important;
             border-color: #1e7e34 !important;
         }
+    .download-btn {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+        color: #fff !important;
+    }
+    .download-btn:hover {
+        background-color: #0b5ed7 !important;
+        border-color: #0a58ca !important;
+    }
     
 </style>

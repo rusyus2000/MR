@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
+using System.Text.Json;
 using SutterAnalyticsApi.Data;
 using SutterAnalyticsApi.DTOs;
 using SutterAnalyticsApi.Models;
@@ -263,6 +265,106 @@ namespace SutterAnalyticsApi.Controllers
                 DateAdded = i.DateAdded,
                 Featured = i.Featured
             });
+        }
+
+        public class ExportRequest { public List<int> Ids { get; set; } = new(); }
+
+        // Admin-only export of items as CSV (values, not IDs)
+        [HttpPost("export")]
+        public async Task<IActionResult> Export()
+        {
+            var user = CurrentUser;
+            if (user?.UserType != "Admin") return Forbid();
+            List<int>? idsToExport = null;
+
+            // Try FormData ids first (avoids preflight)
+            if (Request.HasFormContentType)
+            {
+                var form = await Request.ReadFormAsync();
+                var ids = new List<int>();
+                foreach (var v in form["ids"]) { if (int.TryParse(v, out var id)) ids.Add(id); }
+                if (ids.Count > 0) idsToExport = ids;
+            }
+            else if (Request.ContentLength.GetValueOrDefault() > 0 &&
+                     (Request.ContentType?.Contains("application/json", StringComparison.OrdinalIgnoreCase) ?? false))
+            {
+                try
+                {
+                    using var sr = new StreamReader(Request.Body, Encoding.UTF8, leaveOpen: true);
+                    var json = await sr.ReadToEndAsync();
+                    if (!string.IsNullOrWhiteSpace(json))
+                    {
+                        var dto = JsonSerializer.Deserialize<ExportRequest>(json);
+                        if (dto?.Ids != null && dto.Ids.Count > 0) idsToExport = dto.Ids;
+                    }
+                }
+                catch { }
+            }
+            // If no IDs provided in any format, export ALL items
+
+            var query = _db.Items.AsNoTracking();
+            if (idsToExport != null)
+            {
+                query = query.Where(i => idsToExport.Contains(i.Id));
+            }
+
+            var rows = await query
+                .Select(i => new
+                {
+                    i.Title,
+                    i.Description,
+                    i.Url,
+                    AssetType = i.AssetType != null ? i.AssetType.Value : null,
+                    Domain = i.DomainLookup != null ? i.DomainLookup.Value : null,
+                    Division = i.DivisionLookup != null ? i.DivisionLookup.Value : null,
+                    ServiceLine = i.ServiceLineLookup != null ? i.ServiceLineLookup.Value : null,
+                    DataSource = i.DataSourceLookup != null ? i.DataSourceLookup.Value : null,
+                    Status = i.StatusLookup != null ? i.StatusLookup.Value : null,
+                    OwnerName = i.Owner != null ? i.Owner.Name : null,
+                    OwnerEmail = i.Owner != null ? i.Owner.Email : null,
+                    i.PrivacyPhi,
+                    i.DateAdded,
+                    i.Featured,
+                    Tags = i.ItemTags.Select(t => t.Tag.Value)
+                })
+                .ToListAsync();
+
+            string CsvEscape(string s)
+            {
+                if (s == null) return string.Empty;
+                var needsQuote = s.Contains(',') || s.Contains('"') || s.Contains('\n') || s.Contains('\r');
+                var t = s.Replace("\"", "\"\"");
+                return needsQuote ? $"\"{t}\"" : t;
+            }
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Title,Description,Url,Asset Type,Domain,Division,Service Line,Data Source,Status,Owner Name,Owner Email,PHI,Date Added,Featured,Tags");
+            foreach (var r in rows)
+            {
+                var tags = string.Join("; ", r.Tags);
+                var line = string.Join(",", new[]
+                {
+                    CsvEscape(r.Title ?? string.Empty),
+                    CsvEscape(r.Description ?? string.Empty),
+                    CsvEscape(r.Url ?? string.Empty),
+                    CsvEscape(r.AssetType ?? string.Empty),
+                    CsvEscape(r.Domain ?? string.Empty),
+                    CsvEscape(r.Division ?? string.Empty),
+                    CsvEscape(r.ServiceLine ?? string.Empty),
+                    CsvEscape(r.DataSource ?? string.Empty),
+                    CsvEscape(r.Status ?? string.Empty),
+                    CsvEscape(r.OwnerName ?? string.Empty),
+                    CsvEscape(r.OwnerEmail ?? string.Empty),
+                    r.PrivacyPhi ? "true" : "false",
+                    r.DateAdded.ToString("yyyy-MM-dd"),
+                    r.Featured ? "true" : "false",
+                    CsvEscape(tags)
+                });
+                sb.AppendLine(line);
+            }
+
+            var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+            return File(bytes, "text/csv", "reports-export.csv");
         }
 
         // POST /api/items

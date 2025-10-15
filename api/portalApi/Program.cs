@@ -19,26 +19,16 @@ builder.Services.Configure<SutterAnalyticsApi.Options.AdminOptions>(
 // CORS configuration based on environment
 string[] devOrigins = { "http://localhost:5174" };
 string[] prodOrigins = { "http://smf-appweb-dev", "http://smf-appweb-dev.sutterhealth.org", "https://smf-appweb-dev.sutterhealth.org" }; // Add all production origins you expect
+var allowedOrigins = devOrigins.Concat(prodOrigins).ToArray();
 
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-    {
-        if (builder.Environment.IsDevelopment())
-        {
-            policy.WithOrigins(devOrigins)
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        }
-        else
-        {
-            policy.WithOrigins(prodOrigins)
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        }
-    });
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials()
+    );
 });
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -70,9 +60,7 @@ app.Use(async (context, next) =>
         var origin = context.Request.Headers["Origin"].ToString();
         if (!string.IsNullOrEmpty(origin))
         {
-            var allowed = builder.Environment.IsDevelopment()
-                ? devOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase)
-                : prodOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase);
+            var allowed = allowedOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase);
             if (allowed)
             {
                 context.Response.Headers["Access-Control-Allow-Origin"] = origin;
