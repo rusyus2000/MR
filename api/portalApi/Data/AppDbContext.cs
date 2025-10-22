@@ -15,6 +15,7 @@ namespace SutterAnalyticsApi.Data
         public DbSet<UserSearchHistory> UserSearchHistories { get; set; }
         public DbSet<UserLoginHistory> UserLoginHistories { get; set; }
         public DbSet<Owner> Owners { get; set; }
+        public DbSet<ImportJob> ImportJobs { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
@@ -142,6 +143,11 @@ namespace SutterAnalyticsApi.Data
             // Users: lookup by principal name (unique)
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.UserPrincipalName)
+                .IsUnique();
+
+            // ImportJob: token unique for lookup
+            modelBuilder.Entity<ImportJob>()
+                .HasIndex(j => j.Token)
                 .IsUnique();
         }
     }

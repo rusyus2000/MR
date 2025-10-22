@@ -13,3 +13,8 @@ export const FILTER_SECTIONS = {
   serviceLine: false,
   dataSource: true,
 };
+
+// Toggle displaying counts next to filter values and whether
+// to call the counts API on initial load. Can also be overridden
+// via Vite env `VITE_FILTER_COUNT=true|false`.
+export const FILTER_COUNT = String(import.meta.env.VITE_FILTER_COUNT || 'false').toLowerCase() === 'true';

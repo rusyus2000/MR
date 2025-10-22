@@ -311,6 +311,7 @@ namespace SutterAnalyticsApi.Controllers
             var rows = await query
                 .Select(i => new
                 {
+                    i.Id,
                     i.Title,
                     i.Description,
                     i.Url,
@@ -338,12 +339,13 @@ namespace SutterAnalyticsApi.Controllers
             }
 
             var sb = new StringBuilder();
-            sb.AppendLine("Title,Description,Url,Asset Type,Domain,Division,Service Line,Data Source,Status,Owner Name,Owner Email,PHI,Date Added,Featured,Tags");
+            sb.AppendLine("Id,Title,Description,Url,Asset Type,Domain,Division,Service Line,Data Source,Status,Owner Name,Owner Email,PHI,Date Added,Featured,Tags");
             foreach (var r in rows)
             {
                 var tags = string.Join("; ", r.Tags);
                 var line = string.Join(",", new[]
                 {
+                    CsvEscape(r.Id.ToString()),
                     CsvEscape(r.Title ?? string.Empty),
                     CsvEscape(r.Description ?? string.Empty),
                     CsvEscape(r.Url ?? string.Empty),

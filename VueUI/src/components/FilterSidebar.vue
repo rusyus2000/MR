@@ -24,7 +24,7 @@
                        v-model="type.checked"
                        @change="emitFilters" />
                 <label class="form-check-label" :for="'asset-'+type.id">
-                    {{ type.name }} ({{ type.count }})
+                    {{ type.name }}<span v-if="showCounts"> ({{ type.count ?? 0 }})</span>
                 </label>
             </div>
             <a v-if="assetTypes.length > 5" href="#" class="text-teal small" @click.prevent="assetTypesShowAll = !assetTypesShowAll">
@@ -42,7 +42,7 @@
                        v-model="filters.privacy.phi"
                        @change="emitFilters" />
                 <label class="form-check-label" for="privacy-phi">
-                    PHI ({{ getCount('privacy', 'phi') }})
+                    PHI<span v-if="showCounts"> ({{ getCount('privacy', 'phi') }})</span>
                 </label>
             </div>
         </div>
@@ -60,7 +60,7 @@
                        v-model="domain.checked"
                        @change="emitFilters" />
                 <label class="form-check-label" :for="'domain-'+domain.id">
-                    {{ domain.name }} ({{ domain.count }})
+                    {{ domain.name }}<span v-if="showCounts"> ({{ domain.count ?? 0 }})</span>
                 </label>
             </div>
             <a v-if="domains.length > 5" href="#" class="text-teal small" @click.prevent="domainsShowAll = !domainsShowAll">
@@ -81,7 +81,7 @@
                        v-model="division.checked"
                        @change="emitFilters" />
                 <label class="form-check-label" :for="'division-'+division.id">
-                    {{ division.name }} ({{ division.count }})
+                    {{ division.name }}<span v-if="showCounts"> ({{ division.count ?? 0 }})</span>
                 </label>
             </div>
             <a v-if="divisions.length > 5" href="#" class="text-teal small" @click.prevent="divisionsShowAll = !divisionsShowAll">
@@ -102,7 +102,7 @@
                        v-model="line.checked"
                        @change="emitFilters" />
                 <label class="form-check-label" :for="'service-'+line.id">
-                    {{ line.name }} ({{ line.count }})
+                    {{ line.name }}<span v-if="showCounts"> ({{ line.count ?? 0 }})</span>
                 </label>
             </div>
             <a v-if="serviceLines.length > 5" href="#" class="text-teal small" @click.prevent="serviceLinesShowAll = !serviceLinesShowAll">
@@ -123,7 +123,7 @@
                        v-model="source.checked"
                        @change="emitFilters" />
                 <label class="form-check-label" :for="'source-'+source.id">
-                    {{ source.name }} ({{ source.count }})
+                    {{ source.name }}<span v-if="showCounts"> ({{ source.count ?? 0 }})</span>
                 </label>
             </div>
             <a v-if="dataSources.length > 5" href="#" class="text-teal small" @click.prevent="dataSourcesShowAll = !dataSourcesShowAll">
@@ -134,7 +134,7 @@
 </template>
 
 <script>
-    import { FILTER_SECTIONS } from '../config';
+    import { FILTER_SECTIONS, FILTER_COUNT } from '../config';
 
     export default {
         name: 'FilterSidebar',
@@ -146,6 +146,7 @@
         data() {
             return {
                 filterSections: FILTER_SECTIONS,
+                showCounts: FILTER_COUNT,
                 assetTypes: [],
                 filters: { privacy: { phi: false } },
                 domains: [],
@@ -177,14 +178,25 @@
             async loadLookups() {
                 try {
                     const api = await import('../services/api');
-                    const bulk = await api.fetchLookupsCountsBulk(['AssetType','Domain','Division','ServiceLine','DataSource']);
-                    const norm = x => ({ id: x.id ?? x.Id, name: x.value ?? x.Value, count: x.count ?? x.Count });
-                    const mapArr = arr => (arr || []).map(norm).filter(x => x.count > 0).map(x => ({ id: x.id, name: x.name, checked: false, count: x.count }));
-                    this.assetTypes = mapArr(bulk.AssetType);
-                    this.domains = mapArr(bulk.Domain);
-                    this.divisions = mapArr(bulk.Division);
-                    this.serviceLines = mapArr(bulk.ServiceLine);
-                    this.dataSources = mapArr(bulk.DataSource);
+                    if (this.showCounts) {
+                        const bulk = await api.fetchLookupsCountsBulk(['AssetType','Domain','Division','ServiceLine','DataSource']);
+                        const norm = x => ({ id: x.id ?? x.Id, name: x.value ?? x.Value, count: x.count ?? x.Count });
+                        const mapArr = arr => (arr || []).map(norm).filter(x => x.count > 0).map(x => ({ id: x.id, name: x.name, checked: false, count: x.count }));
+                        this.assetTypes = mapArr(bulk.AssetType);
+                        this.domains = mapArr(bulk.Domain);
+                        this.divisions = mapArr(bulk.Division);
+                        this.serviceLines = mapArr(bulk.ServiceLine);
+                        this.dataSources = mapArr(bulk.DataSource);
+                    } else {
+                        const bulk = await api.fetchLookupsBulk(['AssetType','Domain','Division','ServiceLine','DataSource']);
+                        const norm = x => ({ id: x.id ?? x.Id, name: x.value ?? x.Value });
+                        const mapArr = arr => (arr || []).map(norm).map(x => ({ id: x.id, name: x.name, checked: false }));
+                        this.assetTypes = mapArr(bulk.AssetType);
+                        this.domains = mapArr(bulk.Domain);
+                        this.divisions = mapArr(bulk.Division);
+                        this.serviceLines = mapArr(bulk.ServiceLine);
+                        this.dataSources = mapArr(bulk.DataSource);
+                    }
 
                     if (this._initialDomain) {
                         const found = this.domains.find(d => d.name.toLowerCase() === this._initialDomain.toLowerCase());

@@ -35,6 +35,11 @@
                     <i class="bi bi-download"></i>
                 </button>
 
+                <button v-if="isAdmin" class="btn btn-sm btn-outline-secondary me-2" title="Upload"
+                        @click="openImport">
+                    <i class="bi bi-upload"></i>
+                </button>
+
                 <button v-if="isAdmin" class="btn btn-sm add-asset-btn" title="Add New Asset" @click="openAdd()">
                     <i class="bi bi-plus-lg"></i>
                 </button>
@@ -99,6 +104,7 @@
         <!-- Modals -->
         <ModalAddAsset v-if="showAddModal" :edit-item="editItem" @close="closeAdd" @saved="handleAssetSaved" />
         <ModalAssetDetails v-if="selectedItem || detailsLoading" :item="selectedItem" :is-admin="isAdmin" :is-loading="detailsLoading" @edit="openEditFromDetails" @close="closeDetails" />
+        <ModalImport v-if="showImportModal" @close="closeImport" @done="$emit('refresh')" />
     </div>
 </template>
 
@@ -108,6 +114,7 @@
     import ListItem from './ListItem.vue';
     import ModalAddAsset from './ModalAddAsset.vue';
     import ModalAssetDetails from './ModalAssetDetails.vue';
+    import ModalImport from './ModalImport.vue';
     import { favorites } from '../composables/favorites';
     import { fetchItem } from '../services/api';
     import { getCurrentUserCached } from '../services/api';
@@ -115,7 +122,7 @@
 
     export default {
         name: 'ItemGrid',
-        components: { ItemTile, ListItem, ModalAddAsset, ModalAssetDetails },
+        components: { ItemTile, ListItem, ModalAddAsset, ModalAssetDetails, ModalImport },
         props: {
             filters: {
                 type: Object,
@@ -279,6 +286,8 @@
                 isAdmin.value = !!me && me.userType === 'Admin';
             });
 
+            const showImportModal = ref(false);
+
             const openAdd = () => {
                 editItem.value = null;
                 showAddModal.value = true;
@@ -295,6 +304,9 @@
                 showAddModal.value = false;
                 editItem.value = null;
             };
+
+            const openImport = () => { showImportModal.value = true; };
+            const closeImport = () => { showImportModal.value = false; };
 
             const filtersActive = computed(() => filteredItems.value.length < props.items.length);
 
@@ -317,6 +329,9 @@
                 openAdd,
                 openEditFromDetails,
                 closeAdd,
+                showImportModal,
+                openImport,
+                closeImport,
                 resetSort,
                 getSort,
                 filtersActive,

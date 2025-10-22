@@ -77,6 +77,11 @@ namespace SutterAnalyticsApi.Models
         // When this asset was added
         public DateTime DateAdded { get; set; }
 
+        // Import metadata for idempotency and audit
+        public byte[]? ContentHash { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public string? UpdatedBy { get; set; }
+
         // No CSV-backed multi-value asset types anymore. Use the single
         // AssetType lookup (AssetTypeId) and the boolean `Featured`.
 

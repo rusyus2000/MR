@@ -217,6 +217,55 @@ export async function exportItemsCsv(ids) {
     URL.revokeObjectURL(url);
 }
 
+// Import preview (admin): multipart form with file; returns token + counts + conflicts/errors
+export async function importPreview(file, { source = '', datasetKey = '', mode = 'upsert' } = {}) {
+    const form = new FormData();
+    form.append('file', file);
+    if (source) form.append('source', source);
+    if (datasetKey) form.append('datasetKey', datasetKey);
+    if (mode) form.append('mode', mode);
+    const res = await fetch(`${API_BASE_URL}/imports/preview`, {
+        method: 'POST',
+        credentials: 'include',
+        body: form
+    });
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Preview failed');
+    }
+    return res.json();
+}
+
+// Import commit (admin): send token + decisions
+export async function importCommit(token, decisions = []) {
+    // Use FormData to avoid CORS preflight
+    const form = new FormData();
+    form.append('token', token);
+    form.append('decisions', JSON.stringify(decisions || []));
+    const res = await fetch(`${API_BASE_URL}/imports/commit`, {
+        method: 'POST',
+        credentials: 'include',
+        body: form
+    });
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Commit failed');
+    }
+    return res.json();
+}
+
+// Trigger a full search index rebuild (server makes the external call)
+export async function importRebuild() {
+    const res = await fetch(`${API_BASE_URL}/imports/rebuild-index`, {
+        method: 'POST',
+        credentials: 'include'
+    });
+    if (!res.ok && res.status !== 204) {
+        const text = await res.text();
+        throw new Error(text || 'Rebuild failed');
+    }
+}
+
 // Owners
 export function searchOwners(search, top = 10) {
     const qs = new URLSearchParams({ search: search || '', top });
