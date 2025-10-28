@@ -133,10 +133,10 @@ namespace SutterAnalyticsApi.Data
                 _db.SaveChanges();
             }
 
-            Ensure("Domain", new[] { "Access to Care", "Quality", "Strategy", "People & Workforce" });
+            Ensure("Domain", new[] { "Access to Care", "Quality", "Strategy", "People & Workforce", "Missing Data" });
             Ensure("Division", new[] { "Greater Central Valley", "Greater East Bay", "Greater Sacramento", "Greater San Francisco" });
-            Ensure("ServiceLine", new[] { "Behavioral Health", "Cardiology", "Hospital", "Oncology", "Primary Care", "Orthopedics" });
-            Ensure("DataSource", new[] { "Power BI", "Epic", "Tableau", "Web-Based" });
+            Ensure("ServiceLine", new[] { "Behavioral Health", "Cardiology", "Hospital", "Oncology", "Primary Care", "Orthopedics", "Missing Data" });
+            Ensure("DataSource", new[] { "Power BI", "Tableau", "Web-Based","SSRS","Epic Reports","SSIS","Epic Dashboards" });
             Ensure("AssetType", new[] { "Dashboard", "Report", "Application", "Data Model" });
             Ensure("Status", new[] { "Published", "Offline" });
         }

@@ -232,11 +232,15 @@ namespace SutterAnalyticsApi.Controllers
             var byKey = existing.GroupBy(x => keyOf(x.Url, x.Title, x.Domain, x.AssetType))
                                 .ToDictionary(g => g.Key, g => g.ToList());
 
-            // Prefetch lookup values for strict validation (case-insensitive)
+            // Prefetch lookup values for strict validation (case-insensitive),
+            // normalizing both Type and Value to avoid mismatch from stray spaces
             var lookups = await _db.LookupValues.AsNoTracking().ToListAsync();
             var luByType = lookups
-                .GroupBy(l => l.Type, StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(g => g.Key, g => g.Select(x => x.Value).ToHashSet(StringComparer.OrdinalIgnoreCase), StringComparer.OrdinalIgnoreCase);
+                .GroupBy(l => Normalize(l.Type), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(x => Normalize(x.Value)).ToHashSet(StringComparer.OrdinalIgnoreCase),
+                    StringComparer.OrdinalIgnoreCase);
 
             int toCreate = 0, toUpdate = 0, unchanged = 0, conflicts = 0, errors = 0, skippedBlank = 0;
             var conflictsList = new List<object>();
@@ -500,8 +504,10 @@ namespace SutterAnalyticsApi.Controllers
             int? L(string type, string value)
             {
                 if (string.IsNullOrEmpty(value)) return null;
-                var id = luAll.FirstOrDefault(l => l.Type.Equals(type, StringComparison.OrdinalIgnoreCase)
-                                                && l.Value.Equals(value, StringComparison.OrdinalIgnoreCase))?.Id;
+                var tnorm = Normalize(type);
+                var vnorm = Normalize(value);
+                var id = luAll.FirstOrDefault(l => Normalize(l.Type).Equals(tnorm, StringComparison.OrdinalIgnoreCase)
+                                                && Normalize(l.Value).Equals(vnorm, StringComparison.OrdinalIgnoreCase))?.Id;
                 return id;
             }
 
