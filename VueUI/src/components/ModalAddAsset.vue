@@ -51,6 +51,69 @@
                             </div>
                         </div>
 
+                        <!-- Governance fields -->
+                        <div class="label">Operating Entity:</div>
+                        <div>
+                            <select v-model.number="form.operatingEntityId" @change="() => onLookupChange('operatingEntities','operatingEntityId','operatingEntity')" class="form-select">
+                                <option v-for="opt in lookup.operatingEntities" :key="opt.id" :value="opt.id">{{ opt.value }}</option>
+                            </select>
+                        </div>
+
+                        <div class="label">Executive Sponsor:</div>
+                        <div>
+                            <div class="d-flex gap-2 align-items-center mb-2">
+                                <input v-model="form.executiveSponsorName" type="text" placeholder="Sponsor name" class="form-control" />
+                                <input v-model="form.executiveSponsorEmail" type="email" placeholder="Sponsor email" class="form-control" />
+                            </div>
+                            <small class="text-muted">Optional. Provide both name and email to add a new sponsor.</small>
+                        </div>
+
+                        <div class="label">Data Consumers:</div>
+                        <div>
+                            <div class="mb-2">
+                                <select multiple class="form-select" v-model="form.dataConsumerIds">
+                                    <option v-for="opt in lookup.dataConsumers" :key="opt.id" :value="opt.id">{{ opt.value }}</option>
+                                </select>
+                            </div>
+                            <div class="d-flex gap-2 align-items-center mb-2">
+                                <input v-model="newConsumer" type="text" placeholder="Add custom consumer (press Add)" class="form-control" />
+                                <button type="button" class="btn btn-outline-primary" @click="addConsumer">Add</button>
+                            </div>
+                            <div class="tag-list">
+                                <span v-for="(c, i) in form.dataConsumers" :key="c" class="tag-chip">
+                                    <span class="tag-text">{{ c }}</span>
+                                    <button type="button" class="tag-remove" @click="removeConsumer(i)">&times;</button>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="label">Refresh Frequency:</div>
+                        <div>
+                            <select v-model.number="form.refreshFrequencyId" @change="() => onLookupChange('refreshFrequencies','refreshFrequencyId','refreshFrequency')" class="form-select">
+                                <option v-for="opt in lookup.refreshFrequencies" :key="opt.id" :value="opt.id">{{ opt.value }}</option>
+                            </select>
+                        </div>
+
+                        <div class="label">Flags:</div>
+                        <div class="flags">
+                            <label class="form-check me-3"><input v-model="form.privacyPhi" class="form-check-input" type="checkbox" /> <span class="form-check-label">PHI</span></label>
+                            <label class="form-check me-3"><input v-model="form.privacyPii" class="form-check-input" type="checkbox" /> <span class="form-check-label">PII</span></label>
+                            <label class="form-check"><input v-model="form.hasRls" class="form-check-input" type="checkbox" /> <span class="form-check-label">RLS</span></label>
+                        </div>
+
+                        <div class="label">Last Modified Date:</div>
+                        <div><input type="date" class="form-control" v-model="form.lastModifiedDate" /></div>
+
+                        <div class="label">Dependencies:</div>
+                        <div>
+                            <textarea v-model="form.dependencies" class="form-control" placeholder="Describe upstream data lineage or dependencies"></textarea>
+                        </div>
+
+                        <div class="label">Default AD Groups:</div>
+                        <div>
+                            <textarea v-model="form.defaultAdGroupNames" class="form-control" placeholder="One per line or comma-separated"></textarea>
+                        </div>
+
                         <div class="label">Status:</div>
                         <div>
                             <select v-model.number="form.statusId" class="form-select">
@@ -101,11 +164,6 @@
                                     {{ opt.value }}
                                 </option>
                             </select>
-                        </div>
-
-                        <div class="label">Contains PHI:</div>
-                        <div>
-                            <input v-model="form.privacyPhi" class="form-check-input" type="checkbox" id="privacyPhi" />
                         </div>
 
                         <div class="label">Tags:</div>
@@ -163,10 +221,24 @@
         serviceLineId: null,
         dataSourceId: null,
         privacyPhi: false,
+        privacyPii: false,
+        hasRls: false,
         ownerId: null,
         ownerName: '',
         ownerEmail: '',
         statusId: null,
+        operatingEntityId: null,
+        operatingEntity: '',
+        executiveSponsorId: null,
+        executiveSponsorName: '',
+        executiveSponsorEmail: '',
+        dataConsumerIds: [],
+        dataConsumers: [],
+        refreshFrequencyId: null,
+        refreshFrequency: '',
+        lastModifiedDate: null,
+        dependencies: '',
+        defaultAdGroupNames: '',
     })
 
     const lookup = ref({
@@ -176,6 +248,9 @@
         dataSources: [],
         assetTypes: [],
         statuses: [],
+        operatingEntities: [],
+        refreshFrequencies: [],
+        dataConsumers: [],
     })
 
     // Admin-only access to this modal is enforced by parent; no admin checks here
@@ -194,6 +269,9 @@
         lookup.value.dataSources = norm(bulk.DataSource)
         lookup.value.assetTypes = norm(bulk.AssetType).filter(x => (x.value) !== 'Featured')
         lookup.value.statuses = norm(bulk.Status)
+        lookup.value.operatingEntities = norm(bulk.OperatingEntity)
+        lookup.value.refreshFrequencies = norm(bulk.RefreshFrequency)
+        lookup.value.dataConsumers = norm(bulk.DataConsumer)
         // Prefill when editing
         if (props.editItem) {
             const it = props.editItem
@@ -219,6 +297,16 @@
             if (it.ownerName || it.ownerEmail) {
                 ownerQuery.value = `${it.ownerName || ''}${it.ownerEmail ? ` (${it.ownerEmail})` : ''}`.trim()
             }
+            form.value.operatingEntityId = it.operatingEntityId || null
+            form.value.operatingEntity = it.operatingEntity || ''
+            form.value.refreshFrequencyId = it.refreshFrequencyId || null
+            form.value.refreshFrequency = it.refreshFrequency || ''
+            form.value.lastModifiedDate = it.lastModifiedDate ? it.lastModifiedDate.substring(0,10) : null
+            form.value.privacyPii = !!it.privacyPii
+            form.value.hasRls = !!it.hasRls
+            form.value.dependencies = it.dependencies || ''
+            form.value.defaultAdGroupNames = it.defaultAdGroupNames || ''
+            if (Array.isArray(it.dataConsumers)) form.value.dataConsumers = [...it.dataConsumers]
         }
     })
 
@@ -257,6 +345,7 @@
     }
 
     const newTag = ref('')
+    const newConsumer = ref('')
 
     function addTag() {
         const v = (newTag.value || '').trim()
@@ -269,6 +358,18 @@
 
     function removeTag(i) {
         form.value.tags.splice(i, 1)
+    }
+
+    function addConsumer() {
+        const v = (newConsumer.value || '').trim()
+        if (!v) return
+        if (!form.value.dataConsumers.includes(v)) {
+            form.value.dataConsumers.push(v)
+        }
+        newConsumer.value = ''
+    }
+    function removeConsumer(i) {
+        form.value.dataConsumers.splice(i, 1)
     }
 
     async function onOwnerQuery() {
@@ -356,7 +457,7 @@
     .modal-content {
         background: white;
         padding: 0;
-        width: 700px;
+        width: 900px;
         border-radius: 8px;
         box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
     }
@@ -372,25 +473,19 @@
         border-top-right-radius: 8px;
     }
 
-    .modal-body {
-        padding: 1.5rem;
-    }
+    .modal-body { padding: 1.5rem; max-height: 75vh; overflow: auto; }
 
     .owner-suggest { position: relative; }
     .suggest-box { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #dee2e6; z-index: 10; max-height: 200px; overflow: auto; }
 
-    .details-grid {
-        display: grid;
-        grid-template-columns: max-content 1fr;
-        row-gap: 0.75rem;
-        column-gap: 1rem;
-        align-items: center;
-    }
+    .details-grid { display: grid; grid-template-columns: max-content 1fr max-content 1fr; row-gap: 0.75rem; column-gap: 1rem; align-items: center; }
 
     .label {
         font-weight: 600;
         white-space: nowrap;
     }
+    .flags { display: flex; gap: 1rem; align-items: center; }
+    .flags { display: flex; gap: 1rem; align-items: center; }
     .tag-list {
         display: flex;
         flex-wrap: wrap;

@@ -20,24 +20,61 @@
                     </div>
                 </div>
                 <div v-else class="details-grid">
-                    <div class="label">Description:</div><div>{{ item.description }}</div>
-                    <div class="label">URL:</div><div><a href="#" @click.prevent="openResource(item)">{{ item.url }}</a></div>
+                    <div class="label">Description:</div>
+                    <div class="desc" :title="item.description">{{ shorten(item.description, 65) }}</div>
+                    <div class="label">URL:</div>
+                    <div class="url-row">
+                        <a href="#" @click.prevent="openResource(item)" :title="item.url">
+                            {{ shorten(item.url, 30) }}
+                        </a>
+                        <button class="btn btn-link btn-sm p-0 ms-2 copy-btn" :title="'Copy URL'" @click="copyUrl(item.url)">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </div>
                     <div class="label">Asset Type:</div><div>{{ item.assetTypeName }}</div>
+                    <div class="label">Status:</div><div>{{ item.status || '-' }}</div>
+
                     <div class="label">Owner:</div>
                     <div>
                         <template v-if="item.ownerEmail">
                             <a :href="`mailto:${item.ownerEmail}`">{{ item.ownerName || item.ownerEmail }}</a>
                         </template>
                         <template v-else>
-                            {{ item.ownerName || '—' }}
+                            {{ item.ownerName || '-' }}
                         </template>
                     </div>
+
+                    <div class="label">Executive Sponsor:</div>
+                    <div>
+                        <template v-if="item.executiveSponsorEmail">
+                            <a :href="`mailto:${item.executiveSponsorEmail}`">{{ item.executiveSponsorName || item.executiveSponsorEmail }}</a>
+                        </template>
+                        <template v-else>
+                            {{ item.executiveSponsorName || '-' }}
+                        </template>
+                    </div>
+
                     <div class="label">Domain:</div><div>{{ item.domain }}</div>
                     <div class="label">Division:</div><div>{{ item.division }}</div>
                     <div class="label">Service Line:</div><div>{{ item.serviceLine }}</div>
+                    <div class="label">Operating Entity:</div><div>{{ item.operatingEntity || '-' }}</div>
                     <div class="label">Data Source:</div><div>{{ item.dataSource }}</div>
-                    <div class="label">Contains PHI:</div><div>{{ item.privacyPhi ? 'Yes' : 'No' }}</div>
-                    <div class="label">Date Added:</div><div>{{ new Date(item.dateAdded).toLocaleDateString() }}</div>
+                    <div class="label">Refresh Frequency:</div><div>{{ item.refreshFrequency || '-' }}</div>
+                    <div class="label">Last Modified:</div><div>{{ item.lastModifiedDate ? new Date(item.lastModifiedDate).toLocaleDateString() : '-' }}</div>
+
+                    <div class="label">Flags:</div>
+                    <div class="flags">
+                        <span>PHI: {{ item.privacyPhiDisplay || (item.privacyPhi === null || item.privacyPhi === undefined ? 'Missing Data' : (item.privacyPhi ? 'Yes' : 'No')) }}</span>
+                        <span>PII: {{ item.privacyPiiDisplay || (item.privacyPii === null || item.privacyPii === undefined ? 'Missing Data' : (item.privacyPii ? 'Yes' : 'No')) }}</span>
+                        <span>RLS: {{ item.hasRlsDisplay || (item.hasRls === null || item.hasRls === undefined ? 'Missing Data' : (item.hasRls ? 'Yes' : 'No')) }}</span>
+                    </div>
+
+                    <div class="label">Dependencies:</div>
+                    <div><span v-if="item.dependencies && item.dependencies.trim()">{{ item.dependencies }}</span><span v-else class="text-muted">-</span></div>
+
+                    <div class="label">Default AD Groups:</div>
+                    <div><span v-if="item.defaultAdGroupNames && item.defaultAdGroupNames.trim()">{{ item.defaultAdGroupNames }}</span><span v-else class="text-muted">-</span></div>
+
                     <div class="label">Tags:</div>
                     <div>
                         <div class="tag-list">
@@ -51,6 +88,8 @@
                             </template>
                         </div>
                     </div>
+
+                    <div class="label">Date Added:</div><div>{{ new Date(item.dateAdded).toLocaleDateString() }}</div>
                 </div>
             </div>
             <div v-if="!isLoading && item" class="d-flex justify-content-end mt-3 px-4 pb-3">
@@ -82,8 +121,8 @@
                 } catch (err) {
                     console.error('Failed to toggle favorite', err);
                 }
-            }
-            ,
+            },
+
             async openResource(item) {
                 try {
                     const api = await import('../services/api');
@@ -92,6 +131,29 @@
                     console.error('record open failed', err);
                 }
                 window.open(item.url, '_blank', 'noopener');
+            },
+            shorten(s, max = 30) {
+                if (!s || typeof s !== 'string') return '';
+                return s.length > max ? s.slice(0, max) + '...' : s;
+            },
+            async copyUrl(url) {
+                if (!url) return;
+                try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(url);
+                    } else {
+                        const ta = document.createElement('textarea');
+                        ta.value = url;
+                        ta.style.position = 'fixed';
+                        ta.style.opacity = '0';
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                    }
+                } catch (e) {
+                    console.error('copy failed', e);
+                }
             }
         }
     };
@@ -116,7 +178,7 @@
         background-color: white;
         border-radius: 8px;
         padding: 0;
-        max-width: 600px;
+        max-width: 900px;
         width: 100%;
     }
 
@@ -131,13 +193,11 @@
         border-top-right-radius: 8px;
     }
 
-    .modal-body {
-        padding: 1.5rem;
-    }
+    .modal-body { padding: 1.5rem; max-height: 75vh; overflow: auto; }
 
     .details-grid {
         display: grid;
-        grid-template-columns: max-content 1fr;
+        grid-template-columns: max-content 1fr max-content 1fr;
         row-gap: 0.75rem;
         column-gap: 1rem;
     }
@@ -153,6 +213,24 @@
         font-weight: 600;
         white-space: nowrap;
     }
+
+    .flags { display: flex; gap: 1rem; align-items: center; }
+    .url-row { display: inline-flex; align-items: center; gap: 0.25rem; }
+    .copy-btn { color: #0d6efd; }
+    .copy-btn:hover { color: #0a58ca; }
+
+    /* Two-line clamp with ellipsis and fixed height */
+    .clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        white-space: normal;
+        line-height: 1.35;
+        max-height: calc(1.35em * 2);
+        min-height: calc(1.35em * 2);
+    }
+    .desc { max-width: 100%; }
 
     .tag-list {
         display: flex;

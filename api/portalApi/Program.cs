@@ -96,6 +96,20 @@ using (var scope = app.Services.CreateScope())
                 db.LookupValues.Add(new SutterAnalyticsApi.Models.LookupValue { Type = "Status", Value = s });
             }
         }
+        // Ensure a generic "Missing Data" option exists for common lookup types
+        var typesNeedingMissing = new[]
+        {
+            "AssetType","Domain","Division","ServiceLine","DataSource","Status",
+            "OperatingEntity","RefreshFrequency","DataConsumer"
+        };
+        foreach (var t in typesNeedingMissing)
+        {
+            var exists = db.LookupValues.Any(l => l.Type == t && l.Value == "Missing Data");
+            if (!exists)
+            {
+                db.LookupValues.Add(new SutterAnalyticsApi.Models.LookupValue { Type = t, Value = "Missing Data" });
+            }
+        }
         db.SaveChanges();
 
         // Seed sample data (only if none exists)

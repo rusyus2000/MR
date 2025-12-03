@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SutterAnalyticsApi.Data;
 
@@ -11,9 +12,11 @@ using SutterAnalyticsApi.Data;
 namespace portalApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251028215638_SeedNewLookups")]
+    partial class SeedNewLookups
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -103,60 +106,6 @@ namespace portalApi.Migrations
                     b.Property<byte[]>("ContentHash")
                         .HasColumnType("varbinary(max)");
 
-                    b.Property<string>("ProductGroup")
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("ProductStatusNotes")
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("DataConsumersText")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("TechDeliveryManager")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("RegulatoryComplianceContractual")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("BiPlatform")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("DbServer")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("DbDataMart")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("DatabaseTable")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("SourceRep")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("DataSecurityClassification")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("AccessGroupName")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("AccessGroupDn")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("AutomationClassification")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("UserVisibilityString")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("UserVisibilityNumber")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("EpicSecurityGroupTag")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("KeepLongTerm")
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<int?>("DataSourceId")
                         .HasColumnType("int");
 
@@ -182,10 +131,10 @@ namespace portalApi.Migrations
                     b.Property<int?>("ExecutiveSponsorId")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("Featured")
+                    b.Property<bool>("Featured")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("HasRls")
+                    b.Property<bool>("HasRls")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LastModifiedDate")
@@ -197,10 +146,10 @@ namespace portalApi.Migrations
                     b.Property<int?>("OwnerId")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("PrivacyPhi")
+                    b.Property<bool>("PrivacyPhi")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("PrivacyPii")
+                    b.Property<bool>("PrivacyPii")
                         .HasColumnType("bit");
 
                     b.Property<int?>("RefreshFrequencyId")

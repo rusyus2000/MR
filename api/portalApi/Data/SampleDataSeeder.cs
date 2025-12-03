@@ -139,6 +139,9 @@ namespace SutterAnalyticsApi.Data
             Ensure("DataSource", new[] { "Power BI", "Tableau", "Web-Based","SSRS","Epic Reports","SSIS","Epic Dashboards" });
             Ensure("AssetType", new[] { "Dashboard", "Report", "Application", "Data Model" });
             Ensure("Status", new[] { "Published", "Offline" });
+            Ensure("OperatingEntity", new[] { "Unknown" });
+            Ensure("RefreshFrequency", new[] { "Daily", "Weekly", "Biweekly", "2x/Month", "Monthly", "Quarterly", "Annually" });
+            Ensure("DataConsumer", new[] { "Analysts", "Leaders", "Clinicians" });
         }
 
         private void EnsureOwners()

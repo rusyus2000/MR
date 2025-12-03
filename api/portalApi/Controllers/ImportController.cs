@@ -183,6 +183,10 @@ namespace SutterAnalyticsApi.Controllers
             int cStatus = idx("Status");
             int cOwnerName = idx("Owner Name");
             int cOwnerEmail = idx("Owner Email");
+            int cExecName = idx("Executive Sponsor Name");
+            int cExecEmail = idx("Executive Sponsor Email");
+            int cOperatingEntity = idx("Operating Entity");
+            int cRefreshFrequency = idx("Refresh Frequency");
             int cPhi = idx("PHI");
             int cDateAdded = idx("Date Added");
             int cFeatured = idx("Featured");
@@ -266,10 +270,14 @@ namespace SutterAnalyticsApi.Controllers
                     var rawStatus = cStatus < r.Length ? r[cStatus] : null;
                     var rawOwnerName = cOwnerName < r.Length ? r[cOwnerName] : null;
                     var rawOwnerEmail = cOwnerEmail < r.Length ? r[cOwnerEmail] : null;
+                    var rawExecName = cExecName >= 0 && cExecName < r.Length ? r[cExecName] : null;
+                    var rawExecEmail = cExecEmail >= 0 && cExecEmail < r.Length ? r[cExecEmail] : null;
                     var rawPhi = cPhi < r.Length ? r[cPhi] : null;
                     var rawDateAdded = cDateAdded < r.Length ? r[cDateAdded] : null;
                     var rawFeatured = cFeatured < r.Length ? r[cFeatured] : null;
                     var rawTags = cTags < r.Length ? r[cTags] : null;
+                    var rawOperatingEntity = cOperatingEntity >= 0 && cOperatingEntity < r.Length ? r[cOperatingEntity] : null;
+                    var rawRefreshFrequency = cRefreshFrequency >= 0 && cRefreshFrequency < r.Length ? r[cRefreshFrequency] : null;
 
                     // Normalize strings
                     var row = new
@@ -286,10 +294,14 @@ namespace SutterAnalyticsApi.Controllers
                         Status = Normalize(rawStatus),
                         OwnerName = Normalize(rawOwnerName),
                         OwnerEmail = Normalize(rawOwnerEmail),
+                        ExecutiveSponsorName = Normalize(rawExecName),
+                        ExecutiveSponsorEmail = Normalize(rawExecEmail),
                         PrivacyPhi = Normalize(rawPhi).Equals("true", StringComparison.OrdinalIgnoreCase) ? "true" : "false",
                         DateAdded = Normalize(rawDateAdded),
                         Featured = Normalize(rawFeatured).Equals("true", StringComparison.OrdinalIgnoreCase) ? "true" : "false",
-                        Tags = NormalizeTags(rawTags)
+                        Tags = NormalizeTags(rawTags),
+                        OperatingEntity = Normalize(rawOperatingEntity),
+                        RefreshFrequency = Normalize(rawRefreshFrequency)
                     };
 
                     // Skip completely blank rows (e.g., leftover commas in CSV)
@@ -323,6 +335,8 @@ namespace SutterAnalyticsApi.Controllers
                     else if (!ok("ServiceLine", row.ServiceLine)) missing = "ServiceLine";
                     else if (!ok("DataSource", row.DataSource)) missing = "DataSource";
                     else if (!ok("Status", row.Status)) missing = "Status";
+                    else if (!ok("OperatingEntity", row.OperatingEntity)) missing = "OperatingEntity";
+                    else if (!ok("RefreshFrequency", row.RefreshFrequency)) missing = "RefreshFrequency";
                     if (!string.IsNullOrEmpty(missing))
                     {
                         errors++;
@@ -373,9 +387,9 @@ namespace SutterAnalyticsApi.Controllers
                                 Normalize(exById.Status),
                                 Normalize(exById.OwnerName),
                                 Normalize(exById.OwnerEmail),
-                                exById.PrivacyPhi ? "true" : "false",
+                                (exById.PrivacyPhi == true) ? "true" : "false",
                                 exById.DateAdded.ToString("yyyy-MM-dd"),
-                                exById.Featured ? "true" : "false",
+                                (exById.Featured == true) ? "true" : "false",
                                 exTagsNorm
                             );
                             same = exHash.SequenceEqual(hash);
@@ -511,15 +525,46 @@ namespace SutterAnalyticsApi.Controllers
                 return id;
             }
 
-            // Owner helper
-            async Task<int?> ResolveOwnerAsync(string ownerName, string ownerEmail)
+            // Missing Data helpers
+            var missingCache = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            async Task<int> MissingLookupIdAsync(string type)
             {
-                ownerEmail = ownerEmail?.Trim() ?? string.Empty;
-                if (string.IsNullOrEmpty(ownerEmail)) return null;
-                var existing = await _db.Owners.AsNoTracking().FirstOrDefaultAsync(o => o.Email == ownerEmail);
+                if (missingCache.TryGetValue(type, out var id)) return id;
+                var lv = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == type && l.Value == "Missing Data");
+                if (lv == null)
+                {
+                    lv = new LookupValue { Type = type, Value = "Missing Data" };
+                    _db.LookupValues.Add(lv);
+                    await _db.SaveChangesAsync();
+                }
+                missingCache[type] = lv.Id;
+                return lv.Id;
+            }
+
+            async Task<int> MissingOwnerIdAsync()
+            {
+                var o = await _db.Owners.FirstOrDefaultAsync(x => x.Name == "Missing Data" && x.Email == "missing@example.com");
+                if (o == null)
+                {
+                    o = new Owner { Name = "Missing Data", Email = "missing@example.com" };
+                    _db.Owners.Add(o);
+                    await _db.SaveChangesAsync();
+                }
+                return o.Id;
+            }
+
+            // Person helper (Owner/Executive Sponsor): find by email; if not exists, create; if email missing, use Missing Data person
+            async Task<int> ResolvePersonAsync(string personName, string personEmail)
+            {
+                personEmail = personEmail?.Trim() ?? string.Empty;
+                if (string.IsNullOrEmpty(personEmail))
+                {
+                    return await MissingOwnerIdAsync();
+                }
+                var existing = await _db.Owners.AsNoTracking().FirstOrDefaultAsync(o => o.Email == personEmail);
                 if (existing != null) return existing.Id;
-                if (string.IsNullOrEmpty(ownerName)) return null;
-                var o = new Owner { Name = ownerName.Trim(), Email = ownerEmail };
+                var name = string.IsNullOrWhiteSpace(personName) ? personEmail : personName.Trim();
+                var o = new Owner { Name = name, Email = personEmail };
                 _db.Owners.Add(o);
                 await _db.SaveChangesAsync();
                 return o.Id;
@@ -556,13 +601,27 @@ namespace SutterAnalyticsApi.Controllers
                     string sl = row.GetProperty("ServiceLine").GetString() ?? string.Empty;
                     string ds = row.GetProperty("DataSource").GetString() ?? string.Empty;
                     string st = row.GetProperty("Status").GetString() ?? string.Empty;
+                    string oe = row.TryGetProperty("OperatingEntity", out var oeEl) ? (oeEl.GetString() ?? string.Empty) : string.Empty;
+                    string rf = row.TryGetProperty("RefreshFrequency", out var rfEl) ? (rfEl.GetString() ?? string.Empty) : string.Empty;
                     int? atId = L("AssetType", at), dmId = L("Domain", dm), dvId = L("Division", dv), slId = L("ServiceLine", sl), dsId = L("DataSource", ds), stId = L("Status", st);
+                    int? oeId = L("OperatingEntity", oe), rfId = L("RefreshFrequency", rf);
                     if ((atId == null && !string.IsNullOrEmpty(at)) || (dmId == null && !string.IsNullOrEmpty(dm)) ||
                         (dvId == null && !string.IsNullOrEmpty(dv)) || (slId == null && !string.IsNullOrEmpty(sl)) ||
-                        (dsId == null && !string.IsNullOrEmpty(ds)) || (stId == null && !string.IsNullOrEmpty(st)))
+                        (dsId == null && !string.IsNullOrEmpty(ds)) || (stId == null && !string.IsNullOrEmpty(st)) ||
+                        (oeId == null && !string.IsNullOrEmpty(oe)) || (rfId == null && !string.IsNullOrEmpty(rf)))
                     {
                         skipped++; skippedList.Add(new { index = idx, reason = "unknown lookup value" }); continue;
                     }
+
+                    // Default required lookups to 'Missing Data' when not provided
+                    if (string.IsNullOrEmpty(at)) atId = await MissingLookupIdAsync("AssetType");
+                    if (string.IsNullOrEmpty(dm)) dmId = await MissingLookupIdAsync("Domain");
+                    if (string.IsNullOrEmpty(dv)) dvId = await MissingLookupIdAsync("Division");
+                    if (string.IsNullOrEmpty(sl)) slId = await MissingLookupIdAsync("ServiceLine");
+                    if (string.IsNullOrEmpty(ds)) dsId = await MissingLookupIdAsync("DataSource");
+                    if (string.IsNullOrEmpty(st)) stId = await MissingLookupIdAsync("Status");
+                    if (string.IsNullOrEmpty(oe)) oeId = await MissingLookupIdAsync("OperatingEntity");
+                    if (string.IsNullOrEmpty(rf)) rfId = await MissingLookupIdAsync("RefreshFrequency");
 
                     string title = row.GetProperty("Title").GetString() ?? string.Empty;
                     string desc = row.GetProperty("Description").GetString() ?? string.Empty;
@@ -574,9 +633,12 @@ namespace SutterAnalyticsApi.Controllers
                     if (!string.IsNullOrEmpty(dateStr)) DateTime.TryParseExact(dateStr, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out dateAdded);
                     string ownerName = row.GetProperty("OwnerName").GetString() ?? string.Empty;
                     string ownerEmail = row.GetProperty("OwnerEmail").GetString() ?? string.Empty;
+                    string execName = row.TryGetProperty("ExecutiveSponsorName", out var exn) ? (exn.GetString() ?? string.Empty) : string.Empty;
+                    string execEmail = row.TryGetProperty("ExecutiveSponsorEmail", out var exe) ? (exe.GetString() ?? string.Empty) : string.Empty;
                     string tagsStr = row.GetProperty("Tags").GetString() ?? string.Empty;
 
-                    int? ownerId = await ResolveOwnerAsync(ownerName, ownerEmail);
+                    int ownerId = await ResolvePersonAsync(ownerName, ownerEmail);
+                    int execId = await ResolvePersonAsync(execName, execEmail);
 
                     // Compute hash
                     var hash = ComputeHashFromFields(
@@ -615,6 +677,9 @@ namespace SutterAnalyticsApi.Controllers
                         item.DataSourceId = dsId;
                         item.StatusId = stId;
                         item.OwnerId = ownerId;
+                        item.ExecutiveSponsorId = execId;
+                        item.OperatingEntityId = oeId;
+                        item.RefreshFrequencyId = rfId;
                         item.PrivacyPhi = phi;
                         item.DateAdded = dateAdded;
                         item.Featured = featured;
@@ -649,6 +714,9 @@ namespace SutterAnalyticsApi.Controllers
                             DataSourceId = dsId,
                             StatusId = stId,
                             OwnerId = ownerId,
+                            ExecutiveSponsorId = execId,
+                            OperatingEntityId = oeId,
+                            RefreshFrequencyId = rfId,
                             PrivacyPhi = phi,
                             DateAdded = dateAdded,
                             Featured = featured,

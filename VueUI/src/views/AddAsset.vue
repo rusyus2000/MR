@@ -73,14 +73,21 @@
                                 </select>
                             </div>
 
-                            <div class="col mb-3">
-                                <label class="form-label fw-bold">Privacy (PHI)</label>
-                                <div class="form-check">
-                                    <input v-model="form.privacyPhi"
-                                           class="form-check-input"
-                                           type="checkbox"
-                                           id="privacyPhi" />
-                                    <label class="form-check-label" for="privacyPhi">Contains PHI</label>
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-bold me-3">Flags</label>
+                                <div class="d-flex align-items-center gap-4">
+                                    <label class="form-check d-flex align-items-center gap-2 mb-0">
+                                        <input v-model="form.privacyPhi" class="form-check-input" type="checkbox" />
+                                        <span class="form-check-label">PHI</span>
+                                    </label>
+                                    <label class="form-check d-flex align-items-center gap-2 mb-0">
+                                        <input v-model="form.privacyPii" class="form-check-input" type="checkbox" />
+                                        <span class="form-check-label">PII</span>
+                                    </label>
+                                    <label class="form-check d-flex align-items-center gap-2 mb-0">
+                                        <input v-model="form.hasRls" class="form-check-input" type="checkbox" />
+                                        <span class="form-check-label">RLS</span>
+                                    </label>
                                 </div>
                             </div>
                             <div class="col mb-3">
@@ -92,6 +99,65 @@
                                            id="featured" />
                                     <label class="form-check-label" for="featured">Featured</label>
                                 </div>
+                            </div>
+
+                            <div class="col mb-3">
+                                <label class="form-label fw-bold">Operating Entity</label>
+                                <select v-model.number="form.operatingEntityId" @change="onLookupChange('operatingEntities','operatingEntityId','operatingEntity')" class="form-select w-100">
+                                    <option v-for="opt in lookup.operatingEntities" :key="opt.id" :value="opt.id">{{ opt.value }}</option>
+                                </select>
+                            </div>
+
+                            <div class="col mb-3">
+                                <label class="form-label fw-bold">Refresh Frequency</label>
+                                <select v-model.number="form.refreshFrequencyId" @change="onLookupChange('refreshFrequencies','refreshFrequencyId','refreshFrequency')" class="form-select w-100">
+                                    <option v-for="opt in lookup.refreshFrequencies" :key="opt.id" :value="opt.id">{{ opt.value }}</option>
+                                </select>
+                            </div>
+
+                            <div class="col mb-3">
+                                <label class="form-label fw-bold">Contains PII</label>
+                                <div class="form-check">
+                                    <input v-model="form.privacyPii" class="form-check-input" type="checkbox" id="privacyPii" />
+                                    <label class="form-check-label" for="privacyPii">Contains PII</label>
+                                </div>
+                            </div>
+                            <div class="col mb-3">
+                                <label class="form-label fw-bold">Has RLS</label>
+                                <div class="form-check">
+                                    <input v-model="form.hasRls" class="form-check-input" type="checkbox" id="hasRls" />
+                                    <label class="form-check-label" for="hasRls">Row-Level Security</label>
+                                </div>
+                            </div>
+
+                            <div class="col mb-3">
+                                <label class="form-label fw-bold">Last Modified Date</label>
+                                <input v-model="form.lastModifiedDate" type="date" class="form-control" />
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-bold">Executive Sponsor</label>
+                                <div class="d-flex gap-2">
+                                    <input v-model="form.executiveSponsorName" type="text" placeholder="Sponsor name" class="form-control" />
+                                    <input v-model="form.executiveSponsorEmail" type="email" placeholder="Sponsor email" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-bold">Data Consumers</label>
+                                <select v-model="form.dataConsumerIds" multiple class="form-select asset-select w-100">
+                                    <option v-for="opt in lookup.dataConsumers" :key="opt.id" :value="opt.id">{{ opt.value }}</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-bold">Dependencies (data lineage)</label>
+                                <textarea v-model="form.dependencies" class="form-control" placeholder="Describe upstream data lineage or dependencies"></textarea>
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-bold">Default AD Group Names</label>
+                                <textarea v-model="form.defaultAdGroupNames" class="form-control" placeholder="One per line or comma-separated"></textarea>
                             </div>
                         </div>
 
@@ -137,6 +203,18 @@
                 serviceLine: '',
                 dataSource: '',
                 privacyPhi: false,
+                privacyPii: false,
+                hasRls: false,
+                operatingEntityId: null,
+                operatingEntity: '',
+                refreshFrequencyId: null,
+                refreshFrequency: '',
+                lastModifiedDate: null,
+                executiveSponsorName: '',
+                executiveSponsorEmail: '',
+                dataConsumerIds: [],
+                dependencies: '',
+                defaultAdGroupNames: '',
             });
 
             // lookup data for dropdowns
@@ -146,6 +224,9 @@
                 serviceLines: [],
                 dataSources: [],
                 assetTypes: [],
+                operatingEntities: [],
+                refreshFrequencies: [],
+                dataConsumers: [],
             });
 
             onMounted(async () => {
@@ -155,6 +236,9 @@
                 lookup.value.dataSources = await fetchLookup('DataSource');
                 lookup.value.assetTypes = (await fetchLookup('AssetType'))
                     .filter(x => x.value !== 'Featured'); // remove Featured from asset type options
+                lookup.value.operatingEntities = await fetchLookup('OperatingEntity');
+                lookup.value.refreshFrequencies = await fetchLookup('RefreshFrequency');
+                lookup.value.dataConsumers = await fetchLookup('DataConsumer');
             });
 
             // submit handler
