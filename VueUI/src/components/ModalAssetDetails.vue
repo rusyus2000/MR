@@ -25,31 +25,38 @@
 
                     <!-- Row 2: Description spans across -->
                     <div class="label">Product Description and Purpose <span class="req">*</span>:</div>
-                    <div class="desc desc-cell clamp-2" :title="item.description">{{ shorten(item.description, 240) }}</div>
+                    <div class="desc desc-cell clamp-2" :title="(item.description && item.description.trim()) ? item.description : 'Missing Data'">
+                        {{ (item.description && item.description.trim()) ? shorten(item.description, 240) : 'Missing Data' }}
+                    </div>
 
                     <!-- Row 3: Location/URL | Division -->
                     <div class="label">Location/URL <span class="req">*</span>:</div>
                     <div class="url-row">
-                        <a href="#" @click.prevent="openResource(item)" :title="item.url">
-                            {{ shorten(item.url, 40) }}
-                        </a>
-                        <button class="btn btn-link btn-sm p-0 ms-2 copy-btn" :title="'Copy URL'" @click="copyUrl(item.url)">
-                            <i class="bi bi-clipboard"></i>
-                        </button>
+                        <template v-if="item.url && item.url.trim()">
+                            <a href="#" @click.prevent="openResource(item)" :title="item.url">
+                                {{ shorten(item.url, 40) }}
+                            </a>
+                            <button class="btn btn-link btn-sm p-0 ms-2 copy-btn" :title="'Copy URL'" @click="copyUrl(item.url)">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </template>
+                        <template v-else>
+                            <span class="text-muted">Missing Data</span>
+                        </template>
                     </div>
-                    <div class="label">Division <span class="req">*</span>:</div><div>{{ item.division }}</div>
+                    <div class="label">Division <span class="req">*</span>:</div><div>{{ item.division || 'Missing Data' }}</div>
 
                     <!-- Row 4: Domain | Operating Entity -->
-                    <div class="label">Domain <span class="req">*</span>:</div><div>{{ item.domain }}</div>
+                    <div class="label">Domain <span class="req">*</span>:</div><div>{{ item.domain || 'Missing Data' }}</div>
                     <!-- Row 5: Operating Entity | Executive Sponsor -->
-                    <div class="label">Operating Entity <span class="req">*</span>:</div><div>{{ item.operatingEntity || '-' }}</div>
+                    <div class="label">Operating Entity <span class="req">*</span>:</div><div>{{ item.operatingEntity || 'Missing Data' }}</div>
                     <div class="label">Executive Sponsor <span class="req">*</span>:</div>
                     <div>
                         <template v-if="item.executiveSponsorEmail">
                             <a :href="`mailto:${item.executiveSponsorEmail}`">{{ item.executiveSponsorName || item.executiveSponsorEmail }}</a>
                         </template>
                         <template v-else>
-                            {{ item.executiveSponsorName || '-' }}
+                            {{ item.executiveSponsorName || 'Missing Data' }}
                         </template>
                     </div>
 
@@ -60,20 +67,20 @@
                             <a :href="`mailto:${item.ownerEmail}`">{{ item.ownerName || item.ownerEmail }}</a>
                         </template>
                         <template v-else>
-                            {{ item.ownerName || '-' }}
+                            {{ item.ownerName || 'Missing Data' }}
                         </template>
                     </div>
                     <div class="label">Data Consumers <span class="req">*</span>:</div>
-                    <div><span v-if="item.dataConsumers && item.dataConsumers.trim()">{{ item.dataConsumers }}</span><span v-else class="text-muted">-</span></div>
+                    <div><span v-if="item.dataConsumers && item.dataConsumers.trim()">{{ item.dataConsumers }}</span><span v-else class="text-muted">Missing Data</span></div>
 
                     <!-- Row 7: BI Platform | Dependencies -->
-                    <div class="label">BI Platform <span class="req">*</span>:</div><div>{{ item.biPlatform || '-' }}</div>
+                    <div class="label">BI Platform <span class="req">*</span>:</div><div>{{ item.biPlatform || 'Missing Data' }}</div>
                     <div class="label">Dependencies <span class="req">*</span>:</div>
-                    <div><span v-if="item.dependencies && item.dependencies.trim()">{{ item.dependencies }}</span><span v-else class="text-muted">-</span></div>
+                    <div><span v-if="item.dependencies && item.dependencies.trim()">{{ item.dependencies }}</span><span v-else class="text-muted">Missing Data</span></div>
 
                     <!-- Row 8: Default AD Groups | Flags -->
                     <div class="label">Default AD Groups <span class="req">*</span>:</div>
-                    <div><span v-if="item.defaultAdGroupNames && item.defaultAdGroupNames.trim()">{{ item.defaultAdGroupNames }}</span><span v-else class="text-muted">-</span></div>
+                    <div><span v-if="item.defaultAdGroupNames && item.defaultAdGroupNames.trim()">{{ item.defaultAdGroupNames }}</span><span v-else class="text-muted">Missing Data</span></div>
                     <div class="label">Flags <span class="req">*</span>:</div>
                     <div class="flags">
                         <span>PHI: {{ item.privacyPhiDisplay || (item.privacyPhi === null || item.privacyPhi === undefined ? 'Missing Data' : (item.privacyPhi ? 'Yes' : 'No')) }}</span>
@@ -82,9 +89,9 @@
                     </div>
 
                     <!-- Row 9: Refresh Frequency | Last Date Modified -->
-                    <div class="label">Refresh Frequency <span class="req">*</span>:</div><div>{{ item.refreshFrequency || '-' }}</div>
+                    <div class="label">Refresh Frequency <span class="req">*</span>:</div><div>{{ item.refreshFrequency || 'Missing Data' }}</div>
                     <div class="label">Last Date Modified <span class="req">*</span>:</div>
-                    <div>{{ item.lastModifiedDate ? new Date(item.lastModifiedDate).toLocaleDateString() : '-' }}</div>
+                    <div>{{ item.lastModifiedDate ? new Date(item.lastModifiedDate).toLocaleDateString() : 'Missing Data' }}</div>
 
                     <!-- End required block -->
 
