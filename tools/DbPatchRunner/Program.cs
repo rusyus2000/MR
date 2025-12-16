@@ -226,10 +226,6 @@ BEGIN TRY
     IF OBJECT_ID(N'[dbo].[Employee]', N'U') IS NULL AND OBJECT_ID(N'[dbo].[Owners]', N'U') IS NOT NULL
         EXEC sp_rename 'dbo.Owners', 'Employee';
 
-    -- Ensure Missing Data employee with ID 11 exists
-    IF NOT EXISTS (SELECT 1 FROM Employee WHERE Id = 11)
-        INSERT INTO Employee(Id, Name, Email) VALUES(11, 'Missing Data', 'missing@example.com');
-
     -- Backfill Item.OwnerId and Item.ExecutiveSponsorId to 11 when NULL
     IF COL_LENGTH('Items','OwnerId') IS NOT NULL
         UPDATE Items SET OwnerId = 11 WHERE OwnerId IS NULL;
