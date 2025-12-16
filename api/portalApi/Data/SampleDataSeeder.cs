@@ -20,7 +20,7 @@ namespace SutterAnalyticsApi.Data
             if (_db.Items.Any()) return;
 
             EnsureLookups();
-            EnsureOwners();
+            EnsureEmployees();
 
             var all = _db.LookupValues.ToList();
             int L(string type, string value) => all.First(l => l.Type == type && l.Value == value).Id;
@@ -109,7 +109,7 @@ namespace SutterAnalyticsApi.Data
                 }
 
                 // Assign an owner (reuse among 5 seeded owners)
-                var owner = _db.Owners.OrderBy(_ => Guid.NewGuid()).First();
+            var owner = _db.Employees.OrderBy(_ => Guid.NewGuid()).First();
                 item.OwnerId = owner.Id;
 
                 items.Add(item);
@@ -144,7 +144,7 @@ namespace SutterAnalyticsApi.Data
             Ensure("DataConsumer", new[] { "Analysts", "Leaders", "Clinicians" });
         }
 
-        private void EnsureOwners()
+        private void EnsureEmployees()
         {
             var owners = new (string Name, string Email)[]
             {
@@ -156,9 +156,9 @@ namespace SutterAnalyticsApi.Data
             };
             foreach (var (name, email) in owners)
             {
-                if (!_db.Owners.Any(o => o.Email == email))
+                if (!_db.Employees.Any(o => o.Email == email))
                 {
-                    _db.Owners.Add(new Owner { Name = name, Email = email });
+                    _db.Employees.Add(new Employee { Name = name, Email = email });
                 }
             }
             _db.SaveChanges();

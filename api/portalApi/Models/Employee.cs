@@ -1,8 +1,9 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace SutterAnalyticsApi.Models
 {
-    public class Owner
+    public class Employee
     {
         [Key]
         public int Id { get; set; }

@@ -50,7 +50,7 @@ namespace SutterAnalyticsApi.Models
 
         // Product Owner (separate entity). One owner per item.
         public int? OwnerId { get; set; }
-        public Owner Owner { get; set; }
+        public Employee Owner { get; set; }
 
         // Keep text properties available at the model level for compatibility
         // but do not map them to database columns. Consumers should prefer
@@ -84,7 +84,7 @@ namespace SutterAnalyticsApi.Models
 
         // Executive sponsor (use Owner entity for person records)
         public int? ExecutiveSponsorId { get; set; }
-        public Owner ExecutiveSponsor { get; set; }
+        public Employee ExecutiveSponsor { get; set; }
 
         // Refresh frequency (lookup)
         public int? RefreshFrequencyId { get; set; }

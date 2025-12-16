@@ -14,7 +14,7 @@ namespace SutterAnalyticsApi.Data
         public DbSet<UserAssetOpenHistory> UserAssetOpenHistories { get; set; }
         public DbSet<UserSearchHistory> UserSearchHistories { get; set; }
         public DbSet<UserLoginHistory> UserLoginHistories { get; set; }
-        public DbSet<Owner> Owners { get; set; }
+        public DbSet<Employee> Employees { get; set; }
         public DbSet<ImportJob> ImportJobs { get; set; }
         // Removed: public DbSet<ItemDataConsumer> ItemDataConsumers { get; set; }
 
@@ -93,14 +93,14 @@ namespace SutterAnalyticsApi.Data
                 .HasForeignKey(i => i.StatusId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Item -> Owner (separate entity); optional
+            // Item -> Employee (owner)
             modelBuilder.Entity<Item>()
                 .HasOne(i => i.Owner)
                 .WithMany(o => o.Items)
                 .HasForeignKey(i => i.OwnerId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Item -> ExecutiveSponsor (Owner)
+            // Item -> ExecutiveSponsor (Employee)
             modelBuilder.Entity<Item>()
                 .HasOne(i => i.ExecutiveSponsor)
                 .WithMany()

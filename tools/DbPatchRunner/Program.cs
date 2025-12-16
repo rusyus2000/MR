@@ -218,6 +218,36 @@ using (var cmd4 = conn.CreateCommand())
 }
 Console.WriteLine("ProductImpactCategory ensured.");
 
+// Rename Owners table to Employee (singular) if needed and backfill missing person FKs
+Console.WriteLine("Ensuring Employee table and backfilling person references...");
+string sqlEmp = @"
+BEGIN TRY
+    -- Rename table Owners -> Employee if Employee does not exist
+    IF OBJECT_ID(N'[dbo].[Employee]', N'U') IS NULL AND OBJECT_ID(N'[dbo].[Owners]', N'U') IS NOT NULL
+        EXEC sp_rename 'dbo.Owners', 'Employee';
+
+    -- Ensure Missing Data employee with ID 11 exists
+    IF NOT EXISTS (SELECT 1 FROM Employee WHERE Id = 11)
+        INSERT INTO Employee(Id, Name, Email) VALUES(11, 'Missing Data', 'missing@example.com');
+
+    -- Backfill Item.OwnerId and Item.ExecutiveSponsorId to 11 when NULL
+    IF COL_LENGTH('Items','OwnerId') IS NOT NULL
+        UPDATE Items SET OwnerId = 11 WHERE OwnerId IS NULL;
+    IF COL_LENGTH('Items','ExecutiveSponsorId') IS NOT NULL
+        UPDATE Items SET ExecutiveSponsorId = 11 WHERE ExecutiveSponsorId IS NULL;
+END TRY
+BEGIN CATCH
+    DECLARE @msgEmp nvarchar(4000) = ERROR_MESSAGE();
+    THROW 50005, @msgEmp, 1;
+END CATCH;";
+using (var cmdEmp = conn.CreateCommand())
+{
+    cmdEmp.CommandText = sqlEmp;
+    cmdEmp.CommandTimeout = 120;
+    await cmdEmp.ExecuteNonQueryAsync();
+}
+Console.WriteLine("Employee table ensured and person FKs backfilled.");
+
 // Backfill required fields with 'Missing Data' and ensure required lookup FKs point to 'Missing Data'
 Console.WriteLine("Backfilling required fields to 'Missing Data' where missing...");
 string sql5 = @"

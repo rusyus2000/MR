@@ -689,14 +689,8 @@ namespace SutterAnalyticsApi.Controllers
 
             async Task<int> MissingOwnerIdAsync()
             {
-                var o = await _db.Owners.FirstOrDefaultAsync(x => x.Name == "Missing Data" && x.Email == "missing@example.com");
-                if (o == null)
-                {
-                    o = new Owner { Name = "Missing Data", Email = "missing@example.com" };
-                    _db.Owners.Add(o);
-                    await _db.SaveChangesAsync();
-                }
-                return o.Id;
+                // Use existing Missing Data employee (ID 11)
+                return 11;
             }
 
             // Person helper (Owner/Executive Sponsor): find by email; if not exists, create; if email missing, use Missing Data person
@@ -707,11 +701,11 @@ namespace SutterAnalyticsApi.Controllers
                 {
                     return await MissingOwnerIdAsync();
                 }
-                var existing = await _db.Owners.AsNoTracking().FirstOrDefaultAsync(o => o.Email == personEmail);
+                var existing = await _db.Employees.AsNoTracking().FirstOrDefaultAsync(o => o.Email == personEmail);
                 if (existing != null) return existing.Id;
                 var name = string.IsNullOrWhiteSpace(personName) ? personEmail : personName.Trim();
-                var o = new Owner { Name = name, Email = personEmail };
-                _db.Owners.Add(o);
+                var o = new Employee { Name = name, Email = personEmail };
+                _db.Employees.Add(o);
                 await _db.SaveChangesAsync();
                 return o.Id;
             }

@@ -749,7 +749,7 @@ namespace SutterAnalyticsApi.Controllers
             // Owner assignment
             if (dto.OwnerId.HasValue)
             {
-                var owner = await _db.Owners.FindAsync(dto.OwnerId.Value);
+                var owner = await _db.Employees.FindAsync(dto.OwnerId.Value);
                 if (owner != null) i.OwnerId = owner.Id;
             }
             else if (!string.IsNullOrWhiteSpace(dto.OwnerEmail) || !string.IsNullOrWhiteSpace(dto.OwnerName))
@@ -757,16 +757,16 @@ namespace SutterAnalyticsApi.Controllers
                 var email = (dto.OwnerEmail ?? string.Empty).Trim();
                 var name = (dto.OwnerName ?? string.Empty).Trim();
                 var existing = !string.IsNullOrEmpty(email)
-                    ? await _db.Owners.FirstOrDefaultAsync(o => o.Email == email)
-                    : await _db.Owners.FirstOrDefaultAsync(o => o.Name == name);
+                    ? await _db.Employees.FirstOrDefaultAsync(o => o.Email == email)
+                    : await _db.Employees.FirstOrDefaultAsync(o => o.Name == name);
                 if (existing == null)
                 {
                     if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(email))
                     {
                         return BadRequest("Both OwnerName and OwnerEmail are required to create a new owner.");
                     }
-                    existing = new Owner { Name = name, Email = email };
-                    _db.Owners.Add(existing);
+                    existing = new Employee { Name = name, Email = email };
+                    _db.Employees.Add(existing);
                     await _db.SaveChangesAsync();
                 }
                 i.OwnerId = existing.Id;
@@ -775,7 +775,7 @@ namespace SutterAnalyticsApi.Controllers
             // Executive Sponsor assignment
             if (dto.ExecutiveSponsorId.HasValue)
             {
-                var s = await _db.Owners.FindAsync(dto.ExecutiveSponsorId.Value);
+                var s = await _db.Employees.FindAsync(dto.ExecutiveSponsorId.Value);
                 if (s != null) i.ExecutiveSponsorId = s.Id;
             }
             else if (!string.IsNullOrWhiteSpace(dto.ExecutiveSponsorEmail) || !string.IsNullOrWhiteSpace(dto.ExecutiveSponsorName))
@@ -783,16 +783,16 @@ namespace SutterAnalyticsApi.Controllers
                 var email = (dto.ExecutiveSponsorEmail ?? string.Empty).Trim();
                 var name = (dto.ExecutiveSponsorName ?? string.Empty).Trim();
                 var existing = !string.IsNullOrEmpty(email)
-                    ? await _db.Owners.FirstOrDefaultAsync(o => o.Email == email)
-                    : await _db.Owners.FirstOrDefaultAsync(o => o.Name == name);
+                    ? await _db.Employees.FirstOrDefaultAsync(o => o.Email == email)
+                    : await _db.Employees.FirstOrDefaultAsync(o => o.Name == name);
                 if (existing == null)
                 {
                     if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(email))
                     {
                         return BadRequest("Both ExecutiveSponsorName and ExecutiveSponsorEmail are required to create a new sponsor.");
                     }
-                    existing = new Owner { Name = name, Email = email };
-                    _db.Owners.Add(existing);
+                    existing = new Employee { Name = name, Email = email };
+                    _db.Employees.Add(existing);
                     await _db.SaveChangesAsync();
                 }
                 i.ExecutiveSponsorId = existing.Id;
@@ -958,7 +958,7 @@ namespace SutterAnalyticsApi.Controllers
             // Owner update
             if (dto.OwnerId.HasValue)
             {
-                var owner = await _db.Owners.FindAsync(dto.OwnerId.Value);
+                var owner = await _db.Employees.FindAsync(dto.OwnerId.Value);
                 if (owner != null) i.OwnerId = owner.Id;
             }
             else if (!string.IsNullOrWhiteSpace(dto.OwnerEmail) || !string.IsNullOrWhiteSpace(dto.OwnerName))
@@ -966,16 +966,16 @@ namespace SutterAnalyticsApi.Controllers
                 var email = (dto.OwnerEmail ?? string.Empty).Trim();
                 var name = (dto.OwnerName ?? string.Empty).Trim();
                 var existing = !string.IsNullOrEmpty(email)
-                    ? await _db.Owners.FirstOrDefaultAsync(o => o.Email == email)
-                    : await _db.Owners.FirstOrDefaultAsync(o => o.Name == name);
+                    ? await _db.Employees.FirstOrDefaultAsync(o => o.Email == email)
+                    : await _db.Employees.FirstOrDefaultAsync(o => o.Name == name);
                 if (existing == null)
                 {
                     if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(email))
                     {
                         return BadRequest("Both OwnerName and OwnerEmail are required to create a new owner.");
                     }
-                    existing = new Owner { Name = name, Email = email };
-                    _db.Owners.Add(existing);
+                    existing = new Employee { Name = name, Email = email };
+                    _db.Employees.Add(existing);
                     await _db.SaveChangesAsync();
                 }
                 i.OwnerId = existing.Id;
@@ -984,7 +984,7 @@ namespace SutterAnalyticsApi.Controllers
             // Executive Sponsor update
             if (dto.ExecutiveSponsorId.HasValue)
             {
-                var s = await _db.Owners.FindAsync(dto.ExecutiveSponsorId.Value);
+                var s = await _db.Employees.FindAsync(dto.ExecutiveSponsorId.Value);
                 if (s != null) i.ExecutiveSponsorId = s.Id;
             }
             else if (!string.IsNullOrWhiteSpace(dto.ExecutiveSponsorEmail) || !string.IsNullOrWhiteSpace(dto.ExecutiveSponsorName))
@@ -992,16 +992,16 @@ namespace SutterAnalyticsApi.Controllers
                 var email = (dto.ExecutiveSponsorEmail ?? string.Empty).Trim();
                 var name = (dto.ExecutiveSponsorName ?? string.Empty).Trim();
                 var existing = !string.IsNullOrEmpty(email)
-                    ? await _db.Owners.FirstOrDefaultAsync(o => o.Email == email)
-                    : await _db.Owners.FirstOrDefaultAsync(o => o.Name == name);
+                    ? await _db.Employees.FirstOrDefaultAsync(o => o.Email == email)
+                    : await _db.Employees.FirstOrDefaultAsync(o => o.Name == name);
                 if (existing == null)
                 {
                     if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(email))
                     {
                         return BadRequest("Both ExecutiveSponsorName and ExecutiveSponsorEmail are required to create a new sponsor.");
                     }
-                    existing = new Owner { Name = name, Email = email };
-                    _db.Owners.Add(existing);
+                    existing = new Employee { Name = name, Email = email };
+                    _db.Employees.Add(existing);
                     await _db.SaveChangesAsync();
                 }
                 i.ExecutiveSponsorId = existing.Id;

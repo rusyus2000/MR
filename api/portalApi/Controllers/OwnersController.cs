@@ -15,7 +15,7 @@ namespace SutterAnalyticsApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<object>>> Search([FromQuery] string? search, [FromQuery] int top = 10)
         {
-            var q = _db.Owners.AsQueryable();
+            var q = _db.Employees.AsQueryable();
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var s = search.Trim().ToLower();
@@ -33,10 +33,9 @@ namespace SutterAnalyticsApi.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult<object>> GetById(int id)
         {
-            var o = await _db.Owners.FindAsync(id);
+            var o = await _db.Employees.FindAsync(id);
             if (o == null) return NotFound();
             return Ok(new { o.Id, o.Name, o.Email });
         }
     }
 }
-
