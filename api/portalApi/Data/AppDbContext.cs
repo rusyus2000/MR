@@ -25,6 +25,8 @@ namespace SutterAnalyticsApi.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Map Employee entity to existing table name 'Employee' (singular)
+            modelBuilder.Entity<Employee>().ToTable("Employee");
             modelBuilder.Entity<UserFavorite>()
                 .HasKey(uf => new { uf.UserId, uf.ItemId });
 

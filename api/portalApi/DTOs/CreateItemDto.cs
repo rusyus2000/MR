@@ -69,7 +69,6 @@ public class CreateItemDto
     public string? AccessGroupDn { get; set; }
     public string? AutomationClassification { get; set; }
     public string? UserVisibilityString { get; set; }
-    public string? UserVisibilityNumber { get; set; }
     public string? EpicSecurityGroupTag { get; set; }
     public string? KeepLongTerm { get; set; }
 

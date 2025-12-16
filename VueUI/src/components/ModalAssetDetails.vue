@@ -128,7 +128,6 @@
                     <div class="label">Access Group DN:</div><div>{{ item.accessGroupDn || '-' }}</div>
                     <div class="label">Automation Classification:</div><div>{{ item.automationClassification || '-' }}</div>
                     <div class="label">User Visibility (String):</div><div>{{ item.userVisibilityString || '-' }}</div>
-                    <div class="label">User Visibility (Number):</div><div>{{ item.userVisibilityNumber || '-' }}</div>
                     <div class="label">Epic Security Group Tag:</div><div>{{ item.epicSecurityGroupTag || '-' }}</div>
                     <div class="label">Keep Long Term:</div><div>{{ item.keepLongTerm || '-' }}</div>
 

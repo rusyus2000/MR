@@ -20,52 +20,50 @@ static class Seed
     {
         var domain = new LookupValue { Type = "Domain", Value = "Finance" };
         var division = new LookupValue { Type = "Division", Value = "North" };
-        var serviceLine = new LookupValue { Type = "ServiceLine", Value = "SL-A" };
         var dataSource = new LookupValue { Type = "DataSource", Value = "EDW" };
         var assetType = new LookupValue { Type = "AssetType", Value = "Dashboard" };
         var status = new LookupValue { Type = "Status", Value = "Published" };
         var operatingEntity = new LookupValue { Type = "OperatingEntity", Value = "Entity-1" };
         var refresh = new LookupValue { Type = "RefreshFrequency", Value = "Daily" };
-        var dc1 = new LookupValue { Type = "DataConsumer", Value = "Analysts" };
 
         var optCon = new LookupValue { Type = "PotentialToConsolidate", Value = "High" };
         var optAuto = new LookupValue { Type = "PotentialToAutomate", Value = "Medium" };
         var sponsorVal = new LookupValue { Type = "SponsorBusinessValue", Value = "High" };
-        var mustDo = new LookupValue { Type = "MustDo2025", Value = "Yes" };
         var devEffort = new LookupValue { Type = "DevelopmentEffort", Value = "Small" };
         var estHours = new LookupValue { Type = "EstimatedDevHours", Value = "80" };
         var resDev = new LookupValue { Type = "ResourcesDevelopment", Value = "2" };
         var resAnalysts = new LookupValue { Type = "ResourcesAnalysts", Value = "1" };
         var resPlatform = new LookupValue { Type = "ResourcesPlatform", Value = "1" };
         var resDE = new LookupValue { Type = "ResourcesDataEngineering", Value = "0" };
+        var pic = new LookupValue { Type = "ProductImpactCategory", Value = "Strategic" };
 
-        db.LookupValues.AddRange(domain, division, serviceLine, dataSource, assetType, status, operatingEntity, refresh,
-            dc1, optCon, optAuto, sponsorVal, mustDo, devEffort, estHours, resDev, resAnalysts, resPlatform, resDE);
+        db.LookupValues.AddRange(domain, division, dataSource, assetType, status, operatingEntity, refresh,
+            optCon, optAuto, sponsorVal, devEffort, estHours, resDev, resAnalysts, resPlatform, resDE, pic);
 
-        var owner = new Owner { Name = "Owner One", Email = "owner@example.com" };
-        var sponsor = new Owner { Name = "Exec Sponsor", Email = "exec@example.com" };
-        db.Owners.AddRange(owner, sponsor);
+        var owner = new Employee { Name = "Owner One", Email = "owner@example.com" };
+        var sponsor = new Employee { Name = "Exec Sponsor", Email = "exec@example.com" };
+        db.Employees.AddRange(owner, sponsor);
 
         var tagA = new Tag { Value = "Finance" };
         var tagB = new Tag { Value = "QBR" };
         db.Tags.AddRange(tagA, tagB);
+
+        db.SaveChanges();
 
         var item = new Item
         {
             Title = "Revenue Dashboard",
             Description = "KPIs for revenue trends",
             Url = "http://example/revenue",
-            AssetType = assetType,
-            AssetTypeId = null, // navigation populated
-            DomainLookup = domain,
-            DivisionLookup = division,
-            ServiceLineLookup = serviceLine,
-            DataSourceLookup = dataSource,
-            StatusLookup = status,
-            Owner = owner,
-            ExecutiveSponsor = sponsor,
-            OperatingEntityLookup = operatingEntity,
-            RefreshFrequencyLookup = refresh,
+            AssetTypeId = assetType.Id,
+            DomainId = domain.Id,
+            DivisionId = division.Id,
+            DataSourceId = dataSource.Id,
+            StatusId = status.Id,
+            OwnerId = owner.Id,
+            ExecutiveSponsorId = sponsor.Id,
+            OperatingEntityId = operatingEntity.Id,
+            RefreshFrequencyId = refresh.Id,
             PrivacyPhi = true,
             PrivacyPii = false,
             HasRls = true,
@@ -74,7 +72,7 @@ static class Seed
             Featured = true,
             ProductGroup = "Finance",
             ProductStatusNotes = "Stable",
-            DataConsumersText = "Finance Managers",
+            DataConsumers = "Finance Managers",
             TechDeliveryManager = "Tech Lead",
             RegulatoryComplianceContractual = "SOX",
             BiPlatform = "Power BI",
@@ -87,19 +85,18 @@ static class Seed
             AccessGroupDn = "CN=BI-Users,OU=Groups,DC=example,DC=com",
             AutomationClassification = "Manual",
             UserVisibilityString = "Public",
-            UserVisibilityNumber = "1",
             EpicSecurityGroupTag = "EPIC-1",
             KeepLongTerm = "Yes",
-            PotentialToConsolidate = optCon,
-            PotentialToAutomate = optAuto,
-            SponsorBusinessValue = sponsorVal,
-            MustDo2025 = mustDo,
-            DevelopmentEffortLookup = devEffort,
-            EstimatedDevHoursLookup = estHours,
-            ResourcesDevelopmentLookup = resDev,
-            ResourcesAnalystsLookup = resAnalysts,
-            ResourcesPlatformLookup = resPlatform,
-            ResourcesDataEngineeringLookup = resDE
+            PotentialToConsolidateId = optCon.Id,
+            PotentialToAutomateId = optAuto.Id,
+            SponsorBusinessValueId = sponsorVal.Id,
+            DevelopmentEffortId = devEffort.Id,
+            EstimatedDevHoursId = estHours.Id,
+            ResourcesDevelopmentId = resDev.Id,
+            ResourcesAnalystsId = resAnalysts.Id,
+            ResourcesPlatformId = resPlatform.Id,
+            ResourcesDataEngineeringId = resDE.Id,
+            ProductImpactCategoryId = pic.Id
         };
 
         db.Items.Add(item);
@@ -108,9 +105,6 @@ static class Seed
         // Tags
         db.ItemTags.Add(new ItemTag { ItemId = item.Id, Tag = tagA });
         db.ItemTags.Add(new ItemTag { ItemId = item.Id, Tag = tagB });
-
-        // Data Consumers (lookup relation)
-        db.ItemDataConsumers.Add(new ItemDataConsumer { ItemId = item.Id, DataConsumerId = dc1.Id });
         db.SaveChanges();
     }
 }
@@ -148,4 +142,3 @@ class Program
         return 1;
     }
 }
-

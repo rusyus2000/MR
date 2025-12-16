@@ -11,6 +11,7 @@ using System.Text.Json;
 using SutterAnalyticsApi.Data;
 using SutterAnalyticsApi.DTOs;
 using SutterAnalyticsApi.Models;
+using SutterAnalyticsApi.Services;
 
 namespace SutterAnalyticsApi.Controllers
 {
@@ -327,7 +328,6 @@ namespace SutterAnalyticsApi.Controllers
                 AccessGroupDn = i.AccessGroupDn,
                 AutomationClassification = i.AutomationClassification,
                 UserVisibilityString = i.UserVisibilityString,
-                UserVisibilityNumber = i.UserVisibilityNumber,
                 EpicSecurityGroupTag = i.EpicSecurityGroupTag,
                 KeepLongTerm = i.KeepLongTerm,
                 PrivacyPhiDisplay = DisplayBool(i.PrivacyPhi),
@@ -432,7 +432,6 @@ namespace SutterAnalyticsApi.Controllers
                     i.AccessGroupDn,
                     i.AutomationClassification,
                     i.UserVisibilityString,
-                    i.UserVisibilityNumber,
                     i.EpicSecurityGroupTag,
                     i.KeepLongTerm,
 
@@ -466,62 +465,7 @@ namespace SutterAnalyticsApi.Controllers
 
             var sb = new StringBuilder();
             // Header: custom order provided by requestor
-            sb.AppendLine(string.Join(",", new[] {
-                "Domain",
-                "Product Group",
-                "Title",
-                "Description",
-                "Status",
-                "Product Status Notes",
-                "Division",
-                "Operating Entity",
-                "Executive Sponsor Name",
-                "Data Consumers",
-                "Owner Name",
-                "Owner Email",
-                "Tech Delivery Mgr",
-                "Regulatory/Compliance/Contractual",
-                "Asset Type",
-                "Featured",
-                "BI Platform",
-                "Url",
-                "DB Server",
-                "DB/Data Mart",
-                "Database Table",
-                "Source Rep",
-                "dataSecurityClassification",
-                "accessGroupName",
-                "accessGroupDN",
-                "Data Source",
-                "Automation Classification",
-                "user_visibility_string",
-                "user_visibility_number",
-                "Default AD Group Names",
-                "PHI",
-                "PII",
-                "Has RLS",
-                "Epic Security Group tag",
-                "Refresh Frequency",
-                "Keep Long Term",
-                "Potential to Consolidate",
-                "Potential to Automate",
-                "Last Modified Date",
-                "Business Value by executive sponsor",
-                // 2025 Must Do removed
-                "Development Effort",
-                "Estimated development hours",
-                "Resources - Development",
-                "Resources - Analysts",
-                "Resources - Platform",
-                "Resources - Data Engineering",
-                "Product Impact Category",
-                // Extra fields appended at the end (unchanged labels)
-                "Id",
-                // Service Line removed
-                "Tags",
-                "Dependencies",
-                "Executive Sponsor Email"
-            }));
+            sb.AppendLine(string.Join(",", ItemCsvFormat.Headers));
             foreach (var r in rows)
             {
                 var tags = string.Join("; ", r.Tags);
@@ -584,8 +528,6 @@ namespace SutterAnalyticsApi.Controllers
                     CsvEscape(r.AutomationClassification ?? string.Empty),
                     // user_visibility_string
                     CsvEscape(r.UserVisibilityString ?? string.Empty),
-                    // user_visibility_number
-                    CsvEscape(r.UserVisibilityNumber ?? string.Empty),
                     // Default AD Group Names
                     CsvEscape(r.DefaultAdGroupNames ?? string.Empty),
                     // Has PHI Flag *

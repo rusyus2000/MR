@@ -151,9 +151,6 @@ namespace SutterAnalyticsApi.Models
         public string? UserVisibilityString { get; set; }
 
         [MaxLength(100)]
-        public string? UserVisibilityNumber { get; set; }
-
-        [MaxLength(100)]
         public string? EpicSecurityGroupTag { get; set; }
 
         [MaxLength(100)]

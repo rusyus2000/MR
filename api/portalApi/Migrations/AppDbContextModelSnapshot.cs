@@ -263,10 +263,6 @@ namespace portalApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserVisibilityNumber")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<string>("UserVisibilityString")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");

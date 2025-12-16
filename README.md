@@ -44,7 +44,6 @@ The admin export endpoint `POST /api/items/export` returns a CSV with all requir
 39. accessGroupDN
 40. Automation Classification
 41. user_visibility_string
-42. user_visibility_number
 43. Epic Security Group tag
 44. Keep Long Term
 

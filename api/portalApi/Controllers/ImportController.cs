@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SutterAnalyticsApi.Data;
 using SutterAnalyticsApi.Models;
+using SutterAnalyticsApi.Services;
 
 namespace SutterAnalyticsApi.Controllers
 {
@@ -61,6 +62,50 @@ namespace SutterAnalyticsApi.Controllers
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(p => p, StringComparer.OrdinalIgnoreCase);
             return string.Join("; ", parts);
+        }
+
+        private static bool HeaderMatchesExact(string[] header, string[] expected, out string message)
+        {
+            string norm(string? s) => (s ?? string.Empty).Trim();
+            if (header.Length != expected.Length)
+            {
+                message = $"CSV header column count mismatch: expected {expected.Length}, got {header.Length}.";
+                return false;
+            }
+            for (int i = 0; i < expected.Length; i++)
+            {
+                var actual = norm(header[i]);
+                var exp = expected[i];
+                if (!string.Equals(actual, exp, StringComparison.OrdinalIgnoreCase))
+                {
+                    message = $"CSV header mismatch at column {i + 1}: expected '{exp}', got '{actual}'.";
+                    return false;
+                }
+            }
+            message = string.Empty;
+            return true;
+        }
+
+        private static string NormalizeBoolToken(string? raw, out bool ok)
+        {
+            var t = Normalize(raw);
+            if (string.IsNullOrEmpty(t) || t.Equals("Missing Data", StringComparison.OrdinalIgnoreCase))
+            {
+                ok = true;
+                return "Missing Data";
+            }
+            if (t.Equals("true", StringComparison.OrdinalIgnoreCase) || t.Equals("yes", StringComparison.OrdinalIgnoreCase))
+            {
+                ok = true;
+                return "true";
+            }
+            if (t.Equals("false", StringComparison.OrdinalIgnoreCase) || t.Equals("no", StringComparison.OrdinalIgnoreCase))
+            {
+                ok = true;
+                return "false";
+            }
+            ok = false;
+            return t;
         }
 
         // Compute SHA-256 by streaming each field with a 4-byte big-endian length prefix,
@@ -167,73 +212,65 @@ namespace SutterAnalyticsApi.Controllers
 
             // Expect header
             var header = rows[0];
-            // Map columns by name
-            int idx(string name)
+            if (!HeaderMatchesExact(header, ItemCsvFormat.Headers, out var headerError))
             {
-                for (int i = 0; i < header.Length; i++)
-                    if (string.Equals(header[i]?.Trim(), name, StringComparison.OrdinalIgnoreCase))
-                        return i;
-                return -1;
+                return BadRequest(headerError);
             }
 
-            int cId = idx("Id");
-            int cTitle = idx("Title");
-            int cDesc = idx("Description");
-            int cUrl = idx("Url");
-            int cAssetType = idx("Asset Type");
-            int cDomain = idx("Domain");
-            int cDivision = idx("Division");
-            int cServiceLine = idx("Service Line");
-            int cDataSource = idx("Data Source");
-            int cStatus = idx("Status");
-            int cOwnerName = idx("Owner Name");
-            int cOwnerEmail = idx("Owner Email");
-            int cExecName = idx("Executive Sponsor Name");
-            int cExecEmail = idx("Executive Sponsor Email");
-            int cOperatingEntity = idx("Operating Entity");
-            int cRefreshFrequency = idx("Refresh Frequency");
-            int cPhi = idx("PHI");
-            int cPii = idx("PII");
-            int cHasRls = idx("Has RLS");
-            int cLastModified = idx("Last Modified Date");
-            // Date Added removed from import format (set server-side)
-            int cFeatured = idx("Featured");
-            int cTags = idx("Tags");
-            int cDataConsumers = idx("Data Consumers");
-            int cDependencies = idx("Dependencies");
-            int cDefaultAdGroups = idx("Default AD Group Names");
-            // Free-text extras
-            int cProductGroup = idx("Product Group");
-            int cProductStatusNotes = idx("Product Status Notes");
-            int cTechDeliveryManager = idx("Tech Delivery Mgr");
-            int cRegulatoryCompliance = idx("Regulatory/Compliance/Contractual");
-            int cBiPlatform = idx("BI Platform");
-            int cDbServer = idx("DB Server");
-            int cDbDataMart = idx("DB/Data Mart");
-            int cDatabaseTable = idx("Database Table");
-            int cSourceRep = idx("Source Rep");
-            int cDataSecurityClassification = idx("dataSecurityClassification");
-            int cAccessGroupName = idx("accessGroupName");
-            int cAccessGroupDn = idx("accessGroupDN");
-            int cAutomationClassification = idx("Automation Classification");
-            int cUserVisibilityString = idx("user_visibility_string");
-            int cUserVisibilityNumber = idx("user_visibility_number");
-            int cEpicSecurityGroupTag = idx("Epic Security Group tag");
-            int cKeepLongTerm = idx("Keep Long Term");
-            // Optional lookup extras
-            int cPotentialToConsolidate = idx("Potential to Consolidate");
-            int cPotentialToAutomate = idx("Potential to Automate");
-            int cSponsorBusinessValue = idx("Business Value by executive sponsor");
-            // 2025 Must Do removed
-            int cDevelopmentEffort = idx("Development Effort");
-            int cEstimatedDevHours = idx("Estimated development hours");
-            int cResourcesDevelopment = idx("Resources - Development");
-            int cResourcesAnalysts = idx("Resources - Analysts");
-            int cResourcesPlatform = idx("Resources - Platform");
-            int cResourcesDataEngineering = idx("Resources - Data Engineering");
+            var col = ItemCsvFormat.Headers
+                .Select((name, index) => new { name, index })
+                .ToDictionary(x => x.name, x => x.index, StringComparer.OrdinalIgnoreCase);
 
-            if (cTitle < 0 || cUrl < 0)
-                return BadRequest("Missing required columns");
+            int cDomain = col["Domain"];
+            int cProductGroup = col["Product Group"];
+            int cTitle = col["Title"];
+            int cDesc = col["Description"];
+            int cStatus = col["Status"];
+            int cProductStatusNotes = col["Product Status Notes"];
+            int cDivision = col["Division"];
+            int cOperatingEntity = col["Operating Entity"];
+            int cExecName = col["Executive Sponsor Name"];
+            int cDataConsumers = col["Data Consumers"];
+            int cOwnerName = col["Owner Name"];
+            int cOwnerEmail = col["Owner Email"];
+            int cTechDeliveryManager = col["Tech Delivery Mgr"];
+            int cRegulatoryCompliance = col["Regulatory/Compliance/Contractual"];
+            int cAssetType = col["Asset Type"];
+            int cFeatured = col["Featured"];
+            int cBiPlatform = col["BI Platform"];
+            int cUrl = col["Url"];
+            int cDbServer = col["DB Server"];
+            int cDbDataMart = col["DB/Data Mart"];
+            int cDatabaseTable = col["Database Table"];
+            int cSourceRep = col["Source Rep"];
+            int cDataSecurityClassification = col["dataSecurityClassification"];
+            int cAccessGroupName = col["accessGroupName"];
+            int cAccessGroupDn = col["accessGroupDN"];
+            int cDataSource = col["Data Source"];
+            int cAutomationClassification = col["Automation Classification"];
+            int cUserVisibilityString = col["user_visibility_string"];
+            int cDefaultAdGroups = col["Default AD Group Names"];
+            int cPhi = col["PHI"];
+            int cPii = col["PII"];
+            int cHasRls = col["Has RLS"];
+            int cEpicSecurityGroupTag = col["Epic Security Group tag"];
+            int cRefreshFrequency = col["Refresh Frequency"];
+            int cKeepLongTerm = col["Keep Long Term"];
+            int cPotentialToConsolidate = col["Potential to Consolidate"];
+            int cPotentialToAutomate = col["Potential to Automate"];
+            int cLastModified = col["Last Modified Date"];
+            int cSponsorBusinessValue = col["Business Value by executive sponsor"];
+            int cDevelopmentEffort = col["Development Effort"];
+            int cEstimatedDevHours = col["Estimated development hours"];
+            int cResourcesDevelopment = col["Resources - Development"];
+            int cResourcesAnalysts = col["Resources - Analysts"];
+            int cResourcesPlatform = col["Resources - Platform"];
+            int cResourcesDataEngineering = col["Resources - Data Engineering"];
+            int cProductImpactCategory = col["Product Impact Category"];
+            int cId = col["Id"];
+            int cTags = col["Tags"];
+            int cDependencies = col["Dependencies"];
+            int cExecEmail = col["Executive Sponsor Email"];
 
             var dataRows = rows.Skip(1).Where(r => r.Length > 1).ToList();
 
@@ -247,6 +284,7 @@ namespace SutterAnalyticsApi.Controllers
                 .Include(i => i.DataSourceLookup)
                 .Include(i => i.StatusLookup)
                 .Include(i => i.Owner)
+                .Include(i => i.ExecutiveSponsor)
                 .Include(i => i.ItemTags).ThenInclude(it => it.Tag)
                 .Select(i => new
                 {
@@ -258,14 +296,49 @@ namespace SutterAnalyticsApi.Controllers
                     Domain = i.DomainLookup != null ? i.DomainLookup.Value : string.Empty,
                     Division = i.DivisionLookup != null ? i.DivisionLookup.Value : string.Empty,
                     OperatingEntity = i.OperatingEntityLookup != null ? i.OperatingEntityLookup.Value : string.Empty,
+                    RefreshFrequency = i.RefreshFrequencyLookup != null ? i.RefreshFrequencyLookup.Value : string.Empty,
                     // ServiceLine removed
                     DataSource = i.DataSourceLookup != null ? i.DataSourceLookup.Value : string.Empty,
                     Status = i.StatusLookup != null ? i.StatusLookup.Value : string.Empty,
                     OwnerName = i.Owner != null ? i.Owner.Name : string.Empty,
                     OwnerEmail = i.Owner != null ? i.Owner.Email : string.Empty,
                     i.PrivacyPhi,
+                    i.PrivacyPii,
+                    i.HasRls,
+                    i.LastModifiedDate,
                     i.DateAdded,
                     i.Featured,
+                    i.Dependencies,
+                    i.DefaultAdGroupNames,
+                    i.ProductGroup,
+                    i.ProductStatusNotes,
+                    i.DataConsumers,
+                    i.TechDeliveryManager,
+                    i.RegulatoryComplianceContractual,
+                    i.BiPlatform,
+                    i.DbServer,
+                    i.DbDataMart,
+                    i.DatabaseTable,
+                    i.SourceRep,
+                    i.DataSecurityClassification,
+                    i.AccessGroupName,
+                    i.AccessGroupDn,
+                    i.AutomationClassification,
+                    i.UserVisibilityString,
+                    i.EpicSecurityGroupTag,
+                    i.KeepLongTerm,
+                    PotentialToConsolidate = i.PotentialToConsolidate != null ? i.PotentialToConsolidate.Value : string.Empty,
+                    PotentialToAutomate = i.PotentialToAutomate != null ? i.PotentialToAutomate.Value : string.Empty,
+                    SponsorBusinessValue = i.SponsorBusinessValue != null ? i.SponsorBusinessValue.Value : string.Empty,
+                    DevelopmentEffort = i.DevelopmentEffortLookup != null ? i.DevelopmentEffortLookup.Value : string.Empty,
+                    EstimatedDevHours = i.EstimatedDevHoursLookup != null ? i.EstimatedDevHoursLookup.Value : string.Empty,
+                    ResourcesDevelopment = i.ResourcesDevelopmentLookup != null ? i.ResourcesDevelopmentLookup.Value : string.Empty,
+                    ResourcesAnalysts = i.ResourcesAnalystsLookup != null ? i.ResourcesAnalystsLookup.Value : string.Empty,
+                    ResourcesPlatform = i.ResourcesPlatformLookup != null ? i.ResourcesPlatformLookup.Value : string.Empty,
+                    ResourcesDataEngineering = i.ResourcesDataEngineeringLookup != null ? i.ResourcesDataEngineeringLookup.Value : string.Empty,
+                    ProductImpactCategory = i.ProductImpactCategory != null ? i.ProductImpactCategory.Value : string.Empty,
+                    ExecutiveSponsorName = i.ExecutiveSponsor != null ? i.ExecutiveSponsor.Name : string.Empty,
+                    ExecutiveSponsorEmail = i.ExecutiveSponsor != null ? i.ExecutiveSponsor.Email : string.Empty,
                     Tags = i.ItemTags.Select(it => it.Tag.Value),
                     i.ContentHash
                 })
@@ -299,85 +372,98 @@ namespace SutterAnalyticsApi.Controllers
                 try
                 {
                     rowIdx++;
+                    if (r.Length != ItemCsvFormat.Headers.Length)
+                    {
+                        errors++;
+                        var reason = $"Row has {r.Length} columns but expected {ItemCsvFormat.Headers.Length}. Ensure every row has the same number of columns as the header.";
+                        errorsList.Add(new { index = rowIdx, reason });
+                        previewRows.Add(new { index = rowIdx, action = "error", reason });
+                        continue;
+                    }
                     // Read raw values
-                    var rawTitle = cTitle < r.Length ? r[cTitle] : null;
-                    var rawDesc = cDesc < r.Length ? r[cDesc] : null;
-                    var rawUrl = cUrl < r.Length ? r[cUrl] : null;
-                    var rawAssetType = cAssetType < r.Length ? r[cAssetType] : null;
-                    var rawDomain = cDomain < r.Length ? r[cDomain] : null;
-                    var rawDivision = cDivision < r.Length ? r[cDivision] : null;
-                    var rawServiceLine = cServiceLine < r.Length ? r[cServiceLine] : null;
-                    var rawDataSource = cDataSource < r.Length ? r[cDataSource] : null;
-                    var rawStatus = cStatus < r.Length ? r[cStatus] : null;
-                    var rawOwnerName = cOwnerName < r.Length ? r[cOwnerName] : null;
-                    var rawOwnerEmail = cOwnerEmail < r.Length ? r[cOwnerEmail] : null;
-                    var rawExecName = cExecName >= 0 && cExecName < r.Length ? r[cExecName] : null;
-                    var rawExecEmail = cExecEmail >= 0 && cExecEmail < r.Length ? r[cExecEmail] : null;
-                    var rawPhi = cPhi < r.Length ? r[cPhi] : null;
-                    var rawPii = cPii >= 0 && cPii < r.Length ? r[cPii] : null;
-                    var rawHasRls = cHasRls >= 0 && cHasRls < r.Length ? r[cHasRls] : null;
-                    var rawLastModified = cLastModified >= 0 && cLastModified < r.Length ? r[cLastModified] : null;
-                    // Date Added removed (handled server-side)
-                    var rawFeatured = cFeatured < r.Length ? r[cFeatured] : null;
-                    var rawTags = cTags < r.Length ? r[cTags] : null;
-                    var rawOperatingEntity = cOperatingEntity >= 0 && cOperatingEntity < r.Length ? r[cOperatingEntity] : null;
-                    var rawRefreshFrequency = cRefreshFrequency >= 0 && cRefreshFrequency < r.Length ? r[cRefreshFrequency] : null;
-                    var rawDataConsumers = cDataConsumers >= 0 && cDataConsumers < r.Length ? r[cDataConsumers] : null;
-                    var rawDependencies = cDependencies >= 0 && cDependencies < r.Length ? r[cDependencies] : null;
-                    var rawDefaultAdGroups = cDefaultAdGroups >= 0 && cDefaultAdGroups < r.Length ? r[cDefaultAdGroups] : null;
-                    // Free-text extras
-                    var rawProductGroup = cProductGroup >= 0 && cProductGroup < r.Length ? r[cProductGroup] : null;
-                    var rawProductStatusNotes = cProductStatusNotes >= 0 && cProductStatusNotes < r.Length ? r[cProductStatusNotes] : null;
-                    var rawTechDeliveryManager = cTechDeliveryManager >= 0 && cTechDeliveryManager < r.Length ? r[cTechDeliveryManager] : null;
-                    var rawRegulatoryCompliance = cRegulatoryCompliance >= 0 && cRegulatoryCompliance < r.Length ? r[cRegulatoryCompliance] : null;
-                    var rawBiPlatform = cBiPlatform >= 0 && cBiPlatform < r.Length ? r[cBiPlatform] : null;
-                    var rawDbServer = cDbServer >= 0 && cDbServer < r.Length ? r[cDbServer] : null;
-                    var rawDbDataMart = cDbDataMart >= 0 && cDbDataMart < r.Length ? r[cDbDataMart] : null;
-                    var rawDatabaseTable = cDatabaseTable >= 0 && cDatabaseTable < r.Length ? r[cDatabaseTable] : null;
-                    var rawSourceRep = cSourceRep >= 0 && cSourceRep < r.Length ? r[cSourceRep] : null;
-                    var rawDataSecurityClassification = cDataSecurityClassification >= 0 && cDataSecurityClassification < r.Length ? r[cDataSecurityClassification] : null;
-                    var rawAccessGroupName = cAccessGroupName >= 0 && cAccessGroupName < r.Length ? r[cAccessGroupName] : null;
-                    var rawAccessGroupDn = cAccessGroupDn >= 0 && cAccessGroupDn < r.Length ? r[cAccessGroupDn] : null;
-                    var rawAutomationClassification = cAutomationClassification >= 0 && cAutomationClassification < r.Length ? r[cAutomationClassification] : null;
-                    var rawUserVisibilityString = cUserVisibilityString >= 0 && cUserVisibilityString < r.Length ? r[cUserVisibilityString] : null;
-                    var rawUserVisibilityNumber = cUserVisibilityNumber >= 0 && cUserVisibilityNumber < r.Length ? r[cUserVisibilityNumber] : null;
-                    var rawEpicSecurityGroupTag = cEpicSecurityGroupTag >= 0 && cEpicSecurityGroupTag < r.Length ? r[cEpicSecurityGroupTag] : null;
-                    var rawKeepLongTerm = cKeepLongTerm >= 0 && cKeepLongTerm < r.Length ? r[cKeepLongTerm] : null;
-                    // Optional lookup extras
-                    var rawPotentialToConsolidate = cPotentialToConsolidate >= 0 && cPotentialToConsolidate < r.Length ? r[cPotentialToConsolidate] : null;
-                    var rawPotentialToAutomate = cPotentialToAutomate >= 0 && cPotentialToAutomate < r.Length ? r[cPotentialToAutomate] : null;
-                    var rawSponsorBusinessValue = cSponsorBusinessValue >= 0 && cSponsorBusinessValue < r.Length ? r[cSponsorBusinessValue] : null;
-                    // MustDo2025 removed
-                    var rawDevelopmentEffort = cDevelopmentEffort >= 0 && cDevelopmentEffort < r.Length ? r[cDevelopmentEffort] : null;
-                    var rawEstimatedDevHours = cEstimatedDevHours >= 0 && cEstimatedDevHours < r.Length ? r[cEstimatedDevHours] : null;
-                    var rawResourcesDevelopment = cResourcesDevelopment >= 0 && cResourcesDevelopment < r.Length ? r[cResourcesDevelopment] : null;
-                    var rawResourcesAnalysts = cResourcesAnalysts >= 0 && cResourcesAnalysts < r.Length ? r[cResourcesAnalysts] : null;
-                    var rawResourcesPlatform = cResourcesPlatform >= 0 && cResourcesPlatform < r.Length ? r[cResourcesPlatform] : null;
-                    var rawResourcesDataEngineering = cResourcesDataEngineering >= 0 && cResourcesDataEngineering < r.Length ? r[cResourcesDataEngineering] : null;
+                    var rawDomain = r[cDomain];
+                    var rawProductGroup = r[cProductGroup];
+                    var rawTitle = r[cTitle];
+                    var rawDesc = r[cDesc];
+                    var rawStatus = r[cStatus];
+                    var rawProductStatusNotes = r[cProductStatusNotes];
+                    var rawDivision = r[cDivision];
+                    var rawOperatingEntity = r[cOperatingEntity];
+                    var rawExecName = r[cExecName];
+                    var rawDataConsumers = r[cDataConsumers];
+                    var rawOwnerName = r[cOwnerName];
+                    var rawOwnerEmail = r[cOwnerEmail];
+                    var rawTechDeliveryManager = r[cTechDeliveryManager];
+                    var rawRegulatoryCompliance = r[cRegulatoryCompliance];
+                    var rawAssetType = r[cAssetType];
+                    var rawFeatured = r[cFeatured];
+                    var rawBiPlatform = r[cBiPlatform];
+                    var rawUrl = r[cUrl];
+                    var rawDbServer = r[cDbServer];
+                    var rawDbDataMart = r[cDbDataMart];
+                    var rawDatabaseTable = r[cDatabaseTable];
+                    var rawSourceRep = r[cSourceRep];
+                    var rawDataSecurityClassification = r[cDataSecurityClassification];
+                    var rawAccessGroupName = r[cAccessGroupName];
+                    var rawAccessGroupDn = r[cAccessGroupDn];
+                    var rawDataSource = r[cDataSource];
+                    var rawAutomationClassification = r[cAutomationClassification];
+                    var rawUserVisibilityString = r[cUserVisibilityString];
+                    var rawDefaultAdGroups = r[cDefaultAdGroups];
+                    var rawPhi = r[cPhi];
+                    var rawPii = r[cPii];
+                    var rawHasRls = r[cHasRls];
+                    var rawEpicSecurityGroupTag = r[cEpicSecurityGroupTag];
+                    var rawRefreshFrequency = r[cRefreshFrequency];
+                    var rawKeepLongTerm = r[cKeepLongTerm];
+                    var rawPotentialToConsolidate = r[cPotentialToConsolidate];
+                    var rawPotentialToAutomate = r[cPotentialToAutomate];
+                    var rawLastModified = r[cLastModified];
+                    var rawSponsorBusinessValue = r[cSponsorBusinessValue];
+                    var rawDevelopmentEffort = r[cDevelopmentEffort];
+                    var rawEstimatedDevHours = r[cEstimatedDevHours];
+                    var rawResourcesDevelopment = r[cResourcesDevelopment];
+                    var rawResourcesAnalysts = r[cResourcesAnalysts];
+                    var rawResourcesPlatform = r[cResourcesPlatform];
+                    var rawResourcesDataEngineering = r[cResourcesDataEngineering];
+                    var rawProductImpactCategory = r[cProductImpactCategory];
+                    var rawId = r[cId];
+                    var rawTags = r[cTags];
+                    var rawDependencies = r[cDependencies];
+                    var rawExecEmail = r[cExecEmail];
+
+                    bool phiOk, piiOk, hasRlsOk, featuredOk;
+                    var phiTok = NormalizeBoolToken(rawPhi, out phiOk);
+                    var piiTok = NormalizeBoolToken(rawPii, out piiOk);
+                    var hasRlsTok = NormalizeBoolToken(rawHasRls, out hasRlsOk);
+                    var featuredTok = NormalizeBoolToken(rawFeatured, out featuredOk);
+                    if (!phiOk) throw new Exception("Invalid PHI value");
+                    if (!piiOk) throw new Exception("Invalid PII value");
+                    if (!hasRlsOk) throw new Exception("Invalid Has RLS value");
+                    if (!featuredOk) throw new Exception("Invalid Featured value");
 
                     // Normalize strings
                     var row = new
                     {
-                        Id = (cId >= 0 && cId < r.Length && int.TryParse(r[cId], out var rid)) ? rid : (int?)null,
+                        Id = int.TryParse(rawId, out var rid) ? rid : (int?)null,
                         Title = Normalize(rawTitle),
                         Description = Normalize(rawDesc),
                         Url = NormalizeUrl(rawUrl),
                         AssetType = Normalize(rawAssetType),
                         Domain = Normalize(rawDomain),
                         Division = Normalize(rawDivision),
-                        ServiceLine = Normalize(rawServiceLine),
                         DataSource = Normalize(rawDataSource),
                         Status = Normalize(rawStatus),
                         OwnerName = Normalize(rawOwnerName),
                         OwnerEmail = Normalize(rawOwnerEmail),
                         ExecutiveSponsorName = Normalize(rawExecName),
                         ExecutiveSponsorEmail = Normalize(rawExecEmail),
-                        PrivacyPhi = Normalize(rawPhi).Equals("true", StringComparison.OrdinalIgnoreCase) ? "true" : "false",
-                        PrivacyPii = Normalize(rawPii).Equals("true", StringComparison.OrdinalIgnoreCase) ? "true" : "false",
-                        HasRls = Normalize(rawHasRls).Equals("true", StringComparison.OrdinalIgnoreCase) ? "true" : "false",
+                        PrivacyPhi = phiTok,
+                        PrivacyPii = piiTok,
+                        HasRls = hasRlsTok,
                         LastModifiedDate = Normalize(rawLastModified),
                         // Date Added removed from import row
-                        Featured = Normalize(rawFeatured).Equals("true", StringComparison.OrdinalIgnoreCase) ? "true" : "false",
+                        Featured = featuredTok,
                         Tags = NormalizeTags(rawTags),
                         DataConsumers = Normalize(rawDataConsumers),
                         Dependencies = Normalize(rawDependencies),
@@ -400,7 +486,6 @@ namespace SutterAnalyticsApi.Controllers
                         AccessGroupDn = Normalize(rawAccessGroupDn),
                         AutomationClassification = Normalize(rawAutomationClassification),
                         UserVisibilityString = Normalize(rawUserVisibilityString),
-                        UserVisibilityNumber = Normalize(rawUserVisibilityNumber),
                         EpicSecurityGroupTag = Normalize(rawEpicSecurityGroupTag),
                         KeepLongTerm = Normalize(rawKeepLongTerm),
                         // Lookup extras
@@ -413,7 +498,8 @@ namespace SutterAnalyticsApi.Controllers
                         ResourcesDevelopment = Normalize(rawResourcesDevelopment),
                         ResourcesAnalysts = Normalize(rawResourcesAnalysts),
                         ResourcesPlatform = Normalize(rawResourcesPlatform),
-                        ResourcesDataEngineering = Normalize(rawResourcesDataEngineering)
+                        ResourcesDataEngineering = Normalize(rawResourcesDataEngineering),
+                        ProductImpactCategory = Normalize(rawProductImpactCategory)
                     };
 
                     // Skip completely blank rows (e.g., leftover commas in CSV)
@@ -423,7 +509,6 @@ namespace SutterAnalyticsApi.Controllers
                                  && string.IsNullOrEmpty(row.AssetType)
                                  && string.IsNullOrEmpty(row.Domain)
                                  && string.IsNullOrEmpty(row.Division)
-                                 && string.IsNullOrEmpty(row.ServiceLine)
                                  && string.IsNullOrEmpty(row.DataSource)
                                  && string.IsNullOrEmpty(row.Status)
                                  && string.IsNullOrEmpty(row.OwnerName)
@@ -494,7 +579,6 @@ namespace SutterAnalyticsApi.Controllers
                         row.AccessGroupDn,
                         row.AutomationClassification,
                         row.UserVisibilityString,
-                        row.UserVisibilityNumber,
                         row.EpicSecurityGroupTag,
                         row.KeepLongTerm,
                         row.PotentialToConsolidate,
@@ -506,7 +590,10 @@ namespace SutterAnalyticsApi.Controllers
                         row.ResourcesDevelopment,
                         row.ResourcesAnalysts,
                         row.ResourcesPlatform,
-                        row.ResourcesDataEngineering
+                        row.ResourcesDataEngineering,
+                        row.ProductImpactCategory,
+                        row.ExecutiveSponsorName,
+                        row.ExecutiveSponsorEmail
                     );
 
                     string k = keyOf(row.Url, row.Title, row.Domain, row.AssetType);
@@ -528,15 +615,49 @@ namespace SutterAnalyticsApi.Controllers
                                 Normalize(exById.AssetType),
                                 Normalize(exById.Domain),
                                 Normalize(exById.Division),
-                                Normalize(exById.OperatingEntity),
                                 Normalize(exById.DataSource),
                                 Normalize(exById.Status),
                                 Normalize(exById.OwnerName),
                                 Normalize(exById.OwnerEmail),
-                                (exById.PrivacyPhi == true) ? "true" : "false",
-                        // Date Added excluded from hash comparison
-                                (exById.Featured == true) ? "true" : "false",
-                                exTagsNorm
+                                exById.PrivacyPhi.HasValue ? (exById.PrivacyPhi.Value ? "true" : "false") : "Missing Data",
+                                exById.PrivacyPii.HasValue ? (exById.PrivacyPii.Value ? "true" : "false") : "Missing Data",
+                                exById.HasRls.HasValue ? (exById.HasRls.Value ? "true" : "false") : "Missing Data",
+                                exById.LastModifiedDate.HasValue ? exById.LastModifiedDate.Value.ToString("yyyy-MM-dd") : string.Empty,
+                                exById.Featured.HasValue ? (exById.Featured.Value ? "true" : "false") : "Missing Data",
+                                exTagsNorm,
+                                Normalize(exById.DataConsumers),
+                                Normalize(exById.Dependencies),
+                                Normalize(exById.DefaultAdGroupNames),
+                                Normalize(exById.OperatingEntity),
+                                Normalize(exById.RefreshFrequency),
+                                Normalize(exById.ProductGroup),
+                                Normalize(exById.ProductStatusNotes),
+                                Normalize(exById.TechDeliveryManager),
+                                Normalize(exById.RegulatoryComplianceContractual),
+                                Normalize(exById.BiPlatform),
+                                Normalize(exById.DbServer),
+                                Normalize(exById.DbDataMart),
+                                Normalize(exById.DatabaseTable),
+                                Normalize(exById.SourceRep),
+                                Normalize(exById.DataSecurityClassification),
+                                Normalize(exById.AccessGroupName),
+                                Normalize(exById.AccessGroupDn),
+                                Normalize(exById.AutomationClassification),
+                                Normalize(exById.UserVisibilityString),
+                                Normalize(exById.EpicSecurityGroupTag),
+                                Normalize(exById.KeepLongTerm),
+                                Normalize(exById.PotentialToConsolidate),
+                                Normalize(exById.PotentialToAutomate),
+                                Normalize(exById.SponsorBusinessValue),
+                                Normalize(exById.DevelopmentEffort),
+                                Normalize(exById.EstimatedDevHours),
+                                Normalize(exById.ResourcesDevelopment),
+                                Normalize(exById.ResourcesAnalysts),
+                                Normalize(exById.ResourcesPlatform),
+                                Normalize(exById.ResourcesDataEngineering),
+                                Normalize(exById.ProductImpactCategory),
+                                Normalize(exById.ExecutiveSponsorName),
+                                Normalize(exById.ExecutiveSponsorEmail)
                             );
                             same = exHash.SequenceEqual(hash);
                         }
@@ -561,10 +682,11 @@ namespace SutterAnalyticsApi.Controllers
                         }
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
                     errors++;
-                    errorsList.Add(new { index = rowIdx, reason = "Parse error" });
+                    var msg = string.IsNullOrWhiteSpace(ex.Message) ? "Parse error" : ex.Message;
+                    errorsList.Add(new { index = rowIdx, reason = $"Parse error: {msg}" });
                 }
             }
 
@@ -738,7 +860,6 @@ namespace SutterAnalyticsApi.Controllers
                     string at = row.GetProperty("AssetType").GetString() ?? string.Empty;
                     string dm = row.GetProperty("Domain").GetString() ?? string.Empty;
                     string dv = row.GetProperty("Division").GetString() ?? string.Empty;
-                    string sl = row.GetProperty("ServiceLine").GetString() ?? string.Empty;
                     string ds = row.GetProperty("DataSource").GetString() ?? string.Empty;
                     string st = row.GetProperty("Status").GetString() ?? string.Empty;
                     string oe = row.TryGetProperty("OperatingEntity", out var oeEl) ? (oeEl.GetString() ?? string.Empty) : string.Empty;
@@ -754,14 +875,12 @@ namespace SutterAnalyticsApi.Controllers
                     string resAna = row.TryGetProperty("ResourcesAnalysts", out var ranaEl) ? (ranaEl.GetString() ?? string.Empty) : string.Empty;
                     string resPlat = row.TryGetProperty("ResourcesPlatform", out var rplEl) ? (rplEl.GetString() ?? string.Empty) : string.Empty;
                     string resDE = row.TryGetProperty("ResourcesDataEngineering", out var rdeEl) ? (rdeEl.GetString() ?? string.Empty) : string.Empty;
+                    string pic = row.TryGetProperty("ProductImpactCategory", out var picEl) ? (picEl.GetString() ?? string.Empty) : string.Empty;
                     int? atId = L("AssetType", at), dmId = L("Domain", dm), dvId = L("Division", dv), dsId = L("DataSource", ds), stId = L("Status", st);
                     int? oeId = L("OperatingEntity", oe), rfId = L("RefreshFrequency", rf);
-                    if (oeId == null && !string.IsNullOrWhiteSpace(sl))
-                    {
-                        oeId = await EnsureLookupAsync("OperatingEntity", sl, null);
-                    }
                     int? plcId = L("PotentialToConsolidate", plc), plaId = L("PotentialToAutomate", pla), sbvId = L("SponsorBusinessValue", sbv);
                     int? devEffId = L("DevelopmentEffort", devEff), estHrsId = L("EstimatedDevHours", estHrs), resDevId = L("ResourcesDevelopment", resDev), resAnaId = L("ResourcesAnalysts", resAna), resPlatId = L("ResourcesPlatform", resPlat), resDEId = L("ResourcesDataEngineering", resDE);
+                    int? picId = L("ProductImpactCategory", pic);
                     // Create optional lookup values on-the-fly when not found but provided
                     async Task<int?> EnsureLookupAsync(string type, string value, int? id)
                     {
@@ -788,6 +907,7 @@ namespace SutterAnalyticsApi.Controllers
                     resAnaId = await EnsureLookupAsync("ResourcesAnalysts", resAna, resAnaId);
                     resPlatId = await EnsureLookupAsync("ResourcesPlatform", resPlat, resPlatId);
                     resDEId = await EnsureLookupAsync("ResourcesDataEngineering", resDE, resDEId);
+                    picId = await EnsureLookupAsync("ProductImpactCategory", pic, picId);
                     if ((atId == null && !string.IsNullOrEmpty(at)) || (dmId == null && !string.IsNullOrEmpty(dm)) ||
                         (dvId == null && !string.IsNullOrEmpty(dv)) ||
                         (dsId == null && !string.IsNullOrEmpty(ds)) || (stId == null && !string.IsNullOrEmpty(st)) ||
@@ -809,12 +929,21 @@ namespace SutterAnalyticsApi.Controllers
                     string title = row.GetProperty("Title").GetString() ?? string.Empty;
                     string desc = row.GetProperty("Description").GetString() ?? string.Empty;
                     string url = row.GetProperty("Url").GetString() ?? string.Empty;
-                    bool phi = (row.GetProperty("PrivacyPhi").GetString() ?? "false").Equals("true", StringComparison.OrdinalIgnoreCase);
-                    bool pii = (row.TryGetProperty("PrivacyPii", out var ppi) ? (ppi.GetString() ?? "false") : "false").Equals("true", StringComparison.OrdinalIgnoreCase);
-                    bool hasRls = (row.TryGetProperty("HasRls", out var hr) ? (hr.GetString() ?? "false") : "false").Equals("true", StringComparison.OrdinalIgnoreCase);
-                    bool featured = (row.GetProperty("Featured").GetString() ?? "false").Equals("true", StringComparison.OrdinalIgnoreCase);
-                    // DateAdded provided by server at create time; not read from import
-                    DateTime dateAdded = DateTime.UtcNow;
+
+                    static bool? ParseBoolOrMissing(string? s)
+                    {
+                        if (string.IsNullOrWhiteSpace(s)) return null;
+                        if (s.Equals("Missing Data", StringComparison.OrdinalIgnoreCase)) return null;
+                        if (s.Equals("true", StringComparison.OrdinalIgnoreCase) || s.Equals("yes", StringComparison.OrdinalIgnoreCase)) return true;
+                        if (s.Equals("false", StringComparison.OrdinalIgnoreCase) || s.Equals("no", StringComparison.OrdinalIgnoreCase)) return false;
+                        return null;
+                    }
+
+                    var phi = ParseBoolOrMissing(row.GetProperty("PrivacyPhi").GetString());
+                    var pii = ParseBoolOrMissing(row.TryGetProperty("PrivacyPii", out var ppi) ? ppi.GetString() : null);
+                    var hasRls = ParseBoolOrMissing(row.TryGetProperty("HasRls", out var hr) ? hr.GetString() : null);
+                    var featured = ParseBoolOrMissing(row.GetProperty("Featured").GetString());
+
                     DateTime? lastModified = null;
                     var lmStr = row.TryGetProperty("LastModifiedDate", out var lmd) ? (lmd.GetString() ?? string.Empty) : string.Empty;
                     if (!string.IsNullOrEmpty(lmStr))
@@ -845,7 +974,6 @@ namespace SutterAnalyticsApi.Controllers
                     string accessGroupDn = row.TryGetProperty("AccessGroupDn", out var agd) ? (agd.GetString() ?? string.Empty) : string.Empty;
                     string automationClassification = row.TryGetProperty("AutomationClassification", out var ac) ? (ac.GetString() ?? string.Empty) : string.Empty;
                     string userVisibilityString = row.TryGetProperty("UserVisibilityString", out var uvs) ? (uvs.GetString() ?? string.Empty) : string.Empty;
-                    string userVisibilityNumber = row.TryGetProperty("UserVisibilityNumber", out var uvn) ? (uvn.GetString() ?? string.Empty) : string.Empty;
                     string epicSecurityGroupTag = row.TryGetProperty("EpicSecurityGroupTag", out var esg) ? (esg.GetString() ?? string.Empty) : string.Empty;
                     string keepLongTerm = row.TryGetProperty("KeepLongTerm", out var klt) ? (klt.GetString() ?? string.Empty) : string.Empty;
 
@@ -853,6 +981,7 @@ namespace SutterAnalyticsApi.Controllers
                     int execId = await ResolvePersonAsync(execName, execEmail);
 
                     // Compute hash
+                    string boolToken(bool? b) => b.HasValue ? (b.Value ? "true" : "false") : "Missing Data";
                     var hash = ComputeHashFromFields(
                         title,
                         desc,
@@ -860,15 +989,49 @@ namespace SutterAnalyticsApi.Controllers
                         at,
                         dm,
                         dv,
-                        sl,
                         ds,
                         st,
                         ownerName,
                         ownerEmail,
-                        phi ? "true" : "false",
-                        dateAdded.ToString("yyyy-MM-dd"),
-                        featured ? "true" : "false",
-                        tagsStr
+                        boolToken(phi),
+                        boolToken(pii),
+                        boolToken(hasRls),
+                        lastModified.HasValue ? lastModified.Value.ToString("yyyy-MM-dd") : string.Empty,
+                        boolToken(featured),
+                        NormalizeTags(tagsStr),
+                        Normalize(dataConsumersStr),
+                        Normalize(dependencies),
+                        Normalize(defaultAdGroups),
+                        Normalize(oe),
+                        Normalize(rf),
+                        Normalize(productGroup),
+                        Normalize(productStatusNotes),
+                        Normalize(techDeliveryManager),
+                        Normalize(regulatoryComplianceContractual),
+                        Normalize(biPlatform),
+                        Normalize(dbServer),
+                        Normalize(dbDataMart),
+                        Normalize(databaseTable),
+                        Normalize(sourceRep),
+                        Normalize(dataSecurityClassification),
+                        Normalize(accessGroupName),
+                        Normalize(accessGroupDn),
+                        Normalize(automationClassification),
+                        Normalize(userVisibilityString),
+                        Normalize(epicSecurityGroupTag),
+                        Normalize(keepLongTerm),
+                        Normalize(plc),
+                        Normalize(pla),
+                        Normalize(sbv),
+                        Normalize(devEff),
+                        Normalize(estHrs),
+                        Normalize(resDev),
+                        Normalize(resAna),
+                        Normalize(resPlat),
+                        Normalize(resDE),
+                        Normalize(pic),
+                        Normalize(execName),
+                        Normalize(execEmail)
                     );
 
                     if (action == "update")
@@ -885,11 +1048,6 @@ namespace SutterAnalyticsApi.Controllers
                         item.AssetTypeId = atId;
                         item.DomainId = dmId;
                         item.DivisionId = dvId;
-                        // Map ServiceLine value to Operating Entity when OperatingEntity not provided
-                        if (oeId == null && !string.IsNullOrWhiteSpace(sl))
-                        {
-                            oeId = await EnsureLookupAsync("OperatingEntity", sl, null);
-                        }
                         item.DataSourceId = dsId;
                         item.StatusId = stId;
                         item.OwnerId = ownerId;
@@ -917,7 +1075,6 @@ namespace SutterAnalyticsApi.Controllers
                         item.AccessGroupDn = NullIfEmpty(accessGroupDn);
                         item.AutomationClassification = NullIfEmpty(automationClassification);
                         item.UserVisibilityString = NullIfEmpty(userVisibilityString);
-                        item.UserVisibilityNumber = NullIfEmpty(userVisibilityNumber);
                         item.EpicSecurityGroupTag = NullIfEmpty(epicSecurityGroupTag);
                         item.KeepLongTerm = NullIfEmpty(keepLongTerm);
                         // Optional lookups
@@ -931,6 +1088,7 @@ namespace SutterAnalyticsApi.Controllers
                         item.ResourcesAnalystsId = resAnaId;
                         item.ResourcesPlatformId = resPlatId;
                         item.ResourcesDataEngineeringId = resDEId;
+                        item.ProductImpactCategoryId = picId;
                         // Keep existing DateAdded on updates
                         item.Featured = featured;
                         item.ContentHash = hash;
@@ -987,7 +1145,6 @@ namespace SutterAnalyticsApi.Controllers
                             AccessGroupDn = NullIfEmpty(accessGroupDn),
                             AutomationClassification = NullIfEmpty(automationClassification),
                             UserVisibilityString = NullIfEmpty(userVisibilityString),
-                            UserVisibilityNumber = NullIfEmpty(userVisibilityNumber),
                             EpicSecurityGroupTag = NullIfEmpty(epicSecurityGroupTag),
                             KeepLongTerm = NullIfEmpty(keepLongTerm),
                             PotentialToConsolidateId = plcId,
@@ -1000,6 +1157,7 @@ namespace SutterAnalyticsApi.Controllers
                             ResourcesAnalystsId = resAnaId,
                             ResourcesPlatformId = resPlatId,
                             ResourcesDataEngineeringId = resDEId,
+                            ProductImpactCategoryId = picId,
                             DateAdded = DateTime.UtcNow,
                             Featured = featured,
                             ContentHash = hash,
