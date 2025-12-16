@@ -217,3 +217,47 @@ using (var cmd4 = conn.CreateCommand())
     await cmd4.ExecuteNonQueryAsync();
 }
 Console.WriteLine("ProductImpactCategory ensured.");
+
+// Backfill required fields with 'Missing Data' and ensure required lookup FKs point to 'Missing Data'
+Console.WriteLine("Backfilling required fields to 'Missing Data' where missing...");
+string sql5 = @"
+BEGIN TRY
+    -- Ensure 'Missing Data' lookup exists for required types
+    IF NOT EXISTS (SELECT 1 FROM LookupValues WHERE [Type] = 'Domain' AND [Value] = 'Missing Data')
+        INSERT INTO LookupValues([Type],[Value]) VALUES('Domain','Missing Data');
+    IF NOT EXISTS (SELECT 1 FROM LookupValues WHERE [Type] = 'Division' AND [Value] = 'Missing Data')
+        INSERT INTO LookupValues([Type],[Value]) VALUES('Division','Missing Data');
+    IF NOT EXISTS (SELECT 1 FROM LookupValues WHERE [Type] = 'OperatingEntity' AND [Value] = 'Missing Data')
+        INSERT INTO LookupValues([Type],[Value]) VALUES('OperatingEntity','Missing Data');
+    IF NOT EXISTS (SELECT 1 FROM LookupValues WHERE [Type] = 'RefreshFrequency' AND [Value] = 'Missing Data')
+        INSERT INTO LookupValues([Type],[Value]) VALUES('RefreshFrequency','Missing Data');
+
+    DECLARE @domainMissingId INT = (SELECT TOP 1 Id FROM LookupValues WHERE [Type] = 'Domain' AND [Value] = 'Missing Data');
+    DECLARE @divisionMissingId INT = (SELECT TOP 1 Id FROM LookupValues WHERE [Type] = 'Division' AND [Value] = 'Missing Data');
+    DECLARE @opMissingId INT = (SELECT TOP 1 Id FROM LookupValues WHERE [Type] = 'OperatingEntity' AND [Value] = 'Missing Data');
+    DECLARE @rfMissingId INT = (SELECT TOP 1 Id FROM LookupValues WHERE [Type] = 'RefreshFrequency' AND [Value] = 'Missing Data');
+
+    -- Backfill required lookup foreign keys when NULL
+    UPDATE i SET i.DomainId = @domainMissingId FROM Items i WHERE i.DomainId IS NULL;
+    UPDATE i SET i.DivisionId = @divisionMissingId FROM Items i WHERE i.DivisionId IS NULL;
+    UPDATE i SET i.OperatingEntityId = @opMissingId FROM Items i WHERE i.OperatingEntityId IS NULL;
+    UPDATE i SET i.RefreshFrequencyId = @rfMissingId FROM Items i WHERE i.RefreshFrequencyId IS NULL;
+
+    -- Backfill required text fields when NULL/empty
+    UPDATE Items SET Description = 'Missing Data' WHERE (Description IS NULL OR LTRIM(RTRIM(Description)) = '');
+    UPDATE Items SET DataConsumers = 'Missing Data' WHERE (DataConsumers IS NULL OR LTRIM(RTRIM(DataConsumers)) = '');
+    UPDATE Items SET BiPlatform = 'Missing Data' WHERE (BiPlatform IS NULL OR LTRIM(RTRIM(BiPlatform)) = '');
+    UPDATE Items SET Dependencies = 'Missing Data' WHERE (Dependencies IS NULL OR LTRIM(RTRIM(Dependencies)) = '');
+    UPDATE Items SET DefaultAdGroupNames = 'Missing Data' WHERE (DefaultAdGroupNames IS NULL OR LTRIM(RTRIM(DefaultAdGroupNames)) = '');
+END TRY
+BEGIN CATCH
+    DECLARE @msg5 nvarchar(4000) = ERROR_MESSAGE();
+    THROW 50004, @msg5, 1;
+END CATCH;";
+using (var cmd5 = conn.CreateCommand())
+{
+    cmd5.CommandText = sql5;
+    cmd5.CommandTimeout = 180;
+    await cmd5.ExecuteNonQueryAsync();
+}
+Console.WriteLine("Backfill complete.");
