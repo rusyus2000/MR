@@ -70,21 +70,7 @@
 
                         <div class="label">Data Consumers:</div>
                         <div>
-                            <div class="mb-2">
-                                <select multiple class="form-select" v-model="form.dataConsumerIds">
-                                    <option v-for="opt in lookup.dataConsumers" :key="opt.id" :value="opt.id">{{ opt.value }}</option>
-                                </select>
-                            </div>
-                            <div class="d-flex gap-2 align-items-center mb-2">
-                                <input v-model="newConsumer" type="text" placeholder="Add custom consumer (press Add)" class="form-control" />
-                                <button type="button" class="btn btn-outline-primary" @click="addConsumer">Add</button>
-                            </div>
-                            <div class="tag-list">
-                                <span v-for="(c, i) in form.dataConsumers" :key="c" class="tag-chip">
-                                    <span class="tag-text">{{ c }}</span>
-                                    <button type="button" class="tag-remove" @click="removeConsumer(i)">&times;</button>
-                                </span>
-                            </div>
+                            <textarea v-model="form.dataConsumers" class="form-control" placeholder="Enter data consumers (free text)"></textarea>
                         </div>
 
                         <div class="label">Refresh Frequency:</div>
@@ -232,8 +218,7 @@
         executiveSponsorId: null,
         executiveSponsorName: '',
         executiveSponsorEmail: '',
-        dataConsumerIds: [],
-        dataConsumers: [],
+        dataConsumers: '',
         refreshFrequencyId: null,
         refreshFrequency: '',
         lastModifiedDate: null,
@@ -250,7 +235,6 @@
         statuses: [],
         operatingEntities: [],
         refreshFrequencies: [],
-        dataConsumers: [],
     })
 
     // Admin-only access to this modal is enforced by parent; no admin checks here
@@ -271,7 +255,7 @@
         lookup.value.statuses = norm(bulk.Status)
         lookup.value.operatingEntities = norm(bulk.OperatingEntity)
         lookup.value.refreshFrequencies = norm(bulk.RefreshFrequency)
-        lookup.value.dataConsumers = norm(bulk.DataConsumer)
+        // Data Consumers are free text; no lookup to load
         // Prefill when editing
         if (props.editItem) {
             const it = props.editItem
@@ -306,7 +290,7 @@
             form.value.hasRls = !!it.hasRls
             form.value.dependencies = it.dependencies || ''
             form.value.defaultAdGroupNames = it.defaultAdGroupNames || ''
-            if (Array.isArray(it.dataConsumers)) form.value.dataConsumers = [...it.dataConsumers]
+            form.value.dataConsumers = it.dataConsumers || ''
         }
     })
 
@@ -345,7 +329,7 @@
     }
 
     const newTag = ref('')
-    const newConsumer = ref('')
+    // Data Consumers chips removed; using free-text field only
 
     function addTag() {
         const v = (newTag.value || '').trim()
@@ -360,17 +344,7 @@
         form.value.tags.splice(i, 1)
     }
 
-    function addConsumer() {
-        const v = (newConsumer.value || '').trim()
-        if (!v) return
-        if (!form.value.dataConsumers.includes(v)) {
-            form.value.dataConsumers.push(v)
-        }
-        newConsumer.value = ''
-    }
-    function removeConsumer(i) {
-        form.value.dataConsumers.splice(i, 1)
-    }
+    // No add/remove consumer helpers
 
     async function onOwnerQuery() {
         const q = (ownerQuery.value || '').trim()

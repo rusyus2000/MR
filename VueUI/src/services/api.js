@@ -136,14 +136,14 @@ export function fetchLookupWithCounts(type) {
     return fetch(`${API_BASE_URL}/lookups/${type}/counts`, { credentials: 'include' }).then(handleResponse);
 }
 
-export function fetchLookupsBulk(types = ['AssetType','Domain','Division','ServiceLine','DataSource','Status','OperatingEntity','RefreshFrequency','DataConsumer']) {
+export function fetchLookupsBulk(types = ['AssetType','Domain','Division','ServiceLine','DataSource','Status','OperatingEntity','RefreshFrequency']) {
     const qs = new URLSearchParams({ types: types.join(',') }).toString();
     return fetch(`${API_BASE_URL}/lookups/bulk?${qs}`, { credentials: 'include' }).then(handleResponse);
 }
 
 // Cached bulk lookups (by types key)
 const __bulkLookupsCache = new Map();
-export function getLookupsBulkCached(types = ['AssetType','Domain','Division','ServiceLine','DataSource','Status','OperatingEntity','RefreshFrequency','DataConsumer'], force = false) {
+export function getLookupsBulkCached(types = ['AssetType','Domain','Division','ServiceLine','DataSource','Status','OperatingEntity','RefreshFrequency'], force = false) {
     const key = (types || []).map(t => String(t).toLowerCase()).sort().join(',');
     if (!force && __bulkLookupsCache.has(key)) {
         return __bulkLookupsCache.get(key);
@@ -153,7 +153,7 @@ export function getLookupsBulkCached(types = ['AssetType','Domain','Division','S
     return p;
 }
 
-export function fetchLookupsCountsBulk(types = ['AssetType','Domain','Division','ServiceLine','DataSource','Status','OperatingEntity','RefreshFrequency','DataConsumer']) {
+export function fetchLookupsCountsBulk(types = ['AssetType','Domain','Division','ServiceLine','DataSource','Status','OperatingEntity','RefreshFrequency']) {
     const qs = new URLSearchParams({ types: types.join(',') }).toString();
     return fetch(`${API_BASE_URL}/lookups/bulk-counts?${qs}`, { credentials: 'include' }).then(handleResponse);
 }

@@ -13,11 +13,11 @@ namespace SutterAnalyticsApi.DTOs
         // Lookup IDs for filters (referencing LookupValues)
         public int? DomainId { get; set; }
         public int? DivisionId { get; set; }
-        public int? ServiceLineId { get; set; }
+        // ServiceLine removed; use OperatingEntity
         public int? DataSourceId { get; set; }
         public string Domain { get; set; }
         public string Division { get; set; }
-        public string ServiceLine { get; set; }
+        // ServiceLine removed
         public string DataSource { get; set; }
         public bool? PrivacyPhi { get; set; }
         public bool? PrivacyPii { get; set; }
@@ -31,8 +31,8 @@ namespace SutterAnalyticsApi.DTOs
         public bool IsFavorite { get; set; }
         // Tags associated with the item (free-form)
         public List<string> Tags { get; set; } = new();
-        // Data Consumers (names)
-        public List<string> DataConsumers { get; set; } = new();
+        // Data Consumers: simple free-text
+        public string? DataConsumers { get; set; }
 
         // Status (lookup)
         public int? StatusId { get; set; }
@@ -63,7 +63,7 @@ namespace SutterAnalyticsApi.DTOs
         // Additional catalog metadata (free-text)
         public string? ProductGroup { get; set; }
         public string? ProductStatusNotes { get; set; }
-        public string? DataConsumersText { get; set; }
+        // Deprecated: DataConsumersText
         public string? TechDeliveryManager { get; set; }
         public string? RegulatoryComplianceContractual { get; set; }
         public string? BiPlatform { get; set; }
@@ -96,8 +96,7 @@ namespace SutterAnalyticsApi.DTOs
         public int? SponsorBusinessValueId { get; set; }
         public string? SponsorBusinessValue { get; set; }
 
-        public int? MustDo2025Id { get; set; }
-        public string? MustDo2025 { get; set; }
+        // MustDo2025 removed
 
         public int? DevelopmentEffortId { get; set; }
         public string? DevelopmentEffort { get; set; }
@@ -116,5 +115,9 @@ namespace SutterAnalyticsApi.DTOs
 
         public int? ResourcesDataEngineeringId { get; set; }
         public string? ResourcesDataEngineering { get; set; }
+
+        // Product Impact Category
+        public int? ProductImpactCategoryId { get; set; }
+        public string? ProductImpactCategory { get; set; }
     }
 }

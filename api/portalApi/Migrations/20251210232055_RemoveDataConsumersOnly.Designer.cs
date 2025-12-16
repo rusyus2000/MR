@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SutterAnalyticsApi.Data;
 
@@ -11,9 +12,11 @@ using SutterAnalyticsApi.Data;
 namespace portalApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251210232055_RemoveDataConsumersOnly")]
+    partial class RemoveDataConsumersOnly
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -235,6 +238,9 @@ namespace portalApi.Migrations
                     b.Property<int?>("ResourcesPlatformId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ServiceLineId")
+                        .HasColumnType("int");
+
                     b.Property<string>("SourceRep")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -316,6 +322,8 @@ namespace portalApi.Migrations
                     b.HasIndex("ResourcesDevelopmentId");
 
                     b.HasIndex("ResourcesPlatformId");
+
+                    b.HasIndex("ServiceLineId");
 
                     b.HasIndex("SponsorBusinessValueId");
 
@@ -611,6 +619,11 @@ namespace portalApi.Migrations
                         .HasForeignKey("ResourcesPlatformId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("SutterAnalyticsApi.Models.LookupValue", "ServiceLineLookup")
+                        .WithMany()
+                        .HasForeignKey("ServiceLineId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("SutterAnalyticsApi.Models.LookupValue", "SponsorBusinessValue")
                         .WithMany()
                         .HasForeignKey("SponsorBusinessValueId")
@@ -654,6 +667,8 @@ namespace portalApi.Migrations
                     b.Navigation("ResourcesDevelopmentLookup");
 
                     b.Navigation("ResourcesPlatformLookup");
+
+                    b.Navigation("ServiceLineLookup");
 
                     b.Navigation("SponsorBusinessValue");
 

@@ -18,7 +18,7 @@ builder.Services.Configure<SutterAnalyticsApi.Options.AdminOptions>(
 
 // CORS configuration based on environment
 string[] devOrigins = { "http://localhost:5174" };
-string[] prodOrigins = { "http://smf-appweb-dev", "http://smf-appweb-dev.sutterhealth.org", "https://smf-appweb-dev.sutterhealth.org" }; // Add all production origins you expect
+string[] prodOrigins = { "http://smf-appweb-dev", "http://smf-appweb-dev.sutterhealth.org", "https://smf-appweb-dev.sutterhealth.org", "http://smf-appweb-qa.sutterhealth.org", "http://smf-appweb-qa" }; // Add all production origins you expect
 var allowedOrigins = devOrigins.Concat(prodOrigins).ToArray();
 
 builder.Services.AddCors(options =>
@@ -40,9 +40,12 @@ builder.Services.AddControllers();
 builder.Services.AddHttpClient("SearchApi", (sp, client) =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
-    var baseUrl = cfg["SearchApiUrl"] ?? "http://localhost:8000";
-    client.BaseAddress = new Uri(baseUrl);
+    client.BaseAddress = new Uri(cfg["SearchApiUrl"] ?? "http://smf-appweb-qa/AI_search");
     client.Timeout = TimeSpan.FromSeconds(5);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    UseDefaultCredentials = false
 });
 
 var app = builder.Build();

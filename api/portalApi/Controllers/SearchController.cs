@@ -78,10 +78,23 @@ namespace SutterAnalyticsApi.Controllers
 
             try
             {
-                var client = _httpFactory.CreateClient("SearchApi");
+                var handler = new HttpClientHandler
+                {
+                    UseDefaultCredentials = false,
+                    Credentials = null
+                };
+                var client = new HttpClient(handler)
+                {
+                    BaseAddress = new Uri("http://smf-appweb-qa/AI_search/")
+                };
+                //_httpFactory.CreateClient("SearchApi");
                 var response = await client.GetAsync($"search?query={Uri.EscapeDataString(q)}");
                 if (!response.IsSuccessStatusCode)
-                    return StatusCode((int)response.StatusCode, "AI search service failed.");
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                   // _logger.LogError($"AI search failed: {response.StatusCode} - {content}");
+                    return StatusCode((int)response.StatusCode, $"AI search service failed: {response.StatusCode}");
+                }
 
                 var aiResults = await response.Content.ReadFromJsonAsync<List<AiSearchResult>>();
                 if (aiResults == null || !aiResults.Any())
@@ -125,7 +138,6 @@ namespace SutterAnalyticsApi.Controllers
                         Featured = i.Featured,
                         DomainId = i.DomainId,
                         DivisionId = i.DivisionId,
-                        ServiceLineId = i.ServiceLineId,
                         DataSourceId = i.DataSourceId,
                         PrivacyPhi = i.PrivacyPhi,
                         DateAdded = i.DateAdded,

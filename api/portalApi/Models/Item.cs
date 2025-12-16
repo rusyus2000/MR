@@ -39,8 +39,7 @@ namespace SutterAnalyticsApi.Models
         public int? DivisionId { get; set; }
         public LookupValue DivisionLookup { get; set; }
 
-        public int? ServiceLineId { get; set; }
-        public LookupValue ServiceLineLookup { get; set; }
+        // ServiceLine removed; use OperatingEntity instead
 
         public int? DataSourceId { get; set; }
         public LookupValue DataSourceLookup { get; set; }
@@ -62,8 +61,7 @@ namespace SutterAnalyticsApi.Models
         [NotMapped]
         public string Division => DivisionLookup?.Value;
 
-        [NotMapped]
-        public string ServiceLine => ServiceLineLookup?.Value;
+        // Removed ServiceLine computed property
 
         [NotMapped]
         public string DataSource => DataSourceLookup?.Value;
@@ -111,10 +109,9 @@ namespace SutterAnalyticsApi.Models
         [MaxLength(500)]
         public string? ProductStatusNotes { get; set; }
 
-        // Note: there is already a normalized Data Consumers relationship.
-        // This provides a free-text companion field without colliding with it.
+        // Data Consumers: free-text (semicolon-separated) replacing prior m:m normalization
         [MaxLength(100)]
-        public string? DataConsumersText { get; set; }
+        public string? DataConsumers { get; set; }
 
         [MaxLength(100)]
         public string? TechDeliveryManager { get; set; }
@@ -177,11 +174,12 @@ namespace SutterAnalyticsApi.Models
             }
         }
 
-        // Data Consumers: many-to-many via ItemDataConsumer -> LookupValue(Type="DataConsumer")
-        public ICollection<ItemDataConsumer> ItemDataConsumers { get; set; } = new List<ItemDataConsumer>();
-
+        // Note: former many-to-many relationship (ItemDataConsumer) was removed.
+        // Helper to expose list form derived from the free-text field when needed.
         [NotMapped]
-        public List<string> DataConsumers => ItemDataConsumers?.Select(dc => dc.DataConsumer?.Value).Where(v => v != null).ToList() ?? new List<string>();
+        public List<string> DataConsumersList => string.IsNullOrWhiteSpace(DataConsumers)
+            ? new List<string>()
+            : DataConsumers.Split(';').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList();
 
         // Additional optional lookup fields (nullable FKs to LookupValues)
         public int? PotentialToConsolidateId { get; set; }
@@ -193,8 +191,7 @@ namespace SutterAnalyticsApi.Models
         public int? SponsorBusinessValueId { get; set; }
         public LookupValue SponsorBusinessValue { get; set; }
 
-        public int? MustDo2025Id { get; set; }
-        public LookupValue MustDo2025 { get; set; }
+        // MustDo2025 removed
 
         public int? DevelopmentEffortId { get; set; }
         public LookupValue DevelopmentEffortLookup { get; set; }
@@ -213,5 +210,9 @@ namespace SutterAnalyticsApi.Models
 
         public int? ResourcesDataEngineeringId { get; set; }
         public LookupValue ResourcesDataEngineeringLookup { get; set; }
+
+        // Product Impact Category (lookup)
+        public int? ProductImpactCategoryId { get; set; }
+        public LookupValue ProductImpactCategory { get; set; }
     }
 }

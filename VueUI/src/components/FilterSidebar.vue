@@ -89,26 +89,7 @@
             </a>
         </div>
 
-        <!-- Service Line -->
-        <div v-if="filterSections.serviceLine" class="filter-category">
-            <h6>Service Line</h6>
-            <div v-for="(line, idx) in serviceLines"
-                 :key="line.id"
-                 class="form-check"
-                 v-show="serviceLinesShowAll || idx < 5">
-                <input class="form-check-input"
-                       type="checkbox"
-                       :id="'service-'+line.id"
-                       v-model="line.checked"
-                       @change="emitFilters" />
-                <label class="form-check-label" :for="'service-'+line.id">
-                    {{ line.name }}<span v-if="showCounts"> ({{ line.count ?? 0 }})</span>
-                </label>
-            </div>
-            <a v-if="serviceLines.length > 5" href="#" class="text-teal small" @click.prevent="serviceLinesShowAll = !serviceLinesShowAll">
-                {{ serviceLinesShowAll ? 'Show less' : 'Show more' }}
-            </a>
-        </div>
+        <!-- Service Line removed -->
 
         <!-- Data Source -->
         <div v-if="filterSections.dataSource" class="filter-category">
@@ -151,12 +132,12 @@
                 filters: { privacy: { phi: false } },
                 domains: [],
                 divisions: [],
-                serviceLines: [],
+                // serviceLines removed
                 dataSources: [],
                 assetTypesShowAll: false,
                 domainsShowAll: false,
                 divisionsShowAll: false,
-                serviceLinesShowAll: false,
+                // serviceLinesShowAll removed
                 dataSourcesShowAll: false,
                 _initialDomain: null
             };
@@ -170,7 +151,7 @@
                 a: this.assetTypes.length,
                 d: this.domains.length,
                 v: this.divisions.length,
-                s: this.serviceLines.length,
+                s: 0,
                 ds: this.dataSources.length
             }), () => this.emitFilters());
         },
@@ -179,22 +160,20 @@
                 try {
                     const api = await import('../services/api');
                     if (this.showCounts) {
-                        const bulk = await api.fetchLookupsCountsBulk(['AssetType','Domain','Division','ServiceLine','DataSource']);
+                        const bulk = await api.fetchLookupsCountsBulk(['AssetType','Domain','Division','DataSource']);
                         const norm = x => ({ id: x.id ?? x.Id, name: x.value ?? x.Value, count: x.count ?? x.Count });
                         const mapArr = arr => (arr || []).map(norm).filter(x => x.count > 0).map(x => ({ id: x.id, name: x.name, checked: false, count: x.count }));
                         this.assetTypes = mapArr(bulk.AssetType);
                         this.domains = mapArr(bulk.Domain);
                         this.divisions = mapArr(bulk.Division);
-                        this.serviceLines = mapArr(bulk.ServiceLine);
                         this.dataSources = mapArr(bulk.DataSource);
                     } else {
-                        const bulk = await api.fetchLookupsBulk(['AssetType','Domain','Division','ServiceLine','DataSource']);
+                        const bulk = await api.fetchLookupsBulk(['AssetType','Domain','Division','DataSource']);
                         const norm = x => ({ id: x.id ?? x.Id, name: x.value ?? x.Value });
                         const mapArr = arr => (arr || []).map(norm).map(x => ({ id: x.id, name: x.name, checked: false }));
                         this.assetTypes = mapArr(bulk.AssetType);
                         this.domains = mapArr(bulk.Domain);
                         this.divisions = mapArr(bulk.Division);
-                        this.serviceLines = mapArr(bulk.ServiceLine);
                         this.dataSources = mapArr(bulk.DataSource);
                     }
 
@@ -215,7 +194,7 @@
                     privacy: { phi: this.filters.privacy.phi },
                     domains: this.domains.filter(d => d.checked).map(d => d.id),
                     divisions: this.divisions.filter(d => d.checked).map(d => d.id),
-                    serviceLines: this.serviceLines.filter(s => s.checked).map(s => s.id),
+                    // serviceLines removed
                     dataSources: this.dataSources.filter(ds => ds.checked).map(ds => ds.id),
                 };
                 this.$emit('update:filters', out);

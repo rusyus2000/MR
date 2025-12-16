@@ -40,7 +40,7 @@
                     <i class="bi bi-upload"></i>
                 </button>
 
-                <button v-if="isAdmin" class="btn btn-sm add-asset-btn" title="Add New Asset" @click="openAdd()">
+                <button v-if="isAdmin && FEATURE_FLAGS.allowManualAdd" class="btn btn-sm add-asset-btn" title="Add New Asset" @click="openAdd()">
                     <i class="bi bi-plus-lg"></i>
                 </button>
             </div>
@@ -119,6 +119,7 @@
     import { fetchItem } from '../services/api';
     import { getCurrentUserCached } from '../services/api';
     import { exportItemsCsv } from '../services/api';
+    import { FEATURE_FLAGS } from '../config';
 
     export default {
         name: 'ItemGrid',
@@ -194,13 +195,7 @@
                         if (!matchesId && !matchesName) return false;
                     }
 
-                    // Service line
-                    if (f.serviceLines && f.serviceLines.length) {
-                        const arr = asStr(f.serviceLines);
-                        const matchesId = item.serviceLineId != null && arr.includes(String(item.serviceLineId));
-                        const matchesName = arr.includes(String(item.serviceLine || ''));
-                        if (!matchesId && !matchesName) return false;
-                    }
+                    // Service line removed
 
                     // Data source
                     if (f.dataSources && f.dataSources.length) {
@@ -336,7 +331,8 @@
                 getSort,
                 filtersActive,
                 searchExecuted,
-                exportAll
+                exportAll,
+                FEATURE_FLAGS
             };
         }
     };

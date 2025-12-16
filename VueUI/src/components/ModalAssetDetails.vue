@@ -1,11 +1,11 @@
 ﻿<template>
     <div class="modal-backdrop">
-        <div class="modal-content shadow">
+        <div class="modal-content shadow modal-wide">
             <div class="modal-header custom-header">
                 <h5 class="modal-title d-flex align-items-center gap-2">
                     <i v-if="!isLoading && item && item.featured" class="bi bi-star-fill featured-icon" title="Featured"></i>
                     <span>{{ isLoading ? 'Loading…' : (item ? item.title : '') }}</span>
-                    <button v-if="!isLoading && isAdmin" class="btn btn-link text-primary p-0 ms-2" title="Edit Item" @click="$emit('edit')">
+                    <button v-if="!isLoading && isAdmin && FEATURE_FLAGS.allowManualEdit" class="btn btn-link text-primary p-0 ms-2" title="Edit Item" @click="$emit('edit')">
                         <i class="bi bi-pencil-square fs-4"></i>
                     </button>
                 </h5>
@@ -20,31 +20,30 @@
                     </div>
                 </div>
                 <div v-else class="details-grid">
-                    <div class="label">Description:</div>
-                    <div class="desc" :title="item.description">{{ shorten(item.description, 65) }}</div>
-                    <div class="label">URL:</div>
+                    <!-- Required fields block (top) -->
+                    <!-- Row 1: Product Name removed (title shown in header) -->
+
+                    <!-- Row 2: Description spans across -->
+                    <div class="label">Product Description and Purpose <span class="req">*</span>:</div>
+                    <div class="desc desc-cell clamp-2" :title="item.description">{{ shorten(item.description, 240) }}</div>
+
+                    <!-- Row 3: Location/URL | Division -->
+                    <div class="label">Location/URL <span class="req">*</span>:</div>
                     <div class="url-row">
                         <a href="#" @click.prevent="openResource(item)" :title="item.url">
-                            {{ shorten(item.url, 30) }}
+                            {{ shorten(item.url, 40) }}
                         </a>
                         <button class="btn btn-link btn-sm p-0 ms-2 copy-btn" :title="'Copy URL'" @click="copyUrl(item.url)">
                             <i class="bi bi-clipboard"></i>
                         </button>
                     </div>
-                    <div class="label">Asset Type:</div><div>{{ item.assetTypeName }}</div>
-                    <div class="label">Status:</div><div>{{ item.status || '-' }}</div>
+                    <div class="label">Division <span class="req">*</span>:</div><div>{{ item.division }}</div>
 
-                    <div class="label">Owner:</div>
-                    <div>
-                        <template v-if="item.ownerEmail">
-                            <a :href="`mailto:${item.ownerEmail}`">{{ item.ownerName || item.ownerEmail }}</a>
-                        </template>
-                        <template v-else>
-                            {{ item.ownerName || '-' }}
-                        </template>
-                    </div>
-
-                    <div class="label">Executive Sponsor:</div>
+                    <!-- Row 4: Domain | Operating Entity -->
+                    <div class="label">Domain <span class="req">*</span>:</div><div>{{ item.domain }}</div>
+                    <!-- Row 5: Operating Entity | Executive Sponsor -->
+                    <div class="label">Operating Entity <span class="req">*</span>:</div><div>{{ item.operatingEntity || '-' }}</div>
+                    <div class="label">Executive Sponsor <span class="req">*</span>:</div>
                     <div>
                         <template v-if="item.executiveSponsorEmail">
                             <a :href="`mailto:${item.executiveSponsorEmail}`">{{ item.executiveSponsorName || item.executiveSponsorEmail }}</a>
@@ -54,26 +53,79 @@
                         </template>
                     </div>
 
-                    <div class="label">Domain:</div><div>{{ item.domain }}</div>
-                    <div class="label">Division:</div><div>{{ item.division }}</div>
-                    <div class="label">Service Line:</div><div>{{ item.serviceLine }}</div>
-                    <div class="label">Operating Entity:</div><div>{{ item.operatingEntity || '-' }}</div>
-                    <div class="label">Data Source:</div><div>{{ item.dataSource }}</div>
-                    <div class="label">Refresh Frequency:</div><div>{{ item.refreshFrequency || '-' }}</div>
-                    <div class="label">Last Modified:</div><div>{{ item.lastModifiedDate ? new Date(item.lastModifiedDate).toLocaleDateString() : '-' }}</div>
+                    <!-- Row 6: D&A Product Owner | Data Consumers -->
+                    <div class="label">D&amp;A Product Owner <span class="req">*</span>:</div>
+                    <div>
+                        <template v-if="item.ownerEmail">
+                            <a :href="`mailto:${item.ownerEmail}`">{{ item.ownerName || item.ownerEmail }}</a>
+                        </template>
+                        <template v-else>
+                            {{ item.ownerName || '-' }}
+                        </template>
+                    </div>
+                    <div class="label">Data Consumers <span class="req">*</span>:</div>
+                    <div><span v-if="item.dataConsumers && item.dataConsumers.trim()">{{ item.dataConsumers }}</span><span v-else class="text-muted">-</span></div>
 
-                    <div class="label">Flags:</div>
+                    <!-- Row 7: BI Platform | Dependencies -->
+                    <div class="label">BI Platform <span class="req">*</span>:</div><div>{{ item.biPlatform || '-' }}</div>
+                    <div class="label">Dependencies <span class="req">*</span>:</div>
+                    <div><span v-if="item.dependencies && item.dependencies.trim()">{{ item.dependencies }}</span><span v-else class="text-muted">-</span></div>
+
+                    <!-- Row 8: Default AD Groups | Flags -->
+                    <div class="label">Default AD Groups <span class="req">*</span>:</div>
+                    <div><span v-if="item.defaultAdGroupNames && item.defaultAdGroupNames.trim()">{{ item.defaultAdGroupNames }}</span><span v-else class="text-muted">-</span></div>
+                    <div class="label">Flags <span class="req">*</span>:</div>
                     <div class="flags">
                         <span>PHI: {{ item.privacyPhiDisplay || (item.privacyPhi === null || item.privacyPhi === undefined ? 'Missing Data' : (item.privacyPhi ? 'Yes' : 'No')) }}</span>
                         <span>PII: {{ item.privacyPiiDisplay || (item.privacyPii === null || item.privacyPii === undefined ? 'Missing Data' : (item.privacyPii ? 'Yes' : 'No')) }}</span>
                         <span>RLS: {{ item.hasRlsDisplay || (item.hasRls === null || item.hasRls === undefined ? 'Missing Data' : (item.hasRls ? 'Yes' : 'No')) }}</span>
                     </div>
 
-                    <div class="label">Dependencies:</div>
-                    <div><span v-if="item.dependencies && item.dependencies.trim()">{{ item.dependencies }}</span><span v-else class="text-muted">-</span></div>
+                    <!-- Row 9: Refresh Frequency | Last Date Modified -->
+                    <div class="label">Refresh Frequency <span class="req">*</span>:</div><div>{{ item.refreshFrequency || '-' }}</div>
+                    <div class="label">Last Date Modified <span class="req">*</span>:</div>
+                    <div>{{ item.lastModifiedDate ? new Date(item.lastModifiedDate).toLocaleDateString() : '-' }}</div>
 
-                    <div class="label">Default AD Groups:</div>
-                    <div><span v-if="item.defaultAdGroupNames && item.defaultAdGroupNames.trim()">{{ item.defaultAdGroupNames }}</span><span v-else class="text-muted">-</span></div>
+                    <!-- End required block -->
+
+                    <!-- Remaining fields -->
+                    <div class="label">Asset Type:</div><div>{{ item.assetTypeName }}</div>
+                    <div class="label">Status:</div><div>{{ item.status || '-' }}</div>
+                    <div class="label">Data Source:</div><div>{{ item.dataSource }}</div>
+
+                    <div class="label">Potential to Consolidate:</div><div>{{ item.potentialToConsolidate || '-' }}</div>
+                    <div class="label">Potential to Automate:</div><div>{{ item.potentialToAutomate || '-' }}</div>
+                    <div class="label">Business Value:</div><div>{{ item.sponsorBusinessValue || '-' }}</div>
+                    <div class="label">2025 Must Do:</div><div>{{ item.mustDo2025 || '-' }}</div>
+                    <div class="label">Development Effort:</div><div>{{ item.developmentEffort || '-' }}</div>
+                    <div class="label">Estimated Dev Hours:</div><div>{{ item.estimatedDevHours || '-' }}</div>
+                    <div class="label">Resources - Development:</div><div>{{ item.resourcesDevelopment || '-' }}</div>
+                    <div class="label">Resources - Analysts:</div><div>{{ item.resourcesAnalysts || '-' }}</div>
+                    <div class="label">Resources - Platform:</div><div>{{ item.resourcesPlatform || '-' }}</div>
+                    <div class="label">Resources - Data Engineering:</div><div>{{ item.resourcesDataEngineering || '-' }}</div>
+
+                    <!-- Right column group aligned with left-column neighbors to avoid gaps -->
+                    <div class="label">Product Status Notes:</div><div>{{ item.productStatusNotes || '-' }}</div>
+                    <div class="label" style="grid-column: 3;">Product Group:</div>
+                    <div style="grid-column: 4;">{{ item.productGroup || '-' }}</div>
+                    <div class="label">Tech Delivery Mgr:</div><div>{{ item.techDeliveryManager || '-' }}</div>
+                    <div class="label" style="grid-column: 3;">Product Impact Category:</div>
+                    <div style="grid-column: 4;">{{ item.productImpactCategory || '-' }}</div>
+                    <div class="label">Regulatory/Compliance/Contractual:</div><div>{{ item.regulatoryComplianceContractual || '-' }}</div>
+                    <div class="label">DB Server:</div><div>{{ item.dbServer || '-' }}</div>
+                    <div class="label">DB/Data Mart:</div><div>{{ item.dbDataMart || '-' }}</div>
+                    <div class="label">Database Table:</div><div>{{ item.databaseTable || '-' }}</div>
+                    <div class="label">Source Rep:</div><div>{{ item.sourceRep || '-' }}</div>
+                    <div class="label">Data Security Classification:</div><div>{{ item.dataSecurityClassification || '-' }}</div>
+                    <div class="label">Access Group Name:</div><div>{{ item.accessGroupName || '-' }}</div>
+                    <div class="label">Access Group DN:</div><div>{{ item.accessGroupDn || '-' }}</div>
+                    <div class="label">Automation Classification:</div><div>{{ item.automationClassification || '-' }}</div>
+                    <div class="label">User Visibility (String):</div><div>{{ item.userVisibilityString || '-' }}</div>
+                    <div class="label">User Visibility (Number):</div><div>{{ item.userVisibilityNumber || '-' }}</div>
+                    <div class="label">Epic Security Group Tag:</div><div>{{ item.epicSecurityGroupTag || '-' }}</div>
+                    <div class="label">Keep Long Term:</div><div>{{ item.keepLongTerm || '-' }}</div>
+
+                    
 
                     <div class="label">Tags:</div>
                     <div>
@@ -89,12 +141,12 @@
                         </div>
                     </div>
 
-                    <div class="label">Date Added:</div><div>{{ new Date(item.dateAdded).toLocaleDateString() }}</div>
+                    
                 </div>
             </div>
             <div v-if="!isLoading && item" class="d-flex justify-content-end mt-3 px-4 pb-3">
                 <button class="btn btn-sm favorite-icon-btn" @click="toggleFavorite(item)">
-                    {{ item.isFavorite ? '★ Remove from Favorites' : '☆ Add to Favorites' }}
+                    {{ item.isFavorite ? '? Remove from Favorites' : '? Add to Favorites' }}
                 </button>
             </div>
         </div>
@@ -103,6 +155,7 @@
 
 <script>
     import { toggleFavoriteApi } from '../services/api';
+    import { FEATURE_FLAGS } from '../config';
 
     export default {
         name: 'ModalAssetDetails',
@@ -112,6 +165,9 @@
             isLoading: { type: Boolean, default: false }
         },
         emits: ['close','edit'],
+        data() {
+            return { FEATURE_FLAGS };
+        },
         methods: {
             async toggleFavorite(item) {
                 if (!item) return;
@@ -178,7 +234,7 @@
         background-color: white;
         border-radius: 8px;
         padding: 0;
-        max-width: 900px;
+        max-width: 1200px;
         width: 100%;
     }
 
@@ -198,7 +254,7 @@
     .details-grid {
         display: grid;
         grid-template-columns: max-content 1fr max-content 1fr;
-        row-gap: 0.75rem;
+        row-gap: 0.4rem;
         column-gap: 1rem;
     }
 
@@ -214,7 +270,7 @@
         white-space: nowrap;
     }
 
-    .flags { display: flex; gap: 1rem; align-items: center; }
+    .flags { display: flex; gap: 0.4rem; align-items: center; }
     .url-row { display: inline-flex; align-items: center; gap: 0.25rem; }
     .copy-btn { color: #0d6efd; }
     .copy-btn:hover { color: #0a58ca; }
@@ -231,11 +287,16 @@
         min-height: calc(1.35em * 2);
     }
     .desc { max-width: 100%; }
+    .req { color: #d9534f; }
+    .modal-wide { width: 95vw; }
+
+    /* Description cell should span remaining columns and align to top for multi-line */
+    .desc-cell { grid-column: 2 / span 3; align-items: flex-start; }
 
     .tag-list {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: 0.375rem; /* 25% less than 0.5rem */
         margin: 0; /* ensure no extra vertical spacing */
         align-items: center;
     }

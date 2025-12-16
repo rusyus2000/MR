@@ -58,7 +58,7 @@
                     f.privacy.phi ||
                     f.domains.length ||
                     f.divisions.length ||
-                    f.serviceLines.length ||
+                    // serviceLines removed
                     f.dataSources.length
                 );
             });
@@ -78,7 +78,7 @@
                 privacy: { phi: false },
                 domains: [],
                 divisions: [],
-                serviceLines: [],
+                // serviceLines removed
                 dataSources: []
             });
 
@@ -196,7 +196,7 @@
                 if (f.privacy && f.privacy.phi) p.phi = true;
                 if (f.domains && f.domains.length) p.domainIds = f.domains.join(',');
                 if (f.divisions && f.divisions.length) p.divisionIds = f.divisions.join(',');
-                if (f.serviceLines && f.serviceLines.length) p.serviceLineIds = f.serviceLines.join(',');
+                // serviceLines removed
                 if (f.dataSources && f.dataSources.length) p.dataSourceIds = f.dataSources.join(',');
                 return p;
             }

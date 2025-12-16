@@ -27,13 +27,12 @@ The admin export endpoint `POST /api/items/export` returns a CSV with all requir
 21. Date Added (yyyy-MM-dd)
 22. Featured
 23. Tags (semicolon-separated)
-24. Data Consumers (semicolon-separated)
+24. Data Consumers (free text)
 25. Dependencies
 26. Default AD Group Names
 27. Product Group
 28. Product Status Notes
-29. Data Consumers (Free Text)
-30. Tech Delivery Mgr
+29. Tech Delivery Mgr
 31. Regulatory/Compliance/Contractual
 32. BI Platform
 33. DB Server
@@ -52,4 +51,4 @@ The admin export endpoint `POST /api/items/export` returns a CSV with all requir
 Notes:
 - Optional text fields are empty when values are not set.
 - Boolean fields (PHI, PII, Has RLS, Featured) are nullable; when missing they export as `Missing Data`, otherwise `true`/`false`.
-- Tags and Data Consumers are semicolon-separated.
+- Tags are semicolon-separated; Data Consumers is a single free-text field.

@@ -77,7 +77,7 @@ namespace SutterAnalyticsApi.Data
                     AssetTypeId = L("AssetType", at),
                     DomainId = L("Domain", domains[rnd.Next(domains.Length)]),
                     DivisionId = L("Division", divisions[rnd.Next(divisions.Length)]),
-                    ServiceLineId = L("ServiceLine", serviceLines[rnd.Next(serviceLines.Length)]),
+                    OperatingEntityId = L("OperatingEntity", serviceLines[rnd.Next(serviceLines.Length)]),
                     DataSourceId = L("DataSource", dataSources[rnd.Next(dataSources.Length)]),
                     StatusId = publishedId,
                     PrivacyPhi = rnd.NextDouble() < 0.3,
@@ -90,7 +90,7 @@ namespace SutterAnalyticsApi.Data
                 var selected = tagPool.OrderBy(_ => rnd.Next()).Take(tagCount).ToArray();
                 // Add contextual tags from selected domain/service line
                 selected = selected
-                    .Concat(new[] { item.ServiceLineId.HasValue ? serviceLines[(Array.IndexOf(serviceLines, serviceLines.FirstOrDefault(sl => L("ServiceLine", sl) == item.ServiceLineId)) + serviceLines.Length) % serviceLines.Length] : null })
+                    .Concat(new[] { item.OperatingEntityId.HasValue ? serviceLines[(Array.IndexOf(serviceLines, serviceLines.FirstOrDefault(sl => L("OperatingEntity", sl) == item.OperatingEntityId)) + serviceLines.Length) % serviceLines.Length] : null })
                     .Concat(new[] { item.DomainId.HasValue ? domains[(Array.IndexOf(domains, domains.FirstOrDefault(d => L("Domain", d) == item.DomainId)) + domains.Length) % domains.Length] : null })
                     .Where(s => !string.IsNullOrWhiteSpace(s))
                     .Distinct()

@@ -12,7 +12,7 @@ namespace SutterAnalyticsApi.DTOs
 
         public int? DomainId { get; set; }
         public int? DivisionId { get; set; }
-        public int? ServiceLineId { get; set; }
+        // ServiceLine removed
         public int? DataSourceId { get; set; }
 
         public bool? PrivacyPhi { get; set; }
@@ -59,8 +59,7 @@ namespace SutterAnalyticsApi.DTOs
         public int? SponsorBusinessValueId { get; set; }
         public string? SponsorBusinessValue { get; set; }
 
-        public int? MustDo2025Id { get; set; }
-        public string? MustDo2025 { get; set; }
+        // MustDo2025 removed
 
         public int? DevelopmentEffortId { get; set; }
         public string? DevelopmentEffort { get; set; }
@@ -79,5 +78,9 @@ namespace SutterAnalyticsApi.DTOs
 
         public int? ResourcesDataEngineeringId { get; set; }
         public string? ResourcesDataEngineering { get; set; }
+
+        // Product Impact Category
+        public int? ProductImpactCategoryId { get; set; }
+        public string? ProductImpactCategory { get; set; }
     }
 }

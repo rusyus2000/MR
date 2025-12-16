@@ -86,3 +86,9 @@ _ReSharper*/
 
 # Optional: Ignore local secrets
 secrets.json
+ 
+# Ignore Windows reserved filename accidentally created 
+CON 
+ 
+# Ignore Windows reserved filename accidentally created 
+CON 

@@ -8,11 +8,11 @@ public class CreateItemDto
     // New lookup id fields (reference LookupValues.Id)
     public int? DomainId { get; set; }
     public int? DivisionId { get; set; }
-    public int? ServiceLineId { get; set; }
+    // ServiceLine removed
     public int? DataSourceId { get; set; }
     public string Domain { get; set; }
     public string Division { get; set; }
-    public string ServiceLine { get; set; }
+    // ServiceLine removed
     public string DataSource { get; set; }
     public bool? PrivacyPhi { get; set; }
     public bool? PrivacyPii { get; set; }
@@ -39,9 +39,8 @@ public class CreateItemDto
     public string ExecutiveSponsorName { get; set; }
     public string ExecutiveSponsorEmail { get; set; }
 
-    // Data Consumers (lookup, multi-select)
-    public List<int> DataConsumerIds { get; set; } = new();
-    public List<string> DataConsumers { get; set; } = new();
+    // Data Consumers: simple free-text field
+    public string? DataConsumers { get; set; }
 
     // Free-form metadata
     public string Dependencies { get; set; }
@@ -84,8 +83,7 @@ public class CreateItemDto
     public int? SponsorBusinessValueId { get; set; }
     public string? SponsorBusinessValue { get; set; }
 
-    public int? MustDo2025Id { get; set; }
-    public string? MustDo2025 { get; set; }
+    // MustDo2025 removed
 
     public int? DevelopmentEffortId { get; set; }
     public string? DevelopmentEffort { get; set; }
@@ -104,4 +102,8 @@ public class CreateItemDto
 
     public int? ResourcesDataEngineeringId { get; set; }
     public string? ResourcesDataEngineering { get; set; }
+
+    // Product Impact Category
+    public int? ProductImpactCategoryId { get; set; }
+    public string? ProductImpactCategory { get; set; }
 }

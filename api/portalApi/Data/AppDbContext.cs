@@ -16,7 +16,7 @@ namespace SutterAnalyticsApi.Data
         public DbSet<UserLoginHistory> UserLoginHistories { get; set; }
         public DbSet<Owner> Owners { get; set; }
         public DbSet<ImportJob> ImportJobs { get; set; }
-        public DbSet<ItemDataConsumer> ItemDataConsumers { get; set; }
+        // Removed: public DbSet<ItemDataConsumer> ItemDataConsumers { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
@@ -71,11 +71,7 @@ namespace SutterAnalyticsApi.Data
                 .HasForeignKey(i => i.DivisionId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            modelBuilder.Entity<Item>()
-                .HasOne(i => i.ServiceLineLookup)
-                .WithMany()
-                .HasForeignKey(i => i.ServiceLineId)
-                .OnDelete(DeleteBehavior.NoAction);
+            // Removed ServiceLine; use OperatingEntity instead
 
             modelBuilder.Entity<Item>()
                 .HasOne(i => i.DataSourceLookup)
@@ -128,8 +124,7 @@ namespace SutterAnalyticsApi.Data
             modelBuilder.Entity<Item>()
                 .HasIndex(i => i.DivisionId);
 
-            modelBuilder.Entity<Item>()
-                .HasIndex(i => i.ServiceLineId);
+            // Removed ServiceLine index
 
             modelBuilder.Entity<Item>()
                 .HasIndex(i => i.DataSourceId);
@@ -174,23 +169,7 @@ namespace SutterAnalyticsApi.Data
             modelBuilder.Entity<ItemTag>()
                 .HasIndex(it => it.TagId);
 
-            // ItemDataConsumer many-to-many (Item <-> LookupValue where Type="DataConsumer")
-            modelBuilder.Entity<ItemDataConsumer>()
-                .HasKey(dc => new { dc.ItemId, dc.DataConsumerId });
-
-            modelBuilder.Entity<ItemDataConsumer>()
-                .HasOne(dc => dc.Item)
-                .WithMany(i => i.ItemDataConsumers)
-                .HasForeignKey(dc => dc.ItemId);
-
-            modelBuilder.Entity<ItemDataConsumer>()
-                .HasOne(dc => dc.DataConsumer)
-                .WithMany()
-                .HasForeignKey(dc => dc.DataConsumerId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<ItemDataConsumer>()
-                .HasIndex(dc => dc.DataConsumerId);
+            // Removed ItemDataConsumer many-to-many. DataConsumers stored as free-text.
 
             // New optional lookup FKs
             modelBuilder.Entity<Item>()
@@ -211,11 +190,7 @@ namespace SutterAnalyticsApi.Data
                 .HasForeignKey(i => i.SponsorBusinessValueId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            modelBuilder.Entity<Item>()
-                .HasOne(i => i.MustDo2025)
-                .WithMany()
-                .HasForeignKey(i => i.MustDo2025Id)
-                .OnDelete(DeleteBehavior.NoAction);
+            // MustDo2025 removed
 
             modelBuilder.Entity<Item>()
                 .HasOne(i => i.DevelopmentEffortLookup)
@@ -259,8 +234,7 @@ namespace SutterAnalyticsApi.Data
                 .HasIndex(i => i.PotentialToAutomateId);
             modelBuilder.Entity<Item>()
                 .HasIndex(i => i.SponsorBusinessValueId);
-            modelBuilder.Entity<Item>()
-                .HasIndex(i => i.MustDo2025Id);
+            // MustDo2025 index removed
             modelBuilder.Entity<Item>()
                 .HasIndex(i => i.DevelopmentEffortId);
             modelBuilder.Entity<Item>()
@@ -273,6 +247,16 @@ namespace SutterAnalyticsApi.Data
                 .HasIndex(i => i.ResourcesPlatformId);
             modelBuilder.Entity<Item>()
                 .HasIndex(i => i.ResourcesDataEngineeringId);
+
+            // Product Impact Category
+            modelBuilder.Entity<Item>()
+                .HasOne(i => i.ProductImpactCategory)
+                .WithMany()
+                .HasForeignKey(i => i.ProductImpactCategoryId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Item>()
+                .HasIndex(i => i.ProductImpactCategoryId);
 
             // Users: lookup by principal name (unique)
             modelBuilder.Entity<User>()

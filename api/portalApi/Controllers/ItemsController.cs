@@ -58,14 +58,14 @@ namespace SutterAnalyticsApi.Controllers
      [FromQuery] int? top,
      [FromQuery] string? domain,
      [FromQuery] string? division,
-     [FromQuery] string? serviceLine,
+     // ServiceLine removed
      [FromQuery] string? dataSource,
      [FromQuery] string? assetType,
      [FromQuery] int? assetTypeId,
      // ID-based filters (comma-separated ids)
      [FromQuery] string? domainIds,
      [FromQuery] string? divisionIds,
-     [FromQuery] string? serviceLineIds,
+     // ServiceLine removed
      [FromQuery] string? dataSourceIds,
      [FromQuery] string? assetTypeIds,
      [FromQuery] bool? phi)
@@ -104,9 +104,7 @@ namespace SutterAnalyticsApi.Controllers
             if (divisionIdList.Any())
                 query = query.Where(i => i.DivisionId.HasValue && divisionIdList.Contains(i.DivisionId.Value));
 
-            var serviceLineIdList = ParseIds(serviceLineIds);
-            if (serviceLineIdList.Any())
-                query = query.Where(i => i.ServiceLineId.HasValue && serviceLineIdList.Contains(i.ServiceLineId.Value));
+            // ServiceLine removed
 
             var dataSourceIdList = ParseIds(dataSourceIds);
             if (dataSourceIdList.Any())
@@ -130,12 +128,7 @@ namespace SutterAnalyticsApi.Controllers
                 if (lv != null) query = query.Where(i => i.DivisionId == lv.Id);
                 else return Ok(new List<ItemDto>());
             }
-            if (!string.IsNullOrWhiteSpace(serviceLine))
-            {
-                var lv = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "ServiceLine" && l.Value == serviceLine);
-                if (lv != null) query = query.Where(i => i.ServiceLineId == lv.Id);
-                else return Ok(new List<ItemDto>());
-            }
+            // ServiceLine filtering removed
             if (!string.IsNullOrWhiteSpace(dataSource))
             {
                 var lv = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "DataSource" && l.Value == dataSource);
@@ -181,7 +174,7 @@ namespace SutterAnalyticsApi.Controllers
                 Featured = i.Featured,
                 DomainId = i.DomainId,
                 DivisionId = i.DivisionId,
-                ServiceLineId = i.ServiceLineId,
+                // ServiceLine removed
                 DataSourceId = i.DataSourceId,
                 PrivacyPhi = i.PrivacyPhi,
                 PrivacyPii = i.PrivacyPii,
@@ -209,15 +202,25 @@ namespace SutterAnalyticsApi.Controllers
                 .Include(it => it.AssetType)
                 .Include(it => it.DomainLookup)
                 .Include(it => it.DivisionLookup)
-                .Include(it => it.ServiceLineLookup)
+                // ServiceLine removed
                 .Include(it => it.DataSourceLookup)
                 .Include(it => it.Owner)
                 .Include(it => it.ExecutiveSponsor)
                 .Include(it => it.StatusLookup)
                 .Include(it => it.OperatingEntityLookup)
                 .Include(it => it.RefreshFrequencyLookup)
-                .Include(it => it.ItemDataConsumers)
-                    .ThenInclude(dc => dc.DataConsumer)
+                .Include(it => it.ProductImpactCategory)
+                // Include optional lookup navigations so display values are populated
+                .Include(it => it.PotentialToConsolidate)
+                .Include(it => it.PotentialToAutomate)
+                .Include(it => it.SponsorBusinessValue)
+                // MustDo2025 removed
+                .Include(it => it.DevelopmentEffortLookup)
+                .Include(it => it.EstimatedDevHoursLookup)
+                .Include(it => it.ResourcesDevelopmentLookup)
+                .Include(it => it.ResourcesAnalystsLookup)
+                .Include(it => it.ResourcesPlatformLookup)
+                .Include(it => it.ResourcesDataEngineeringLookup)
                 .FirstOrDefaultAsync(it => it.Id == id);
             if (i == null) return NotFound();
             // Non-admins cannot view non-Published items
@@ -264,11 +267,11 @@ namespace SutterAnalyticsApi.Controllers
                 AssetTypeName = i.AssetType != null ? i.AssetType.Value : null,
                 DomainId = i.DomainId,
                 DivisionId = i.DivisionId,
-                ServiceLineId = i.ServiceLineId,
+                // ServiceLine removed
                 DataSourceId = i.DataSourceId,
                 Domain = i.DomainLookup != null ? i.DomainLookup.Value : null,
                 Division = i.DivisionLookup != null ? i.DivisionLookup.Value : null,
-                ServiceLine = i.ServiceLineLookup != null ? i.ServiceLineLookup.Value : null,
+                // ServiceLine removed
                 DataSource = i.DataSourceLookup != null ? i.DataSourceLookup.Value : null,
                 StatusId = i.StatusId,
                 Status = i.StatusLookup != null ? i.StatusLookup.Value : null,
@@ -282,10 +285,51 @@ namespace SutterAnalyticsApi.Controllers
                 OperatingEntity = i.OperatingEntityLookup != null ? i.OperatingEntityLookup.Value : null,
                 RefreshFrequencyId = i.RefreshFrequencyId,
                 RefreshFrequency = i.RefreshFrequencyLookup != null ? i.RefreshFrequencyLookup.Value : null,
-                DataConsumers = i.ItemDataConsumers.Select(dc => dc.DataConsumer.Value).ToList(),
+                DataConsumers = i.DataConsumers,
                 PrivacyPhi = i.PrivacyPhi,
                 PrivacyPii = i.PrivacyPii,
                 HasRls = i.HasRls,
+                // New optional lookup fields (ids + display)
+                PotentialToConsolidateId = i.PotentialToConsolidateId,
+                PotentialToConsolidate = i.PotentialToConsolidate != null ? i.PotentialToConsolidate.Value : null,
+                PotentialToAutomateId = i.PotentialToAutomateId,
+                PotentialToAutomate = i.PotentialToAutomate != null ? i.PotentialToAutomate.Value : null,
+                SponsorBusinessValueId = i.SponsorBusinessValueId,
+                SponsorBusinessValue = i.SponsorBusinessValue != null ? i.SponsorBusinessValue.Value : null,
+                // MustDo2025 removed
+                DevelopmentEffortId = i.DevelopmentEffortId,
+                DevelopmentEffort = i.DevelopmentEffortLookup != null ? i.DevelopmentEffortLookup.Value : null,
+                EstimatedDevHoursId = i.EstimatedDevHoursId,
+                EstimatedDevHours = i.EstimatedDevHoursLookup != null ? i.EstimatedDevHoursLookup.Value : null,
+                ResourcesDevelopmentId = i.ResourcesDevelopmentId,
+                ResourcesDevelopment = i.ResourcesDevelopmentLookup != null ? i.ResourcesDevelopmentLookup.Value : null,
+                ResourcesAnalystsId = i.ResourcesAnalystsId,
+                ResourcesAnalysts = i.ResourcesAnalystsLookup != null ? i.ResourcesAnalystsLookup.Value : null,
+                ResourcesPlatformId = i.ResourcesPlatformId,
+                ResourcesPlatform = i.ResourcesPlatformLookup != null ? i.ResourcesPlatformLookup.Value : null,
+                ResourcesDataEngineeringId = i.ResourcesDataEngineeringId,
+                ResourcesDataEngineering = i.ResourcesDataEngineeringLookup != null ? i.ResourcesDataEngineeringLookup.Value : null,
+                ProductImpactCategoryId = i.ProductImpactCategoryId,
+                ProductImpactCategory = i.ProductImpactCategory != null ? i.ProductImpactCategory.Value : null,
+                // Additional free-text fields
+                ProductGroup = i.ProductGroup,
+                ProductStatusNotes = i.ProductStatusNotes,
+                // DataConsumers already mapped
+                TechDeliveryManager = i.TechDeliveryManager,
+                RegulatoryComplianceContractual = i.RegulatoryComplianceContractual,
+                BiPlatform = i.BiPlatform,
+                DbServer = i.DbServer,
+                DbDataMart = i.DbDataMart,
+                DatabaseTable = i.DatabaseTable,
+                SourceRep = i.SourceRep,
+                DataSecurityClassification = i.DataSecurityClassification,
+                AccessGroupName = i.AccessGroupName,
+                AccessGroupDn = i.AccessGroupDn,
+                AutomationClassification = i.AutomationClassification,
+                UserVisibilityString = i.UserVisibilityString,
+                UserVisibilityNumber = i.UserVisibilityNumber,
+                EpicSecurityGroupTag = i.EpicSecurityGroupTag,
+                KeepLongTerm = i.KeepLongTerm,
                 PrivacyPhiDisplay = DisplayBool(i.PrivacyPhi),
                 PrivacyPiiDisplay = DisplayBool(i.PrivacyPii),
                 HasRlsDisplay = DisplayBool(i.HasRls),
@@ -352,7 +396,7 @@ namespace SutterAnalyticsApi.Controllers
                     AssetType = i.AssetType != null ? i.AssetType.Value : null,
                     Domain = i.DomainLookup != null ? i.DomainLookup.Value : null,
                     Division = i.DivisionLookup != null ? i.DivisionLookup.Value : null,
-                    ServiceLine = i.ServiceLineLookup != null ? i.ServiceLineLookup.Value : null,
+                    // ServiceLine removed
                     DataSource = i.DataSourceLookup != null ? i.DataSourceLookup.Value : null,
                     Status = i.StatusLookup != null ? i.StatusLookup.Value : null,
                     OwnerName = i.Owner != null ? i.Owner.Name : null,
@@ -368,14 +412,14 @@ namespace SutterAnalyticsApi.Controllers
                     i.DateAdded,
                     i.Featured,
                     Tags = i.ItemTags.Select(t => t.Tag.Value),
-                    DataConsumers = i.ItemDataConsumers.Select(dc => dc.DataConsumer.Value),
+                    // DataConsumers removed from export projection (use text field later)
                     i.Dependencies,
                     i.DefaultAdGroupNames,
 
                     // New optional free-text fields
                     i.ProductGroup,
                     i.ProductStatusNotes,
-                    i.DataConsumersText,
+                    DataConsumers = i.DataConsumers,
                     i.TechDeliveryManager,
                     i.RegulatoryComplianceContractual,
                     i.BiPlatform,
@@ -396,13 +440,14 @@ namespace SutterAnalyticsApi.Controllers
                     PotentialToConsolidate = i.PotentialToConsolidate != null ? i.PotentialToConsolidate.Value : null,
                     PotentialToAutomate = i.PotentialToAutomate != null ? i.PotentialToAutomate.Value : null,
                     SponsorBusinessValue = i.SponsorBusinessValue != null ? i.SponsorBusinessValue.Value : null,
-                    MustDo2025 = i.MustDo2025 != null ? i.MustDo2025.Value : null,
+                    // MustDo2025 removed
                     DevelopmentEffort = i.DevelopmentEffortLookup != null ? i.DevelopmentEffortLookup.Value : null,
                     EstimatedDevHours = i.EstimatedDevHoursLookup != null ? i.EstimatedDevHoursLookup.Value : null,
                     ResourcesDevelopment = i.ResourcesDevelopmentLookup != null ? i.ResourcesDevelopmentLookup.Value : null,
                     ResourcesAnalysts = i.ResourcesAnalystsLookup != null ? i.ResourcesAnalystsLookup.Value : null,
                     ResourcesPlatform = i.ResourcesPlatformLookup != null ? i.ResourcesPlatformLookup.Value : null,
-                    ResourcesDataEngineering = i.ResourcesDataEngineeringLookup != null ? i.ResourcesDataEngineeringLookup.Value : null
+                    ResourcesDataEngineering = i.ResourcesDataEngineeringLookup != null ? i.ResourcesDataEngineeringLookup.Value : null,
+                    ProductImpactCategory = i.ProductImpactCategory != null ? i.ProductImpactCategory.Value : null
                 })
                 .ToListAsync();
 
@@ -420,89 +465,170 @@ namespace SutterAnalyticsApi.Controllers
             }
 
             var sb = new StringBuilder();
-            // Header: required first, then existing optional, then all new optional fields
+            // Header: custom order provided by requestor
             sb.AppendLine(string.Join(",", new[] {
-                // Required
-                "Id","Title","Description","Url",
-                // Existing optional
-                "Asset Type","Domain","Division","Service Line","Data Source","Status",
-                "Owner Name","Owner Email","Executive Sponsor Name","Executive Sponsor Email",
-                "Operating Entity","Refresh Frequency",
-                "PHI","PII","Has RLS","Last Modified Date","Date Added","Featured",
-                "Tags","Data Consumers","Dependencies","Default AD Group Names",
-                // New optional
-                "Product Group","Product Status Notes","Data Consumers (Free Text)","Tech Delivery Mgr",
-                "Regulatory/Compliance/Contractual","BI Platform","DB Server","DB/Data Mart","Database Table",
-                "Source Rep","dataSecurityClassification","accessGroupName","accessGroupDN",
-                "Automation Classification","user_visibility_string","user_visibility_number",
-                "Epic Security Group tag","Keep Long Term",
-                // New lookup fields
-                "Potential to Consolidate","Potential to Automate","Business Value by executive sponsor",
-                "2025 Must Do","Development Effort","Estimated development hours",
-                "Resources - Development","Resources - Analysts","Resources - Platform","Resources - Data Engineering"
+                "Domain",
+                "Product Group",
+                "Title",
+                "Description",
+                "Status",
+                "Product Status Notes",
+                "Division",
+                "Operating Entity",
+                "Executive Sponsor Name",
+                "Data Consumers",
+                "Owner Name",
+                "Owner Email",
+                "Tech Delivery Mgr",
+                "Regulatory/Compliance/Contractual",
+                "Asset Type",
+                "Featured",
+                "BI Platform",
+                "Url",
+                "DB Server",
+                "DB/Data Mart",
+                "Database Table",
+                "Source Rep",
+                "dataSecurityClassification",
+                "accessGroupName",
+                "accessGroupDN",
+                "Data Source",
+                "Automation Classification",
+                "user_visibility_string",
+                "user_visibility_number",
+                "Default AD Group Names",
+                "PHI",
+                "PII",
+                "Has RLS",
+                "Epic Security Group tag",
+                "Refresh Frequency",
+                "Keep Long Term",
+                "Potential to Consolidate",
+                "Potential to Automate",
+                "Last Modified Date",
+                "Business Value by executive sponsor",
+                // 2025 Must Do removed
+                "Development Effort",
+                "Estimated development hours",
+                "Resources - Development",
+                "Resources - Analysts",
+                "Resources - Platform",
+                "Resources - Data Engineering",
+                "Product Impact Category",
+                // Extra fields appended at the end (unchanged labels)
+                "Id",
+                // Service Line removed
+                "Tags",
+                "Dependencies",
+                "Executive Sponsor Email"
             }));
             foreach (var r in rows)
             {
                 var tags = string.Join("; ", r.Tags);
-                var consumers = string.Join("; ", r.DataConsumers);
+                var consumers = r.DataConsumers ?? string.Empty;
                 var line = string.Join(",", new[]
                 {
-                    CsvEscape(r.Id.ToString()),
-                    CsvEscape(r.Title ?? string.Empty),
-                    CsvEscape(r.Description ?? string.Empty),
-                    CsvEscape(r.Url ?? string.Empty),
-                    CsvEscape(r.AssetType ?? string.Empty),
+                    // Domain *
                     CsvEscape(r.Domain ?? string.Empty),
-                    CsvEscape(r.Division ?? string.Empty),
-                    CsvEscape(r.ServiceLine ?? string.Empty),
-                    CsvEscape(r.DataSource ?? string.Empty),
-                    CsvEscape(r.Status ?? string.Empty),
-                    CsvEscape(r.OwnerName ?? string.Empty),
-                    CsvEscape(r.OwnerEmail ?? string.Empty),
-                    CsvEscape(r.ExecutiveSponsorName ?? string.Empty),
-                    CsvEscape(r.ExecutiveSponsorEmail ?? string.Empty),
-                    CsvEscape(r.OperatingEntity ?? string.Empty),
-                    CsvEscape(r.RefreshFrequency ?? string.Empty),
-                    BoolOut(r.PrivacyPhi),
-                    BoolOut(r.PrivacyPii),
-                    BoolOut(r.HasRls),
-                    CsvEscape(r.LastModifiedDate.HasValue ? r.LastModifiedDate.Value.ToString("yyyy-MM-dd") : string.Empty),
-                    r.DateAdded.ToString("yyyy-MM-dd"),
-                    BoolOut(r.Featured),
-                    CsvEscape(tags),
-                    CsvEscape(consumers),
-                    CsvEscape(r.Dependencies ?? string.Empty),
-                    CsvEscape(r.DefaultAdGroupNames ?? string.Empty),
-                    // New optional
+                    // Product Group
                     CsvEscape(r.ProductGroup ?? string.Empty),
+                    // Product Name * (Title)
+                    CsvEscape(r.Title ?? string.Empty),
+                    // Product Description and Purpose * (Description)
+                    CsvEscape(r.Description ?? string.Empty),
+                    // Product Status (Status)
+                    CsvEscape(r.Status ?? string.Empty),
+                    // Product Status Notes
                     CsvEscape(r.ProductStatusNotes ?? string.Empty),
-                    CsvEscape(r.DataConsumersText ?? string.Empty),
+                    // Division *
+                    CsvEscape(r.Division ?? string.Empty),
+                    // Operating Entity *
+                    CsvEscape(r.OperatingEntity ?? string.Empty),
+                    // Executive Sponsor * (name only)
+                    CsvEscape(r.ExecutiveSponsorName ?? string.Empty),
+                    // Data Consumers * (semicolon separated)
+                    CsvEscape(consumers),
+                    // D&A Product Owner * (Owner Name)
+                    CsvEscape(r.OwnerName ?? string.Empty),
+                    // D&A Product Owner Email *
+                    CsvEscape(r.OwnerEmail ?? string.Empty),
+                    // Tech Delivery Mgr
                     CsvEscape(r.TechDeliveryManager ?? string.Empty),
+                    // Regulatory/Compliance/Contractual
                     CsvEscape(r.RegulatoryComplianceContractual ?? string.Empty),
+                    // Asset Type *
+                    CsvEscape(r.AssetType ?? string.Empty),
+                    // Featured
+                    BoolOut(r.Featured),
+                    // BI Platform *
                     CsvEscape(r.BiPlatform ?? string.Empty),
+                    // Location/URL * (Url)
+                    CsvEscape(r.Url ?? string.Empty),
+                    // DB Server
                     CsvEscape(r.DbServer ?? string.Empty),
+                    // DB/Data Mart
                     CsvEscape(r.DbDataMart ?? string.Empty),
+                    // Database Table
                     CsvEscape(r.DatabaseTable ?? string.Empty),
+                    // Source Repo (maps to SourceRep)
                     CsvEscape(r.SourceRep ?? string.Empty),
+                    // dataSecurityClassification
                     CsvEscape(r.DataSecurityClassification ?? string.Empty),
+                    // accessGroupName
                     CsvEscape(r.AccessGroupName ?? string.Empty),
+                    // accessGroupDN
                     CsvEscape(r.AccessGroupDn ?? string.Empty),
+                    // Data Source *
+                    CsvEscape(r.DataSource ?? string.Empty),
+                    // Automation Classification
                     CsvEscape(r.AutomationClassification ?? string.Empty),
+                    // user_visibility_string
                     CsvEscape(r.UserVisibilityString ?? string.Empty),
+                    // user_visibility_number
                     CsvEscape(r.UserVisibilityNumber ?? string.Empty),
+                    // Default AD Group Names
+                    CsvEscape(r.DefaultAdGroupNames ?? string.Empty),
+                    // Has PHI Flag *
+                    BoolOut(r.PrivacyPhi),
+                    // Has PII Flag *
+                    BoolOut(r.PrivacyPii),
+                    // Has RLS Flag *
+                    BoolOut(r.HasRls),
+                    // Epic Security Group tag
                     CsvEscape(r.EpicSecurityGroupTag ?? string.Empty),
+                    // Refresh Frequency *
+                    CsvEscape(r.RefreshFrequency ?? string.Empty),
+                    // Keep (maps to KeepLongTerm)
                     CsvEscape(r.KeepLongTerm ?? string.Empty),
-                    // New lookup fields (optional, no Missing Data default)
+                    // Potential to Consolidate
                     CsvEscape(r.PotentialToConsolidate ?? string.Empty),
+                    // Potential to Automate
                     CsvEscape(r.PotentialToAutomate ?? string.Empty),
+                    // Last Date Modified for this row * (yyyy-MM-dd)
+                    CsvEscape(r.LastModifiedDate.HasValue ? r.LastModifiedDate.Value.ToString("yyyy-MM-dd") : string.Empty),
+                    // Business Value rated by the executive sponsor
                     CsvEscape(r.SponsorBusinessValue ?? string.Empty),
-                    CsvEscape(r.MustDo2025 ?? string.Empty),
+                    // 2025 Must Do removed
+                    // Development Effort
                     CsvEscape(r.DevelopmentEffort ?? string.Empty),
+                    // Estimated 2025 development hours
                     CsvEscape(r.EstimatedDevHours ?? string.Empty),
+                    // Resources - Development
                     CsvEscape(r.ResourcesDevelopment ?? string.Empty),
+                    // Resources - Analysts
                     CsvEscape(r.ResourcesAnalysts ?? string.Empty),
+                    // Resources - Platform
                     CsvEscape(r.ResourcesPlatform ?? string.Empty),
-                    CsvEscape(r.ResourcesDataEngineering ?? string.Empty)
+                    // Resources - Data Engineering
+                    CsvEscape(r.ResourcesDataEngineering ?? string.Empty),
+                    // Product Impact Category
+                    CsvEscape(r.ProductImpactCategory ?? string.Empty),
+                    // Extra fields appended at the end
+                    CsvEscape(r.Id.ToString()),
+                    // Service Line removed
+                    CsvEscape(tags),
+                    CsvEscape(r.Dependencies ?? string.Empty),
+                    CsvEscape(r.ExecutiveSponsorEmail ?? string.Empty)
                 });
                 sb.AppendLine(line);
             }
@@ -528,15 +654,14 @@ namespace SutterAnalyticsApi.Controllers
                 // tags will be attached via ItemTags below
                 DomainId = null,
                 DivisionId = null,
-                ServiceLineId = null,
                 DataSourceId = null,
                 PrivacyPhi = dto.PrivacyPhi,
                 PrivacyPii = dto.PrivacyPii,
                 HasRls = dto.HasRls,
                 DateAdded = DateTime.UtcNow,
                 Featured = dto.Featured,
-                Dependencies = dto.Dependencies,
-                DefaultAdGroupNames = dto.DefaultAdGroupNames,
+                Dependencies = string.IsNullOrWhiteSpace(dto.Dependencies) ? null : dto.Dependencies,
+                DefaultAdGroupNames = string.IsNullOrWhiteSpace(dto.DefaultAdGroupNames) ? null : dto.DefaultAdGroupNames,
                 LastModifiedDate = dto.LastModifiedDate
             };
 
@@ -593,22 +718,7 @@ namespace SutterAnalyticsApi.Controllers
                 i.DivisionId = lookup.Id;
             }
 
-            if (dto.ServiceLineId.HasValue)
-            {
-                var lookup = await _db.LookupValues.FindAsync(dto.ServiceLineId.Value);
-                if (lookup != null) { i.ServiceLineId = lookup.Id; }
-            }
-            else if (!string.IsNullOrWhiteSpace(dto.ServiceLine))
-            {
-                var lookup = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "ServiceLine" && l.Value == dto.ServiceLine);
-                if (lookup == null)
-                {
-                    lookup = new LookupValue { Type = "ServiceLine", Value = dto.ServiceLine };
-                    _db.LookupValues.Add(lookup);
-                    await _db.SaveChangesAsync();
-                }
-                i.ServiceLineId = lookup.Id;
-            }
+            // ServiceLine removed
 
             if (dto.DataSourceId.HasValue)
             {
@@ -724,30 +834,22 @@ namespace SutterAnalyticsApi.Controllers
                 i.RefreshFrequencyId = lookup.Id;
             }
 
-            // Data Consumers (ids)
-            if (dto.DataConsumerIds != null && dto.DataConsumerIds.Any())
+            // Data Consumers: simple free text
+            i.DataConsumers = string.IsNullOrWhiteSpace(dto.DataConsumers) ? null : dto.DataConsumers.Trim();
+
+            // Product Impact Category
+            if (dto.ProductImpactCategoryId.HasValue)
+                i.ProductImpactCategoryId = dto.ProductImpactCategoryId;
+            else if (!string.IsNullOrWhiteSpace(dto.ProductImpactCategory))
             {
-                foreach (var cid in dto.DataConsumerIds.Distinct())
+                var pic = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "ProductImpactCategory" && l.Value == dto.ProductImpactCategory);
+                if (pic == null)
                 {
-                    var lv = await _db.LookupValues.FindAsync(cid);
-                    if (lv != null)
-                        i.ItemDataConsumers.Add(new ItemDataConsumer { Item = i, DataConsumer = lv });
+                    pic = new LookupValue { Type = "ProductImpactCategory", Value = dto.ProductImpactCategory };
+                    _db.LookupValues.Add(pic);
+                    await _db.SaveChangesAsync();
                 }
-            }
-            // Data Consumers (names)
-            if (dto.DataConsumers != null && dto.DataConsumers.Any())
-            {
-                foreach (var name in dto.DataConsumers.Select(n => n?.Trim()).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct())
-                {
-                    var lv = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "DataConsumer" && l.Value == name);
-                    if (lv == null)
-                    {
-                        lv = new LookupValue { Type = "DataConsumer", Value = name };
-                        _db.LookupValues.Add(lv);
-                        await _db.SaveChangesAsync();
-                    }
-                    i.ItemDataConsumers.Add(new ItemDataConsumer { Item = i, DataConsumer = lv });
-                }
+                i.ProductImpactCategoryId = pic.Id;
             }
 
             // Status assignment: default to Published; admins may override via dto.StatusId
@@ -809,7 +911,7 @@ namespace SutterAnalyticsApi.Controllers
                 }
             }
             if (dto.AssetTypeId.HasValue) i.AssetTypeId = dto.AssetTypeId;
-            // Map domain/division/serviceLine/dataSource to lookup ids when provided
+            // Map domain/division/dataSource to lookup ids when provided
             if (dto.DomainId.HasValue)
                 i.DomainId = dto.DomainId;
             else if (!string.IsNullOrWhiteSpace(dto.Domain))
@@ -838,19 +940,7 @@ namespace SutterAnalyticsApi.Controllers
                 i.DivisionId = lookup.Id;
             }
 
-            if (dto.ServiceLineId.HasValue)
-                i.ServiceLineId = dto.ServiceLineId;
-            else if (!string.IsNullOrWhiteSpace(dto.ServiceLine))
-            {
-                var lookup = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "ServiceLine" && l.Value == dto.ServiceLine);
-                if (lookup == null)
-                {
-                    lookup = new LookupValue { Type = "ServiceLine", Value = dto.ServiceLine };
-                    _db.LookupValues.Add(lookup);
-                    await _db.SaveChangesAsync();
-                }
-                i.ServiceLineId = lookup.Id;
-            }
+            // ServiceLine removed
 
             if (dto.DataSourceId.HasValue)
                 i.DataSourceId = dto.DataSourceId;
@@ -947,30 +1037,22 @@ namespace SutterAnalyticsApi.Controllers
                 i.RefreshFrequencyId = lookup.Id;
             }
 
-            // Data Consumers update: remove existing and re-add
-            var existingConsumers = await _db.ItemDataConsumers.Where(dc => dc.ItemId == i.Id).ToListAsync();
-            if (existingConsumers.Any()) _db.ItemDataConsumers.RemoveRange(existingConsumers);
-            if (dto.DataConsumerIds != null && dto.DataConsumerIds.Any())
+            // Data Consumers update: simple free text
+            i.DataConsumers = string.IsNullOrWhiteSpace(dto.DataConsumers) ? null : dto.DataConsumers.Trim();
+
+            // Product Impact Category
+            if (dto.ProductImpactCategoryId.HasValue)
+                i.ProductImpactCategoryId = dto.ProductImpactCategoryId;
+            else if (!string.IsNullOrWhiteSpace(dto.ProductImpactCategory))
             {
-                foreach (var cid in dto.DataConsumerIds.Distinct())
+                var pic = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "ProductImpactCategory" && l.Value == dto.ProductImpactCategory);
+                if (pic == null)
                 {
-                    var lv = await _db.LookupValues.FindAsync(cid);
-                    if (lv != null) _db.ItemDataConsumers.Add(new ItemDataConsumer { Item = i, DataConsumer = lv });
+                    pic = new LookupValue { Type = "ProductImpactCategory", Value = dto.ProductImpactCategory };
+                    _db.LookupValues.Add(pic);
+                    await _db.SaveChangesAsync();
                 }
-            }
-            if (dto.DataConsumers != null && dto.DataConsumers.Any())
-            {
-                foreach (var name in dto.DataConsumers.Select(n => n?.Trim()).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct())
-                {
-                    var lv = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "DataConsumer" && l.Value == name);
-                    if (lv == null)
-                    {
-                        lv = new LookupValue { Type = "DataConsumer", Value = name };
-                        _db.LookupValues.Add(lv);
-                        await _db.SaveChangesAsync();
-                    }
-                    _db.ItemDataConsumers.Add(new ItemDataConsumer { Item = i, DataConsumer = lv });
-                }
+                i.ProductImpactCategoryId = pic.Id;
             }
 
             // Status update (admin only)
@@ -983,8 +1065,8 @@ namespace SutterAnalyticsApi.Controllers
             i.PrivacyPhi = dto.PrivacyPhi;
             i.PrivacyPii = dto.PrivacyPii;
             i.HasRls = dto.HasRls;
-            i.Dependencies = dto.Dependencies;
-            i.DefaultAdGroupNames = dto.DefaultAdGroupNames;
+            i.Dependencies = string.IsNullOrWhiteSpace(dto.Dependencies) ? null : dto.Dependencies;
+            i.DefaultAdGroupNames = string.IsNullOrWhiteSpace(dto.DefaultAdGroupNames) ? null : dto.DefaultAdGroupNames;
             i.LastModifiedDate = dto.LastModifiedDate;
             i.Featured = dto.Featured;
             // keep original DateAdded

@@ -54,9 +54,7 @@ namespace SutterAnalyticsApi.Controllers
                     case "Division":
                         count = await _db.Items.CountAsync(i => i.DivisionId == lv.Id);
                         break;
-                    case "ServiceLine":
-                        count = await _db.Items.CountAsync(i => i.ServiceLineId == lv.Id);
-                        break;
+                    // ServiceLine removed
                     case "DataSource":
                         count = await _db.Items.CountAsync(i => i.DataSourceId == lv.Id);
                         break;
@@ -73,12 +71,12 @@ namespace SutterAnalyticsApi.Controllers
             return Ok(result);
         }
 
-        // GET /api/lookups/bulk?types=AssetType,Domain,Division,ServiceLine,DataSource,Status
+        // GET /api/lookups/bulk?types=AssetType,Domain,Division,DataSource,Status
         // Returns an object keyed by type with arrays of { id, value }
         [HttpGet("bulk")]
         public async Task<ActionResult<object>> GetBulk([FromQuery] string? types)
         {
-            var defaultTypes = new[] { "AssetType", "Domain", "Division", "ServiceLine", "DataSource", "Status" };
+            var defaultTypes = new[] { "AssetType", "Domain", "Division", "DataSource", "Status" };
             var typeSet = string.IsNullOrWhiteSpace(types)
                 ? defaultTypes
                 : types.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -102,12 +100,12 @@ namespace SutterAnalyticsApi.Controllers
             return Ok(result);
         }
 
-        // GET /api/lookups/bulk-counts?types=AssetType,Domain,Division,ServiceLine,DataSource,Status
+        // GET /api/lookups/bulk-counts?types=AssetType,Domain,Division,DataSource,Status
         // Returns an object keyed by type with arrays of { id, value, count }
         [HttpGet("bulk-counts")]
         public async Task<ActionResult<object>> GetBulkWithCounts([FromQuery] string? types)
         {
-            var defaultTypes = new[] { "AssetType", "Domain", "Division", "ServiceLine", "DataSource", "Status" };
+            var defaultTypes = new[] { "AssetType", "Domain", "Division", "DataSource", "Status" };
             var typeList = string.IsNullOrWhiteSpace(types)
                 ? defaultTypes
                 : types.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -129,7 +127,7 @@ namespace SutterAnalyticsApi.Controllers
                         "AssetType" => _db.Items.Count(i => i.AssetTypeId == lv.Id),
                         "Domain" => _db.Items.Count(i => i.DomainId == lv.Id),
                         "Division" => _db.Items.Count(i => i.DivisionId == lv.Id),
-                        "ServiceLine" => _db.Items.Count(i => i.ServiceLineId == lv.Id),
+                        // ServiceLine removed
                         "DataSource" => _db.Items.Count(i => i.DataSourceId == lv.Id),
                         "Status" => _db.Items.Count(i => i.StatusId == lv.Id),
                         _ => 0
