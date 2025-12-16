@@ -115,18 +115,7 @@ using (var scope = app.Services.CreateScope())
         }
         db.SaveChanges();
 
-        // Ensure Missing Data employee with ID 11 is present (do not overwrite if exists)
-        try
-        {
-            var existsEmp = db.Set<SutterAnalyticsApi.Models.Employee>().Any(e => e.Id == 11);
-            if (!existsEmp)
-            {
-                var emp = new SutterAnalyticsApi.Models.Employee { Id = 11, Name = "Missing Data", Email = "missing@example.com" };
-                db.Add(emp);
-                db.SaveChanges();
-            }
-        }
-        catch { }
+        // Assume Missing Data employee (Id=11) exists per ops; do not insert here.
 
         // Seed sample data (only if none exists)
         if (!db.Items.Any())
