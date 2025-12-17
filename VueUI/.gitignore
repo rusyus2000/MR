@@ -3,11 +3,14 @@
 
 # Distribution build
 /dist
+/dist-*
 
 # Local development environment
 .local
 .dev
 .env.*
+!/.env.qa
+!/.env.dev
 .config/*
 !/.config/.gitkeep
 
@@ -29,4 +32,3 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.swp
-
