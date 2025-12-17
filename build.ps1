@@ -72,7 +72,7 @@ if ($Env -eq "dev") {
 Ensure-AppSettingNotBlank $apiEnvSettings "ConnectionStrings.DefaultConnection" "Set ConnectionStrings.DefaultConnection in $apiEnvSettings."
 Ensure-AppSettingNotBlank $apiEnvSettings "SearchApiUrl" "Set SearchApiUrl in $apiEnvSettings."
 
-dotnet publish $apiProj -c Release -o $apiOut
+dotnet publish $apiProj -c Release -f net9.0 -r win-x86 --self-contained true -o $apiOut
 
 # Overwrite published appsettings.json with the environment-specific one
 Copy-Item -Path $apiEnvSettings -Destination (Join-Path $apiOut "appsettings.json") -Force
