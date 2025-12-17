@@ -166,17 +166,16 @@ namespace SutterAnalyticsApi.Controllers
 
             var list = await query.Select(i => new ItemListDto
             {
-                Id = i.Id,
-                Title = i.Title,
-                Description = i.Description,
-                Url = i.Url,
-                AssetTypeId = i.AssetTypeId,
-                AssetTypeName = i.AssetType != null ? i.AssetType.Value : null,
-                Featured = i.Featured,
-                DomainId = i.DomainId,
-                DivisionId = i.DivisionId,
-                // ServiceLine removed
-                DataSourceId = i.DataSourceId,
+                 Id = i.Id,
+                 Title = i.Title,
+                 Description = i.Description,
+                 Url = i.Url,
+                 AssetTypeId = i.AssetTypeId,
+                 AssetTypeName = i.AssetType != null ? i.AssetType.Value : null,
+                 DomainId = i.DomainId,
+                 DivisionId = i.DivisionId,
+                 // ServiceLine removed
+                 DataSourceId = i.DataSourceId,
                 PrivacyPhi = i.PrivacyPhi,
                 PrivacyPii = i.PrivacyPii,
                 HasRls = i.HasRls,
@@ -257,6 +256,14 @@ namespace SutterAnalyticsApi.Controllers
 
             string DisplayBool(bool? v) => v.HasValue ? (v.Value ? "Yes" : "No") : "Missing Data";
 
+            var isFavorite = false;
+            if (user != null)
+            {
+                isFavorite = await _db.UserFavorites
+                    .AsNoTracking()
+                    .AnyAsync(f => f.UserId == user.Id && f.ItemId == i.Id);
+            }
+
             return Ok(new ItemDto
             {
                 Id = i.Id,
@@ -333,14 +340,13 @@ namespace SutterAnalyticsApi.Controllers
                 PrivacyPhiDisplay = DisplayBool(i.PrivacyPhi),
                 PrivacyPiiDisplay = DisplayBool(i.PrivacyPii),
                 HasRlsDisplay = DisplayBool(i.HasRls),
-                Dependencies = i.Dependencies,
-                DefaultAdGroupNames = i.DefaultAdGroupNames,
-                LastModifiedDate = i.LastModifiedDate,
-                DateAdded = i.DateAdded,
-                Featured = i.Featured,
-                FeaturedDisplay = DisplayBool(i.Featured)
-            });
-        }
+                 Dependencies = i.Dependencies,
+                 DefaultAdGroupNames = i.DefaultAdGroupNames,
+                 LastModifiedDate = i.LastModifiedDate,
+                 DateAdded = i.DateAdded,
+                 IsFavorite = isFavorite
+             });
+         }
 
         public class ExportRequest { public List<int> Ids { get; set; } = new(); }
 
@@ -410,7 +416,6 @@ namespace SutterAnalyticsApi.Controllers
                     i.HasRls,
                     i.LastModifiedDate,
                     i.DateAdded,
-                    i.Featured,
                     Tags = i.ItemTags.Select(t => t.Tag.Value),
                     // DataConsumers removed from export projection (use text field later)
                     i.Dependencies,
@@ -502,8 +507,6 @@ namespace SutterAnalyticsApi.Controllers
                     CsvEscape(r.RegulatoryComplianceContractual ?? string.Empty),
                     // Asset Type *
                     CsvEscape(r.AssetType ?? string.Empty),
-                    // Featured
-                    BoolOut(r.Featured),
                     // BI Platform *
                     CsvEscape(r.BiPlatform ?? string.Empty),
                     // Location/URL * (Url)
@@ -598,14 +601,13 @@ namespace SutterAnalyticsApi.Controllers
                 DivisionId = null,
                 DataSourceId = null,
                 PrivacyPhi = dto.PrivacyPhi,
-                PrivacyPii = dto.PrivacyPii,
-                HasRls = dto.HasRls,
-                DateAdded = DateTime.UtcNow,
-                Featured = dto.Featured,
-                Dependencies = string.IsNullOrWhiteSpace(dto.Dependencies) ? null : dto.Dependencies,
-                DefaultAdGroupNames = string.IsNullOrWhiteSpace(dto.DefaultAdGroupNames) ? null : dto.DefaultAdGroupNames,
-                LastModifiedDate = dto.LastModifiedDate
-            };
+                 PrivacyPii = dto.PrivacyPii,
+                 HasRls = dto.HasRls,
+                 DateAdded = DateTime.UtcNow,
+                 Dependencies = string.IsNullOrWhiteSpace(dto.Dependencies) ? null : dto.Dependencies,
+                 DefaultAdGroupNames = string.IsNullOrWhiteSpace(dto.DefaultAdGroupNames) ? null : dto.DefaultAdGroupNames,
+                 LastModifiedDate = dto.LastModifiedDate
+             };
 
             // Attach tags: find existing Tag entities or create new ones
             if (dto.Tags != null && dto.Tags.Any())
@@ -684,9 +686,6 @@ namespace SutterAnalyticsApi.Controllers
                 var at = await _db.LookupValues.FindAsync(dto.AssetTypeId.Value);
                 // nothing else required; AssetTypeId is stored
             }
-
-            // Set featured flag
-            i.Featured = dto.Featured;
 
             // Owner assignment
             if (dto.OwnerId.HasValue)
@@ -831,7 +830,7 @@ namespace SutterAnalyticsApi.Controllers
             i.Title = dto.Title;
             i.Description = dto.Description;
             i.Url = dto.Url;
-            // asset types are now single-valued; update AssetTypeId/Featured below
+            // asset types are now single-valued; update AssetTypeId below
             // Update tags: remove existing item-tags and reattach
             // Load existing ItemTags
             var existingTags = await _db.ItemTags.Where(it => it.ItemId == i.Id).ToListAsync();
@@ -1010,7 +1009,6 @@ namespace SutterAnalyticsApi.Controllers
             i.Dependencies = string.IsNullOrWhiteSpace(dto.Dependencies) ? null : dto.Dependencies;
             i.DefaultAdGroupNames = string.IsNullOrWhiteSpace(dto.DefaultAdGroupNames) ? null : dto.DefaultAdGroupNames;
             i.LastModifiedDate = dto.LastModifiedDate;
-            i.Featured = dto.Featured;
             // keep original DateAdded
 
             await _db.SaveChangesAsync();

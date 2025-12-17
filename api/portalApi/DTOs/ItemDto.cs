@@ -26,7 +26,6 @@ namespace SutterAnalyticsApi.DTOs
         // New field
         public DateTime DateAdded { get; set; }
         public DateTime? LastModifiedDate { get; set; }
-        public bool? Featured { get; set; }
         public double? Score { get; set; }
         public bool IsFavorite { get; set; }
         // Tags associated with the item (free-form)
@@ -83,7 +82,6 @@ namespace SutterAnalyticsApi.DTOs
         public string? PrivacyPhiDisplay { get; set; }
         public string? PrivacyPiiDisplay { get; set; }
         public string? HasRlsDisplay { get; set; }
-        public string? FeaturedDisplay { get; set; }
 
         // New optional lookup fields
         public int? PotentialToConsolidateId { get; set; }

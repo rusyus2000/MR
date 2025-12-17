@@ -29,7 +29,6 @@
             <a href="#" class="title-link d-block text-decoration-none mb-2 mt-1"
                @click.prevent="$emit('show-details')">
                 <h5 class="mb-0">
-                    <i v-if="isFeatured" class="bi bi-star-fill featured-icon" title="Featured"></i>
                     {{ item.title }}
                 </h5>
             </a>
@@ -62,7 +61,6 @@
     });
 
     const isFavorite = computed(() => props.item.isFavorite);
-    const isFeatured = computed(() => !!props.item.featured);
 
     function toggleFavorite(item) {
         toggleFavoriteApi(item.id)
@@ -113,7 +111,6 @@
             Report: 'bg-report',
             Application: 'bg-application',
             'Data Model': 'bg-data-model',
-            Featured: 'bg-featured',
         };
         return map[assetType] || 'bg-teal';
     };
@@ -129,16 +126,6 @@
         window.open(item.url, '_blank', 'noopener');
     }
 </script>
-
-<style scoped>
-    .featured-icon {
-        color: #FFD700; /* gold */
-        font-size: 0.9rem;
-        position: relative;
-        top: -2px;
-    }
-</style>
-
 
 <style scoped>
     .favorite-icon {
@@ -248,10 +235,6 @@
 
     .bg-data-model {
         background-color: #FFA500;
-    }
-
-    .bg-featured {
-        background-color: #FFD700;
     }
 
     .bg-teal {

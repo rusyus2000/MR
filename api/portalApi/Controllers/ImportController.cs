@@ -236,7 +236,6 @@ namespace SutterAnalyticsApi.Controllers
             int cTechDeliveryManager = col["Tech Delivery Mgr"];
             int cRegulatoryCompliance = col["Regulatory/Compliance/Contractual"];
             int cAssetType = col["Asset Type"];
-            int cFeatured = col["Featured"];
             int cBiPlatform = col["BI Platform"];
             int cUrl = col["Url"];
             int cDbServer = col["DB Server"];
@@ -303,13 +302,12 @@ namespace SutterAnalyticsApi.Controllers
                     OwnerName = i.Owner != null ? i.Owner.Name : string.Empty,
                     OwnerEmail = i.Owner != null ? i.Owner.Email : string.Empty,
                     i.PrivacyPhi,
-                    i.PrivacyPii,
-                    i.HasRls,
-                    i.LastModifiedDate,
-                    i.DateAdded,
-                    i.Featured,
-                    i.Dependencies,
-                    i.DefaultAdGroupNames,
+                     i.PrivacyPii,
+                     i.HasRls,
+                     i.LastModifiedDate,
+                     i.DateAdded,
+                     i.Dependencies,
+                     i.DefaultAdGroupNames,
                     i.ProductGroup,
                     i.ProductStatusNotes,
                     i.DataConsumers,
@@ -393,12 +391,11 @@ namespace SutterAnalyticsApi.Controllers
                     var rawDataConsumers = r[cDataConsumers];
                     var rawOwnerName = r[cOwnerName];
                     var rawOwnerEmail = r[cOwnerEmail];
-                    var rawTechDeliveryManager = r[cTechDeliveryManager];
-                    var rawRegulatoryCompliance = r[cRegulatoryCompliance];
-                    var rawAssetType = r[cAssetType];
-                    var rawFeatured = r[cFeatured];
-                    var rawBiPlatform = r[cBiPlatform];
-                    var rawUrl = r[cUrl];
+                     var rawTechDeliveryManager = r[cTechDeliveryManager];
+                     var rawRegulatoryCompliance = r[cRegulatoryCompliance];
+                     var rawAssetType = r[cAssetType];
+                     var rawBiPlatform = r[cBiPlatform];
+                     var rawUrl = r[cUrl];
                     var rawDbServer = r[cDbServer];
                     var rawDbDataMart = r[cDbDataMart];
                     var rawDatabaseTable = r[cDatabaseTable];
@@ -432,15 +429,13 @@ namespace SutterAnalyticsApi.Controllers
                     var rawDependencies = r[cDependencies];
                     var rawExecEmail = r[cExecEmail];
 
-                    bool phiOk, piiOk, hasRlsOk, featuredOk;
+                    bool phiOk, piiOk, hasRlsOk;
                     var phiTok = NormalizeBoolToken(rawPhi, out phiOk);
                     var piiTok = NormalizeBoolToken(rawPii, out piiOk);
                     var hasRlsTok = NormalizeBoolToken(rawHasRls, out hasRlsOk);
-                    var featuredTok = NormalizeBoolToken(rawFeatured, out featuredOk);
                     if (!phiOk) throw new Exception("Invalid PHI value");
                     if (!piiOk) throw new Exception("Invalid PII value");
                     if (!hasRlsOk) throw new Exception("Invalid Has RLS value");
-                    if (!featuredOk) throw new Exception("Invalid Featured value");
 
                     // Normalize strings
                     var row = new
@@ -463,7 +458,6 @@ namespace SutterAnalyticsApi.Controllers
                         HasRls = hasRlsTok,
                         LastModifiedDate = Normalize(rawLastModified),
                         // Date Added removed from import row
-                        Featured = featuredTok,
                         Tags = NormalizeTags(rawTags),
                         DataConsumers = Normalize(rawDataConsumers),
                         Dependencies = Normalize(rawDependencies),
@@ -511,12 +505,11 @@ namespace SutterAnalyticsApi.Controllers
                                  && string.IsNullOrEmpty(row.Division)
                                  && string.IsNullOrEmpty(row.DataSource)
                                  && string.IsNullOrEmpty(row.Status)
-                                 && string.IsNullOrEmpty(row.OwnerName)
-                                 && string.IsNullOrEmpty(row.OwnerEmail)
-                                 && string.IsNullOrEmpty(Normalize(rawPhi))
-                                 // Date Added removed from blank row detection
-                                 && string.IsNullOrEmpty(Normalize(rawFeatured))
-                                 && string.IsNullOrEmpty(row.Tags);
+                                  && string.IsNullOrEmpty(row.OwnerName)
+                                  && string.IsNullOrEmpty(row.OwnerEmail)
+                                  && string.IsNullOrEmpty(Normalize(rawPhi))
+                                  // Date Added removed from blank row detection
+                                  && string.IsNullOrEmpty(row.Tags);
                     if (allEmpty)
                     {
                         skippedBlank++; // Do not count toward totals; ignore silently
@@ -558,7 +551,6 @@ namespace SutterAnalyticsApi.Controllers
                         row.PrivacyPii,
                         row.HasRls,
                         row.LastModifiedDate,
-                        row.Featured,
                         row.Tags,
                         row.DataConsumers,
                         row.Dependencies,
@@ -623,7 +615,6 @@ namespace SutterAnalyticsApi.Controllers
                                 exById.PrivacyPii.HasValue ? (exById.PrivacyPii.Value ? "true" : "false") : "Missing Data",
                                 exById.HasRls.HasValue ? (exById.HasRls.Value ? "true" : "false") : "Missing Data",
                                 exById.LastModifiedDate.HasValue ? exById.LastModifiedDate.Value.ToString("yyyy-MM-dd") : string.Empty,
-                                exById.Featured.HasValue ? (exById.Featured.Value ? "true" : "false") : "Missing Data",
                                 exTagsNorm,
                                 Normalize(exById.DataConsumers),
                                 Normalize(exById.Dependencies),
@@ -942,7 +933,6 @@ namespace SutterAnalyticsApi.Controllers
                     var phi = ParseBoolOrMissing(row.GetProperty("PrivacyPhi").GetString());
                     var pii = ParseBoolOrMissing(row.TryGetProperty("PrivacyPii", out var ppi) ? ppi.GetString() : null);
                     var hasRls = ParseBoolOrMissing(row.TryGetProperty("HasRls", out var hr) ? hr.GetString() : null);
-                    var featured = ParseBoolOrMissing(row.GetProperty("Featured").GetString());
 
                     DateTime? lastModified = null;
                     var lmStr = row.TryGetProperty("LastModifiedDate", out var lmd) ? (lmd.GetString() ?? string.Empty) : string.Empty;
@@ -997,7 +987,6 @@ namespace SutterAnalyticsApi.Controllers
                         boolToken(pii),
                         boolToken(hasRls),
                         lastModified.HasValue ? lastModified.Value.ToString("yyyy-MM-dd") : string.Empty,
-                        boolToken(featured),
                         NormalizeTags(tagsStr),
                         Normalize(dataConsumersStr),
                         Normalize(dependencies),
@@ -1090,7 +1079,6 @@ namespace SutterAnalyticsApi.Controllers
                         item.ResourcesDataEngineeringId = resDEId;
                         item.ProductImpactCategoryId = picId;
                         // Keep existing DateAdded on updates
-                        item.Featured = featured;
                         item.ContentHash = hash;
                         item.UpdatedAt = DateTime.UtcNow;
                         item.UpdatedBy = user.UserPrincipalName;
@@ -1159,7 +1147,6 @@ namespace SutterAnalyticsApi.Controllers
                             ResourcesDataEngineeringId = resDEId,
                             ProductImpactCategoryId = picId,
                             DateAdded = DateTime.UtcNow,
-                            Featured = featured,
                             ContentHash = hash,
                             UpdatedAt = DateTime.UtcNow,
                             UpdatedBy = user.UserPrincipalName

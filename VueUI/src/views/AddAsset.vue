@@ -91,17 +91,6 @@
                                 </div>
                             </div>
                             <div class="col mb-3">
-                                <label class="form-label fw-bold">Promotion</label>
-                                <div class="form-check">
-                                    <input v-model="form.featured"
-                                           class="form-check-input"
-                                           type="checkbox"
-                                           id="featured" />
-                                    <label class="form-check-label" for="featured">Featured</label>
-                                </div>
-                            </div>
-
-                            <div class="col mb-3">
                                 <label class="form-label fw-bold">Operating Entity</label>
                                 <select v-model.number="form.operatingEntityId" @change="onLookupChange('operatingEntities','operatingEntityId','operatingEntity')" class="form-select w-100">
                                     <option v-for="opt in lookup.operatingEntities" :key="opt.id" :value="opt.id">{{ opt.value }}</option>
@@ -195,12 +184,11 @@
             const form = ref({
                 title: '',
                 description: '',
-                url: '',
-                assetTypeId: null,
-                featured: false,
-                domain: '',
-                division: '',
-                serviceLine: '',
+                 url: '',
+                 assetTypeId: null,
+                 domain: '',
+                 division: '',
+                 serviceLine: '',
                 dataSource: '',
                 privacyPhi: false,
                 privacyPii: false,

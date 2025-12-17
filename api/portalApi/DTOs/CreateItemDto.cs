@@ -19,8 +19,6 @@ public class CreateItemDto
     public bool? HasRls { get; set; }
     // Free-form tags that can be attached to the item. Sent from the UI as repeated form entries.
     public List<string> Tags { get; set; } = new();
-    // Promotion flag
-    public bool? Featured { get; set; }
 
     // Status (lookup) - respected only for admins; defaults to Published
     public int? StatusId { get; set; }

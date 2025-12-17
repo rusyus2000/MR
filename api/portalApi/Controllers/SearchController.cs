@@ -135,7 +135,6 @@ namespace SutterAnalyticsApi.Controllers
                         Url = i.Url,
                         AssetTypeId = i.AssetTypeId,
                         AssetTypeName = i.AssetType != null ? i.AssetType.Value : null,
-                        Featured = i.Featured,
                         DomainId = i.DomainId,
                         DivisionId = i.DivisionId,
                         DataSourceId = i.DataSourceId,

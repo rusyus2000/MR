@@ -81,7 +81,6 @@ namespace SutterAnalyticsApi.Data
                     DataSourceId = L("DataSource", dataSources[rnd.Next(dataSources.Length)]),
                     StatusId = publishedId,
                     PrivacyPhi = rnd.NextDouble() < 0.3,
-                    Featured = rnd.NextDouble() < 0.15,
                     DateAdded = now.AddDays(-rnd.Next(0, 120))
                 };
 

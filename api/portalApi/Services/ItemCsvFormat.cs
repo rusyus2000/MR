@@ -22,7 +22,6 @@ public static class ItemCsvFormat
         "Tech Delivery Mgr",
         "Regulatory/Compliance/Contractual",
         "Asset Type",
-        "Featured",
         "BI Platform",
         "Url",
         "DB Server",

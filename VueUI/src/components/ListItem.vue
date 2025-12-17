@@ -18,7 +18,6 @@
             <div class="flex-grow-1 ps-4">
                 <a href="#" @click.prevent="$emit('show-details')" class="text-decoration-none">
                     <h5 class="mb-0 card-title">
-                        <i v-if="isFeatured" class="bi bi-star-fill featured-icon" title="Featured"></i>
                         {{ item.title }}
                     </h5>
                 </a>
@@ -69,9 +68,6 @@
             isFavorite() {
                 return this.item.isFavorite;
             },
-            isFeatured() {
-                return !!this.item.featured;
-            },
             relevancePercent() {
                 if (typeof this.item.score !== 'number') return null;
                 const clamped = Math.max(0, Math.min(1, this.item.score));
@@ -109,7 +105,6 @@
                     Report: 'bg-report',
                     Application: 'bg-application',
                     'Data Model': 'bg-data-model',
-                    Featured: 'bg-featured'
                 };
                 return colorMap[type] || 'bg-teal';
             }
@@ -206,10 +201,6 @@
         background-color: #FFA500;
     }
 
-    .bg-featured {
-        background-color: #FFD700;
-    }
-
     .bg-teal {
         background-color: #00A89E;
     }
@@ -235,10 +226,4 @@
         padding: 3px 8px 3px 16px !important;
     }
 
-    .featured-icon {
-        color: #FFD700;
-        font-size: 0.9rem;
-        position: relative;
-        top: -3px;
-    }
 </style>

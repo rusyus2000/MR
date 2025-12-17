@@ -7,15 +7,14 @@
             </span>
             <div class="d-flex align-items-center">
                 <label for="sortBy" class="me-2 mb-0">Sort by:</label>
-                <select id="sortBy"
-                        class="form-select form-select-sm me-3"
-                        v-model="sortBy"
-                        style="width: auto;">
-                    <option>Favorites</option>
-                    <option>Featured</option>
-                    <option>Most Relevant</option>
-                    <option>Alphabetical</option>
-                </select>
+                 <select id="sortBy"
+                         class="form-select form-select-sm me-3"
+                         v-model="sortBy"
+                         style="width: auto;">
+                     <option>Favorites</option>
+                     <option>Most Relevant</option>
+                     <option>Alphabetical</option>
+                 </select>
 
                 <button class="btn btn-sm me-2"
                         :class="{ 'btn-primary': viewMode==='grid', 'btn-outline-secondary': viewMode!=='grid' }"
@@ -147,7 +146,7 @@
         },
         setup(props, { emit }) {
             const viewMode = ref('grid');
-            const sortBy = ref('Featured');
+            const sortBy = ref('Favorites');
             const itemsPerPage = ref(15);
             const currentPage = ref(1);
             const showAddModal = ref(false);
@@ -218,12 +217,6 @@
 
                 if (sortBy.value === 'Alphabetical') {
                     list = [...list].sort((a, b) => a.title.localeCompare(b.title));
-                } else if (sortBy.value === 'Featured') {
-                    list = [...list].sort((a, b) => {
-                        const aFeat = a.featured ? 0 : 1;
-                        const bFeat = b.featured ? 0 : 1;
-                        return aFeat - bFeat; // featured first
-                    });
                 } else if (sortBy.value === 'Favorites') {
                     list = [...list].sort((a, b) => {
                         const aFav = a.isFavorite ? 0 : 1;
@@ -255,7 +248,11 @@
                 selectedItem.value = null;
                 try {
                     const full = await fetchItem(item.id);
-                    selectedItem.value = full || item;
+                    if (full) {
+                        // Merge into the existing list item so updates (e.g., favorites) stay in sync
+                        Object.assign(item, full);
+                    }
+                    selectedItem.value = item;
                 } catch (e) {
                     selectedItem.value = item;
                 } finally {

@@ -106,7 +106,7 @@
                     console.log('[runSearch]', q);
                     // Save previous sort only if a search is not already active
                     if (!searchExecuted.value) {
-                        previousSort.value = itemGrid.value?.getSort ? itemGrid.value.getSort() : 'Featured';
+                        previousSort.value = itemGrid.value?.getSort ? itemGrid.value.getSort() : 'Favorites';
                     }
                     searchExecuted.value = true;
                     const result = await searchItems(q);
@@ -126,7 +126,7 @@
                 searchQuery.value = '';
                 searchTerm.value = '';
                 // Restore the sort that was active prior to the search
-                const prev = previousSort.value || 'Featured';
+                const prev = previousSort.value || 'Favorites';
                 itemGrid.value?.resetSort(prev);
                 previousSort.value = null;
                 loadItems();
@@ -183,7 +183,7 @@
                 if (searchExecuted.value) {
                     itemGrid.value?.resetSort('Most Relevant');
                 } else {
-                    itemGrid.value?.resetSort('Featured');
+                    itemGrid.value?.resetSort('Favorites');
                 }
                 runSearch(searchQuery.value);
             }

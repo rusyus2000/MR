@@ -18,7 +18,6 @@ namespace SutterAnalyticsApi.DTOs
         public bool? PrivacyPhi { get; set; }
         public bool? PrivacyPii { get; set; }
         public bool? HasRls { get; set; }
-        public bool? Featured { get; set; }
         public DateTime DateAdded { get; set; }
         public DateTime? LastModifiedDate { get; set; }
         public double? Score { get; set; }

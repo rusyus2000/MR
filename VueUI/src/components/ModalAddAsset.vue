@@ -9,11 +9,6 @@
                 <form @submit.prevent="submitForm">
                     <div class="details-grid">
 
-                        <div class="label">Featured</div>
-                        <div>
-                            <input v-model="form.featured" class="form-check-input" type="checkbox" id="featured" />
-                        </div>
-
                         <div class="label">Title:</div>
                         <div><input v-model="form.title" type="text" class="form-control" required /></div>
 
@@ -197,7 +192,6 @@
         url: '',
         assetTypeId: null,
         tags: [],
-        featured: false,
         domain: '',
         division: '',
         serviceLine: '',
@@ -263,7 +257,6 @@
             form.value.description = it.description
             form.value.url = it.url
             form.value.assetTypeId = it.assetTypeId || null
-            form.value.featured = !!it.featured
             form.value.domain = it.domain || ''
             form.value.division = it.division || ''
             form.value.serviceLine = it.serviceLine || ''
