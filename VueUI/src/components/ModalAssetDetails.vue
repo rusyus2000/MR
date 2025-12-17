@@ -3,7 +3,9 @@
         <div class="modal-content shadow modal-wide">
             <div class="modal-header custom-header">
                 <h5 class="modal-title d-flex align-items-center gap-2">
-                    <i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Product Name *'] || ''"></i>
+                    <span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Product Name *'] || ''" aria-label="Field definition" tabindex="0">
+                        <i class="bi bi-info-circle info-icon"></i>
+                    </span>
                     <span>{{ isLoading ? 'Loading…' : (item ? item.title : '') }}</span>
                     <button v-if="!isLoading && isAdmin && FEATURE_FLAGS.allowManualEdit" class="btn btn-link text-primary p-0 ms-2" title="Edit Item" @click="$emit('edit')">
                         <i class="bi bi-pencil-square fs-4"></i>
@@ -27,13 +29,13 @@
                     <!-- Row 1: Product Name removed (title shown in header) -->
 
                     <!-- Row 2: Description spans across -->
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Product Description and Purpose *'] || ''"></i>Product Description and Purpose <span class="req">*</span>:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Product Description and Purpose *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Product Description and Purpose <span class="req">*</span>:</div>
                     <div class="desc desc-cell clamp-2" :title="(item.description && item.description.trim()) ? item.description : 'Missing Data'">
                         {{ (item.description && item.description.trim()) ? shorten(item.description, 240) : 'Missing Data' }}
                     </div>
 
                     <!-- Row 3: Location/URL | Division -->
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Location/URL *'] || ''"></i>Location/URL <span class="req">*</span>:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Location/URL *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Location/URL <span class="req">*</span>:</div>
                     <div class="url-row">
                         <template v-if="item.url && item.url.trim()">
                             <a href="#" @click.prevent="openResource(item)" :title="item.url">
@@ -47,13 +49,13 @@
                             <span class="text-muted">Missing Data</span>
                         </template>
                     </div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Division *'] || ''"></i>Division <span class="req">*</span>:</div><div>{{ item.division || 'Missing Data' }}</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Division *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Division <span class="req">*</span>:</div><div>{{ item.division || 'Missing Data' }}</div>
 
                     <!-- Row 4: Domain | Operating Entity -->
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Domain *'] || ''"></i>Domain <span class="req">*</span>:</div><div>{{ item.domain || 'Missing Data' }}</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Domain *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Domain <span class="req">*</span>:</div><div>{{ item.domain || 'Missing Data' }}</div>
                     <!-- Row 5: Operating Entity | Executive Sponsor -->
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Operating Entity *'] || ''"></i>Operating Entity <span class="req">*</span>:</div><div>{{ item.operatingEntity || 'Missing Data' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Executive Sponsor *'] || ''"></i>Executive Sponsor <span class="req">*</span>:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Operating Entity *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Operating Entity <span class="req">*</span>:</div><div>{{ item.operatingEntity || 'Missing Data' }}</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Executive Sponsor *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Executive Sponsor <span class="req">*</span>:</div>
                     <div>
                         <template v-if="item.executiveSponsorEmail">
                             <a :href="`mailto:${item.executiveSponsorEmail}`">{{ item.executiveSponsorName || item.executiveSponsorEmail }}</a>
@@ -64,7 +66,7 @@
                     </div>
 
                     <!-- Row 6: D&A Product Owner | Data Consumers -->
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['D&A Product Owner *'] || ''"></i>D&amp;A Product Owner <span class="req">*</span>:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['D&A Product Owner *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>D&amp;A Product Owner <span class="req">*</span>:</div>
                     <div>
                         <template v-if="item.ownerEmail">
                             <a :href="`mailto:${item.ownerEmail}`">{{ item.ownerName || item.ownerEmail }}</a>
@@ -73,18 +75,18 @@
                             {{ item.ownerName || 'Missing Data' }}
                         </template>
                     </div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Data Consumers *'] || ''"></i>Data Consumers <span class="req">*</span>:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Data Consumers *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Data Consumers <span class="req">*</span>:</div>
                     <div><span v-if="item.dataConsumers && item.dataConsumers.trim()">{{ item.dataConsumers }}</span><span v-else class="text-muted">Missing Data</span></div>
 
                     <!-- Row 7: BI Platform | Dependencies -->
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['BI Platform *'] || ''"></i>BI Platform <span class="req">*</span>:</div><div>{{ item.biPlatform || 'Missing Data' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Dependencies'] || ''"></i>Dependencies <span class="req">*</span>:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['BI Platform *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>BI Platform <span class="req">*</span>:</div><div>{{ item.biPlatform || 'Missing Data' }}</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Dependencies'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Dependencies <span class="req">*</span>:</div>
                     <div><span v-if="item.dependencies && item.dependencies.trim()">{{ item.dependencies }}</span><span v-else class="text-muted">Missing Data</span></div>
 
                     <!-- Row 8: Default AD Groups | Flags -->
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Default AD Group Names *'] || ''"></i>Default AD Groups <span class="req">*</span>:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Default AD Group Names *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Default AD Groups <span class="req">*</span>:</div>
                     <div><span v-if="item.defaultAdGroupNames && item.defaultAdGroupNames.trim()">{{ item.defaultAdGroupNames }}</span><span v-else class="text-muted">Missing Data</span></div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Flags'] || ''"></i>Flags <span class="req">*</span>:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Flags'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Flags <span class="req">*</span>:</div>
                     <div class="flags">
                         <span>PHI: {{ item.privacyPhiDisplay || (item.privacyPhi === null || item.privacyPhi === undefined ? 'Missing Data' : (item.privacyPhi ? 'Yes' : 'No')) }}</span>
                         <span>PII: {{ item.privacyPiiDisplay || (item.privacyPii === null || item.privacyPii === undefined ? 'Missing Data' : (item.privacyPii ? 'Yes' : 'No')) }}</span>
@@ -92,84 +94,84 @@
                     </div>
 
                     <!-- Row 9: Refresh Frequency | Last Date Modified -->
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Refresh Frequency *'] || ''"></i>Refresh Frequency <span class="req">*</span>:</div><div>{{ item.refreshFrequency || 'Missing Data' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Last Date Modified for this row *'] || ''"></i>Last Date Modified <span class="req">*</span>:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Refresh Frequency *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Refresh Frequency <span class="req">*</span>:</div><div>{{ item.refreshFrequency || 'Missing Data' }}</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Last Date Modified for this row *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Last Date Modified <span class="req">*</span>:</div>
                     <div>{{ item.lastModifiedDate ? new Date(item.lastModifiedDate).toLocaleDateString() : 'Missing Data' }}</div>
 
                     <!-- End required block -->
 
                     <!-- Remaining fields -->
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Asset Type *'] || ''"></i>Asset Type:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Asset Type *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Asset Type:</div>
                     <div>{{ item.assetTypeName }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Product Status'] || ''"></i>Status:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Product Status'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Status:</div>
                     <div>{{ item.status || '-' }}</div>
 
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Data Source *'] || ''"></i>Data Source:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Data Source *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Data Source:</div>
                     <div>{{ item.dataSource }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Product Status Notes'] || ''"></i>Product Status Notes:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Product Status Notes'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Product Status Notes:</div>
                     <div>{{ item.productStatusNotes || '-' }}</div>
 
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Potential to Consolidate'] || ''"></i>Potential to Consolidate:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Potential to Consolidate'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Potential to Consolidate:</div>
                     <div>{{ item.potentialToConsolidate || '-' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Product Group'] || ''"></i>Product Group:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Product Group'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Product Group:</div>
                     <div>{{ item.productGroup || '-' }}</div>
 
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Potential to Automate'] || ''"></i>Potential to Automate:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Potential to Automate'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Potential to Automate:</div>
                     <div>{{ item.potentialToAutomate || '-' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Product Impact Category'] || ''"></i>Product Impact Category:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Product Impact Category'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Product Impact Category:</div>
                     <div>{{ item.productImpactCategory || '-' }}</div>
 
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Estimated 2025 development hours'] || ''"></i>Estimated Dev Hours:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Estimated 2025 development hours'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Estimated Dev Hours:</div>
                     <div>{{ item.estimatedDevHours || '-' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Tech Delivery Mgr'] || ''"></i>Tech Delivery Mgr:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Tech Delivery Mgr'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Tech Delivery Mgr:</div>
                     <div>{{ item.techDeliveryManager || '-' }}</div>
 
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Business Value rated by the executive sponsor'] || ''"></i>Business Value:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Business Value rated by the executive sponsor'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Business Value:</div>
                     <div>{{ item.sponsorBusinessValue || '-' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Regulatory/Compliance/Contractual Flag*'] || ''"></i>Regulatory/Compliance/Contractual:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Regulatory/Compliance/Contractual Flag*'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Regulatory/Compliance/Contractual:</div>
                     <div>{{ item.regulatoryComplianceContractual || '-' }}</div>
 
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Development Effort'] || ''"></i>Development Effort:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Development Effort'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Development Effort:</div>
                     <div>{{ item.developmentEffort || '-' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['DB Server'] || ''"></i>DB Server:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['DB Server'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>DB Server:</div>
                     <div>{{ item.dbServer || '-' }}</div>
 
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Resources - Development'] || ''"></i>Resources - Development:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Resources - Development'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Resources - Development:</div>
                     <div>{{ item.resourcesDevelopment || '-' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['DB/Data Mart'] || ''"></i>DB/Data Mart:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['DB/Data Mart'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>DB/Data Mart:</div>
                     <div>{{ item.dbDataMart || '-' }}</div>
 
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Resources - Analysts'] || ''"></i>Resources - Analysts:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Resources - Analysts'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Resources - Analysts:</div>
                     <div>{{ item.resourcesAnalysts || '-' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Database Table'] || ''"></i>Database Table:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Database Table'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Database Table:</div>
                     <div>{{ item.databaseTable || '-' }}</div>
 
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Resources - Platform'] || ''"></i>Resources - Platform:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Resources - Platform'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Resources - Platform:</div>
                     <div>{{ item.resourcesPlatform || '-' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Source Repo'] || ''"></i>Source Rep:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Source Repo'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Source Rep:</div>
                     <div>{{ item.sourceRep || '-' }}</div>
 
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Resources - Data Engineering'] || ''"></i>Resources - Data Engineering:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Resources - Data Engineering'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Resources - Data Engineering:</div>
                     <div>{{ item.resourcesDataEngineering || '-' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['dataSecurityClassification'] || ''"></i>Data Security Classification:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['dataSecurityClassification'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Data Security Classification:</div>
                     <div>{{ item.dataSecurityClassification || '-' }}</div>
 
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['accessGroupName'] || ''"></i>Access Group Name:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['accessGroupName'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Access Group Name:</div>
                     <div>{{ item.accessGroupName || '-' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['accessGroupDN'] || ''"></i>Access Group DN:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['accessGroupDN'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Access Group DN:</div>
                     <div>{{ item.accessGroupDn || '-' }}</div>
 
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Automation Classification'] || ''"></i>Automation Classification:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Automation Classification'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Automation Classification:</div>
                     <div>{{ item.automationClassification || '-' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['user_visibility_string'] || ''"></i>User Visibility (String):</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['user_visibility_string'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>User Visibility (String):</div>
                     <div>{{ item.userVisibilityString || '-' }}</div>
 
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Epic Security Group tag *'] || ''"></i>Epic Security Group Tag:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Epic Security Group tag *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Epic Security Group Tag:</div>
                     <div>{{ item.epicSecurityGroupTag || '-' }}</div>
-                    <div class="label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Keep'] || ''"></i>Keep Long Term:</div>
+                    <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Keep'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Keep Long Term:</div>
                     <div>{{ item.keepLongTerm || '-' }}</div>
 
-                    <div class="label align-top tags-label"><i class="bi bi-info-circle info-icon" :title="FIELD_DEFINITIONS['Tags'] || ''"></i>Tags:</div>
+                    <div class="label align-top tags-label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Tags'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Tags:</div>
                     <div class="tags-value align-top">
                         <div class="tag-list">
                             <template v-if="!item || !item.tags || item.tags.length === 0">
@@ -436,6 +438,64 @@
         opacity: 0.9;
         cursor: help;
         flex: 0 0 auto;
+    }
+
+    /* Instant tooltip (faster than native title tooltip) */
+    .info-icon-wrap {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        outline: none;
+    }
+
+    .info-icon-wrap[data-tooltip=""]::before,
+    .info-icon-wrap[data-tooltip=""]::after {
+        display: none;
+    }
+
+    .info-icon-wrap::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 0;
+        top: 1.35rem;
+        z-index: 1000;
+        max-width: 420px;
+        width: max-content;
+        padding: 0.5rem 0.6rem;
+        border-radius: 0.45rem;
+        background: #f2f7ff;
+        border: 1px solid #cfe0ff;
+        color: #0b2b4a;
+        font-size: 0.85rem;
+        line-height: 1.25;
+        white-space: normal;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+        opacity: 0;
+        transform: translateY(-2px);
+        pointer-events: none;
+        transition: opacity 80ms ease-out, transform 80ms ease-out;
+    }
+
+    .info-icon-wrap::before {
+        content: "";
+        position: absolute;
+        left: 0.35rem;
+        top: 1.12rem;
+        border-width: 0 7px 7px 7px;
+        border-style: solid;
+        border-color: transparent transparent #cfe0ff transparent;
+        opacity: 0;
+        transform: translateY(-2px);
+        pointer-events: none;
+        transition: opacity 80ms ease-out, transform 80ms ease-out;
+    }
+
+    .info-icon-wrap:hover::after,
+    .info-icon-wrap:hover::before,
+    .info-icon-wrap:focus::after,
+    .info-icon-wrap:focus::before {
+        opacity: 1;
+        transform: translateY(0);
     }
 
     /* Hover highlight for each field/value pair */
