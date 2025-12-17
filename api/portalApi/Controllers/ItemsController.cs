@@ -55,7 +55,7 @@ namespace SutterAnalyticsApi.Controllers
 
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ItemListDto>>> GetAll(
+        public async Task<ActionResult<IEnumerable<ItemTileDto>>> GetAll(
      [FromQuery] int? top,
      [FromQuery] string? domain,
      [FromQuery] string? division,
@@ -72,7 +72,7 @@ namespace SutterAnalyticsApi.Controllers
      [FromQuery] bool? phi)
         {
             var user = CurrentUser;
-            var query = _db.Items.AsQueryable();
+            var query = _db.Items.AsNoTracking().AsQueryable();
 
             // Restrict visibility: non-admins see only Published items
             var isAdmin = user?.UserType == "Admin";
@@ -171,7 +171,7 @@ namespace SutterAnalyticsApi.Controllers
                     .Select(f => f.ItemId)
                     .ToListAsync();
 
-            var list = await query.Select(i => new ItemListDto
+            var list = await query.Select(i => new ItemTileDto
             {
                  Id = i.Id,
                  Title = i.Title,
@@ -184,14 +184,6 @@ namespace SutterAnalyticsApi.Controllers
                  // ServiceLine removed
                  DataSourceId = i.DataSourceId,
                 PrivacyPhi = i.PrivacyPhi,
-                PrivacyPii = i.PrivacyPii,
-                HasRls = i.HasRls,
-                OperatingEntityId = i.OperatingEntityId,
-                OperatingEntity = i.OperatingEntityLookup != null ? i.OperatingEntityLookup.Value : null,
-                RefreshFrequencyId = i.RefreshFrequencyId,
-                RefreshFrequency = i.RefreshFrequencyLookup != null ? i.RefreshFrequencyLookup.Value : null,
-                LastModifiedDate = i.LastModifiedDate,
-                DateAdded = i.DateAdded,
                 IsFavorite = favoriteIds.Contains(i.Id)
             }).ToListAsync();
 
