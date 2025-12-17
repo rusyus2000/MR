@@ -1,5 +1,5 @@
 param(
-  [Parameter(Mandatory = $true)]
+  [Parameter(Mandatory = $false)]
   [ValidateSet("dev", "qa")]
   [string]$Env
 )
@@ -34,49 +34,56 @@ function Ensure-AppSettingNotBlank($Path, $JsonPath, $Hint) {
 
 $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $artifacts = Join-Path $repoRoot "artifacts"
-$apiOut = Join-Path $artifacts ("api-" + $Env)
-$uiOut = Join-Path $artifacts ("ui-" + $Env)
 
-Write-Host "Building for environment: $Env"
+function Build-OneEnv([string]$TargetEnv) {
+  $apiOut = Join-Path $artifacts ("api-" + $TargetEnv)
+  $uiOut = Join-Path $artifacts ("ui-" + $TargetEnv)
 
-# --- UI ---
-Push-Location (Join-Path $repoRoot "VueUI")
-try {
-  $uiEnvFile = Join-Path (Get-Location) (".env." + $Env)
-  Ensure-FileNotEmpty $uiEnvFile "Expected an env file like $uiEnvFile."
-  Ensure-EnvVarSetInFile $uiEnvFile "VITE_API_BASE_URL" "Set VITE_API_BASE_URL in VueUI/.env.$Env."
+  Write-Host "Building for environment: $TargetEnv"
 
-  npm run ("build:" + $Env)
+  # --- UI ---
+  Push-Location (Join-Path $repoRoot "VueUI")
+  try {
+    $uiEnvFile = Join-Path (Get-Location) (".env." + $TargetEnv)
+    Ensure-FileNotEmpty $uiEnvFile "Expected an env file like $uiEnvFile."
+    Ensure-EnvVarSetInFile $uiEnvFile "VITE_API_BASE_URL" "Set VITE_API_BASE_URL in VueUI/.env.$TargetEnv."
 
-  if (Test-Path $uiOut) { Remove-Item $uiOut -Recurse -Force }
-  New-Item -ItemType Directory -Force -Path $uiOut | Out-Null
+    npm run ("build:" + $TargetEnv)
 
-  $distDir = Join-Path (Get-Location) ("dist-" + $Env)
-  Copy-Item -Path (Join-Path $distDir "*") -Destination $uiOut -Recurse -Force
+    if (Test-Path $uiOut) { Remove-Item $uiOut -Recurse -Force }
+    New-Item -ItemType Directory -Force -Path $uiOut | Out-Null
+
+    $distDir = Join-Path (Get-Location) ("dist-" + $TargetEnv)
+    Copy-Item -Path (Join-Path $distDir "*") -Destination $uiOut -Recurse -Force
+  }
+  finally {
+    Pop-Location
+  }
+
+  # --- API ---
+  $apiProj = Join-Path $repoRoot "api\portalApi\portalApi.csproj"
+  $apiEnvSettings = Join-Path $repoRoot ("api\portalApi\appsettings." + $TargetEnv.ToUpper() + ".json")
+  if (-not (Test-Path $apiEnvSettings)) {
+    $apiEnvSettings = Join-Path $repoRoot ("api\portalApi\appsettings." + (Get-Culture).TextInfo.ToTitleCase($TargetEnv) + ".json")
+  }
+
+  Ensure-FileNotEmpty $apiEnvSettings "Expected an env settings file like $apiEnvSettings."
+  Ensure-AppSettingNotBlank $apiEnvSettings "ConnectionStrings.DefaultConnection" "Set ConnectionStrings.DefaultConnection in $apiEnvSettings."
+  Ensure-AppSettingNotBlank $apiEnvSettings "SearchApiUrl" "Set SearchApiUrl in $apiEnvSettings."
+
+  dotnet publish $apiProj -c Release -f net9.0 -r win-x86 --self-contained true -o $apiOut
+
+  # Overwrite published appsettings.json with the environment-specific one
+  Copy-Item -Path $apiEnvSettings -Destination (Join-Path $apiOut "appsettings.json") -Force
+
+  Write-Host "Done."
+  Write-Host "UI:  $uiOut"
+  Write-Host "API: $apiOut"
 }
-finally {
-  Pop-Location
+
+if ([string]::IsNullOrWhiteSpace($Env)) {
+  Build-OneEnv "dev"
+  Build-OneEnv "qa"
+} else {
+  Build-OneEnv $Env
 }
-
-# --- API ---
-$apiProj = Join-Path $repoRoot "api\portalApi\portalApi.csproj"
-$apiEnvSettings = Join-Path $repoRoot ("api\portalApi\appsettings." + $Env.ToUpper() + ".json")
-if (-not (Test-Path $apiEnvSettings)) {
-  $apiEnvSettings = Join-Path $repoRoot ("api\portalApi\appsettings." + (Get-Culture).TextInfo.ToTitleCase($Env) + ".json")
-}
-
-if ($Env -eq "dev") {
-  Ensure-FileNotEmpty $apiEnvSettings "Fill in api/portalApi/appsettings.Dev.json (connection string + SearchApiUrl)."
-}
-
-Ensure-AppSettingNotBlank $apiEnvSettings "ConnectionStrings.DefaultConnection" "Set ConnectionStrings.DefaultConnection in $apiEnvSettings."
-Ensure-AppSettingNotBlank $apiEnvSettings "SearchApiUrl" "Set SearchApiUrl in $apiEnvSettings."
-
-dotnet publish $apiProj -c Release -f net9.0 -r win-x86 --self-contained true -o $apiOut
-
-# Overwrite published appsettings.json with the environment-specific one
-Copy-Item -Path $apiEnvSettings -Destination (Join-Path $apiOut "appsettings.json") -Force
-
-Write-Host "Done."
-Write-Host "UI:  $uiOut"
-Write-Host "API: $apiOut"
