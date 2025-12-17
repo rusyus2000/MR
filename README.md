@@ -14,8 +14,8 @@ The admin export endpoint `POST /api/items/export` returns a CSV with all requir
 8. Service Line
 9. Data Source
 10. Status
-11. Owner Name
-12. Owner Email
+11. D&A Product Owner Name
+12. D&A Product Owner Email
 13. Executive Sponsor Name
 14. Executive Sponsor Email
 15. Operating Entity

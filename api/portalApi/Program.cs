@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using portalApi.Middleware;
 using SutterAnalyticsApi.Data;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,12 +41,20 @@ builder.Services.AddControllers();
 builder.Services.AddHttpClient("SearchApi", (sp, client) =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
-    client.BaseAddress = new Uri(cfg["SearchApiUrl"] ?? "http://smf-appweb-qa/AI_search");
+    var baseUrl = cfg["SearchApiUrl"] ?? "http://smf-appweb-qa/AI_search/";
+    // Ensure trailing slash so relative requests like "rebuild-index" resolve under /AI_search/
+    if (!baseUrl.EndsWith("/")) baseUrl += "/";
+    client.BaseAddress = new Uri(baseUrl);
     client.Timeout = TimeSpan.FromSeconds(5);
 })
 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
 {
-    UseDefaultCredentials = false
+    // Some Search API endpoints (e.g. rebuild-index) may require Windows auth.
+    // In dev, set SearchApi:UseDefaultCredentials=true to send the process identity.
+    UseDefaultCredentials = builder.Configuration.GetValue<bool?>("SearchApi:UseDefaultCredentials") ?? false,
+    Credentials = (builder.Configuration.GetValue<bool?>("SearchApi:UseDefaultCredentials") ?? false)
+        ? CredentialCache.DefaultNetworkCredentials
+        : null
 });
 
 var app = builder.Build();

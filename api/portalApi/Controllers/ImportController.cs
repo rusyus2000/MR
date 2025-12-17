@@ -231,8 +231,8 @@ namespace SutterAnalyticsApi.Controllers
             int cOperatingEntity = col["Operating Entity"];
             int cExecName = col["Executive Sponsor Name"];
             int cDataConsumers = col["Data Consumers"];
-            int cOwnerName = col["Owner Name"];
-            int cOwnerEmail = col["Owner Email"];
+            int cOwnerName = col["D&A Product Owner Name"];
+            int cOwnerEmail = col["D&A Product Owner Email"];
             int cTechDeliveryManager = col["Tech Delivery Mgr"];
             int cRegulatoryCompliance = col["Regulatory/Compliance/Contractual"];
             int cAssetType = col["Asset Type"];
@@ -1219,7 +1219,8 @@ namespace SutterAnalyticsApi.Controllers
                 var client = _httpFactory.CreateClient("SearchApi");
                 // Rebuild can take longer; override default timeout
                 client.Timeout = TimeSpan.FromMinutes(2);
-                var res = await client.PostAsync("rebuild-index", content: null);
+                // Search API endpoint is GET /rebuild-index (no payload)
+                var res = await client.GetAsync("rebuild-index");
                 if (!res.IsSuccessStatusCode)
                 {
                     return StatusCode((int)res.StatusCode, await res.Content.ReadAsStringAsync());

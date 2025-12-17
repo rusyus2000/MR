@@ -23,14 +23,14 @@
                         <div class="label">URL:</div>
                         <div><input v-model="form.url" type="url" class="form-control" required /></div>
 
-                        <div class="label">Owner:</div>
+                        <div class="label">D&amp;A Product Owner:</div>
                         <div>
                             <div class="owner-suggest">
                                 <input v-model="ownerQuery"
                                        @input="onOwnerQuery"
                                        @keydown="onOwnerKeydown"
                                        type="text"
-                                       placeholder="Search owner by name or email"
+                                       placeholder="Search D&amp;A product owner by name or email"
                                        class="form-control mb-2"
                                        :disabled="!!form.ownerId" />
                                 <div v-if="ownerSuggestions.length && !form.ownerId" class="suggest-box list-group" ref="ownerSuggestBox">
@@ -45,8 +45,8 @@
                                 </div>
                             </div>
                             <div class="d-flex gap-2 align-items-center mb-2">
-                                <input v-model="form.ownerName" type="text" placeholder="Owner name" class="form-control" :disabled="!!form.ownerId" />
-                                <input v-model="form.ownerEmail" type="email" placeholder="Owner email" class="form-control" :disabled="!!form.ownerId" />
+                                <input v-model="form.ownerName" type="text" placeholder="D&amp;A product owner name" class="form-control" :disabled="!!form.ownerId" />
+                                <input v-model="form.ownerEmail" type="email" placeholder="D&amp;A product owner email" class="form-control" :disabled="!!form.ownerId" />
                                 <button v-if="form.ownerId" type="button" class="btn btn-outline-secondary" @click="clearOwner">Clear</button>
                             </div>
                         </div>
@@ -311,7 +311,7 @@
                 const hasAny = (form.value.ownerName || '').trim() || (form.value.ownerEmail || '').trim()
                 const hasBoth = (form.value.ownerName || '').trim() && (form.value.ownerEmail || '').trim()
                 if (hasAny && !hasBoth) {
-                    alert('Please provide both Owner Name and Owner Email, or select an existing owner.')
+                    alert('Please provide both D&A Product Owner Name and D&A Product Owner Email, or select an existing owner.')
                     return
                 }
             }
