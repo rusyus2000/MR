@@ -81,7 +81,12 @@ namespace SutterAnalyticsApi.Controllers
                 var published = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "Status" && l.Value == "Published");
                 if (published != null)
                 {
-                    query = query.Where(i => !i.StatusId.HasValue || i.StatusId == published.Id);
+                    // Treat "Missing Data" status as effectively unset so it doesn't hide everything
+                    // when StatusId is populated with a placeholder lookup value.
+                    query = query.Where(i =>
+                        !i.StatusId.HasValue
+                        || i.StatusId == published.Id
+                        || (i.StatusLookup != null && i.StatusLookup.Value == "Missing Data"));
                 }
             }
 
@@ -159,10 +164,12 @@ namespace SutterAnalyticsApi.Controllers
                 query = query.OrderByDescending(i => i.DateAdded).Take(top.Value);
 
             // Get user's favorite item IDs
-            var favoriteIds = await _db.UserFavorites
-                .Where(f => f.UserId == user.Id)
-                .Select(f => f.ItemId)
-                .ToListAsync();
+            var favoriteIds = user == null
+                ? new List<int>()
+                : await _db.UserFavorites
+                    .Where(f => f.UserId == user.Id)
+                    .Select(f => f.ItemId)
+                    .ToListAsync();
 
             var list = await query.Select(i => new ItemListDto
             {
