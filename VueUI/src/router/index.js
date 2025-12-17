@@ -2,11 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Dashboard from '../views/Dashboard.vue';
 import AddAsset from '../views/AddAsset.vue';
 
-// This uses Vite's environment variables
-const base =
-    import.meta.env.MODE === 'production'
-        ? '/mp_ui/'
-        : '/';
+// Use the Vite base URL so routing works when deployed under `/mp_ui`.
+// In dev server this will be `/`, in builds it will be `/mp_ui/`.
+const base = import.meta.env.BASE_URL || '/';
 
 const routes = [
     {
