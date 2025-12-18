@@ -6,6 +6,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Invoke-Checked([string]$FilePath, [string[]]$ArgumentList) {
+  & $FilePath @ArgumentList
+  if ($LASTEXITCODE -ne 0) {
+    throw "$FilePath failed with exit code $LASTEXITCODE. Args: $($ArgumentList -join ' ')"
+  }
+}
+
 function Ensure-FileNotEmpty($Path, $Hint) {
   if (-not (Test-Path $Path)) { throw "Missing file: $Path" }
   $content = (Get-Content $Path -Raw).Trim()
@@ -115,6 +122,7 @@ function Build-OneEnv([string]$TargetEnv) {
     Ensure-EnvVarSetInFile $uiEnvFile "VITE_API_BASE_URL" "Set VITE_API_BASE_URL in VueUI/.env.$TargetEnv."
 
     npm run ("build:" + $TargetEnv)
+    if ($LASTEXITCODE -ne 0) { throw "npm build failed for $TargetEnv (exit $LASTEXITCODE)" }
 
     if (Test-Path $uiOut) { Remove-Item $uiOut -Recurse -Force }
     New-Item -ItemType Directory -Force -Path $uiOut | Out-Null
@@ -138,7 +146,8 @@ function Build-OneEnv([string]$TargetEnv) {
   Ensure-AppSettingNotBlank $apiEnvSettings "ConnectionStrings.DefaultConnection" "Set ConnectionStrings.DefaultConnection in $apiEnvSettings."
   Ensure-AppSettingNotBlank $apiEnvSettings "SearchApiUrl" "Set SearchApiUrl in $apiEnvSettings."
 
-  dotnet publish $apiProj -c Release -f net9.0 -r win-x86 --self-contained true -o $apiOut
+  Invoke-Checked "dotnet" @("restore", $apiProj, "-r", "win-x86")
+  Invoke-Checked "dotnet" @("publish", $apiProj, "-c", "Release", "-f", "net9.0", "-r", "win-x86", "--self-contained", "true", "-o", $apiOut)
 
   # Produce a full appsettings.json for the target env by merging repo base + env overrides
   $outAppSettings = Join-Path $apiOut "appsettings.json"
