@@ -30,8 +30,11 @@
 
                     <!-- Row 2: Description spans across -->
                     <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Product Description and Purpose *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Product Description and Purpose <span class="req">*</span>:</div>
-                    <div class="desc desc-cell clamp-2" :title="(item.description && item.description.trim()) ? item.description : 'Missing Data'">
-                        {{ (item.description && item.description.trim()) ? shorten(item.description, 240) : 'Missing Data' }}
+                    <div ref="descEl"
+                         class="desc desc-cell desc-auto"
+                         :class="{ 'desc-fit-one': descFitsOneLine && !descMeasuring, 'desc-measure': descMeasuring }"
+                         :title="(item.description && item.description.trim()) ? item.description : 'Missing Data'">
+                        {{ (item.description && item.description.trim()) ? item.description : 'Missing Data' }}
                     </div>
 
                     <!-- Row 3: Location/URL | Division -->
@@ -260,23 +263,74 @@
         },
         emits: ['close','edit'],
         data() {
-            return { FEATURE_FLAGS, FIELD_DEFINITIONS, showScrollHint: false, _scrollHintTimer: null, _scrollHintSeq: 0 };
+            return {
+                FEATURE_FLAGS,
+                FIELD_DEFINITIONS,
+                showScrollHint: false,
+                _scrollHintTimer: null,
+                _scrollHintSeq: 0,
+                descFitsOneLine: true,
+                descMeasuring: false,
+                _descMeasureSeq: 0,
+                _descResizeTimer: null
+            };
         },
         watch: {
             isLoading() {
                 this.maybeShowScrollHint();
+                this.scheduleUpdateDescriptionFit();
             },
             item() {
                 this.maybeShowScrollHint();
+                this.scheduleUpdateDescriptionFit();
             }
         },
         mounted() {
             this.maybeShowScrollHint();
+            this.scheduleUpdateDescriptionFit();
+            window.addEventListener('resize', this.scheduleUpdateDescriptionFit, { passive: true });
         },
         beforeUnmount() {
             if (this._scrollHintTimer) clearTimeout(this._scrollHintTimer);
+            if (this._descResizeTimer) clearTimeout(this._descResizeTimer);
+            window.removeEventListener('resize', this.scheduleUpdateDescriptionFit);
         },
         methods: {
+            scheduleUpdateDescriptionFit() {
+                if (this._descResizeTimer) clearTimeout(this._descResizeTimer);
+                this._descResizeTimer = setTimeout(() => {
+                    this._descResizeTimer = null;
+                    this.updateDescriptionFit();
+                }, 120);
+            },
+            updateDescriptionFit() {
+                const seq = ++this._descMeasureSeq;
+                if (this.isLoading) {
+                    this.descFitsOneLine = true;
+                    this.descMeasuring = false;
+                    return;
+                }
+                const text = this.item && typeof this.item.description === 'string' ? this.item.description.trim() : '';
+                if (!text) {
+                    this.descFitsOneLine = true;
+                    this.descMeasuring = false;
+                    return;
+                }
+
+                // Measure overflow with a temporary nowrap state to decide whether it fits in 1 line.
+                this.descMeasuring = true;
+                this.$nextTick(() => {
+                    if (seq !== this._descMeasureSeq) return;
+                    const el = this.$refs.descEl;
+                    if (!el) {
+                        this.descMeasuring = false;
+                        return;
+                    }
+                    const overflows = el.scrollWidth > (el.clientWidth + 1);
+                    this.descFitsOneLine = !overflows;
+                    this.descMeasuring = false;
+                });
+            },
             maybeShowScrollHint() {
                 if (this._scrollHintTimer) clearTimeout(this._scrollHintTimer);
                 this.showScrollHint = false;
@@ -546,6 +600,24 @@
 
     /* Description cell should span remaining columns and align to top for multi-line */
     .desc-cell { grid-column: 2 / span 3; align-items: flex-start; }
+
+    /* Description: default to 1 line when it fits; otherwise wrap and expand fully */
+    .desc-auto {
+        white-space: normal;
+        overflow: visible;
+    }
+
+    .desc-fit-one {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Temporary measurement state (nowrap) */
+    .desc-measure {
+        white-space: nowrap;
+        overflow: hidden;
+    }
 
     .tag-list {
         display: flex;
