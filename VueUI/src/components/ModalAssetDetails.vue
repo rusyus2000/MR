@@ -14,11 +14,39 @@
                         <i :class="item.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'"></i>
                     </button>
                 </h5>
-                <div class="d-flex align-items-center gap-2">
-                    <button class="btn-close" @click="$emit('close')"></button>
-                </div>
+                <div></div>
             </div>
             <div class="modal-body" ref="modalBody">
+                <div v-if="showAccessForm" class="request-access-overlay">
+                    <div class="request-access-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">Request access email</h6>
+                            <button class="btn-close" @click="closeAccessForm"></button>
+                        </div>
+                        <div class="access-row">
+                            <label class="form-label access-label">To</label>
+                            <input class="form-control" type="email" v-model="accessForm.to" readonly />
+                        </div>
+                        <div class="access-row">
+                            <label class="form-label access-label">CC</label>
+                            <input class="form-control" type="text" v-model="accessForm.cc" placeholder="Optional" />
+                        </div>
+                        <div class="access-row">
+                            <label class="form-label access-label">Subject</label>
+                            <input class="form-control" type="text" v-model="accessForm.subject" />
+                        </div>
+                        <div class="access-row access-row-body">
+                            <label class="form-label access-label">Body</label>
+                            <textarea class="form-control access-body" rows="12" v-model="accessForm.body"></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button class="btn btn-sm btn-primary" :disabled="outlookOpening" @click="openInOutlook">
+                                <span v-if="outlookOpening">Openning Outlook{{ outlookDots }}</span>
+                                <span v-else>Open in Outlook</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div v-if="isLoading" class="d-flex justify-content-center align-items-center" style="min-height:160px;">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
@@ -195,8 +223,9 @@
             <div v-if="showScrollHint" class="scroll-hint" aria-hidden="true">
                 <i class="bi bi-arrow-down-circle-fill"></i>
             </div>
-            <div v-if="!isLoading && item" class="d-flex justify-content-end mt-3 px-4 pb-3">
-                <button class="btn btn-sm btn-outline-secondary" @click="$emit('close')">Close</button>
+            <div v-if="!isLoading && item" class="d-flex justify-content-end mt-3 px-4 pb-3 gap-2">
+                <button class="btn btn-sm btn-outline-teal action-btn" @click="openAccessForm">Request access</button>
+                <button class="btn btn-sm btn-outline-secondary action-btn" @click="$emit('close')">Close</button>
             </div>
         </div>
     </div>
@@ -205,6 +234,7 @@
 <script>
     import { toggleFavoriteApi } from '../services/api';
     import { FEATURE_FLAGS } from '../config';
+    import { getCurrentUserCached } from '../services/api';
 
     const FIELD_DEFINITIONS = Object.freeze({
         "Domain *": "The top/first logical grouping of the 3 level portfolio framework with related data products that share common functions, features, or intended uses, serving to organize inventory for data customers and facilite efficient discovery.",
@@ -272,7 +302,20 @@
                 descFitsOneLine: true,
                 descMeasuring: false,
                 _descMeasureSeq: 0,
-                _descResizeTimer: null
+                _descResizeTimer: null,
+                showAccessForm: false,
+                outlookOpening: false,
+                outlookDots: '',
+                _outlookTimer: null,
+                _outlookStopTimer: null,
+                accessForm: {
+                    to: '',
+                    cc: '',
+                    subject: 'Access Request',
+                    requesterName: '',
+                    requesterUpn: '',
+                    body: ''
+                }
             };
         },
         watch: {
@@ -283,16 +326,21 @@
             item() {
                 this.maybeShowScrollHint();
                 this.scheduleUpdateDescriptionFit();
+                this.syncAccessForm();
             }
         },
         mounted() {
             this.maybeShowScrollHint();
             this.scheduleUpdateDescriptionFit();
             window.addEventListener('resize', this.scheduleUpdateDescriptionFit, { passive: true });
+            this.initCurrentUser();
+            this.syncAccessForm();
         },
         beforeUnmount() {
             if (this._scrollHintTimer) clearTimeout(this._scrollHintTimer);
             if (this._descResizeTimer) clearTimeout(this._descResizeTimer);
+            if (this._outlookTimer) clearInterval(this._outlookTimer);
+            if (this._outlookStopTimer) clearTimeout(this._outlookStopTimer);
             window.removeEventListener('resize', this.scheduleUpdateDescriptionFit);
         },
         methods: {
@@ -354,6 +402,101 @@
                         this._scrollHintTimer = null;
                     }, totalMs);
                 });
+            },
+            async initCurrentUser() {
+                try {
+                    const me = await getCurrentUserCached();
+                    const name = me?.displayName || me?.userPrincipalName || '';
+                    const nt = me?.userPrincipalName || '';
+                    this.accessForm.requesterName = name;
+                    this.accessForm.requesterUpn = nt;
+                    this.syncAccessForm();
+                } catch {
+                    // Leave fields editable if user lookup fails
+                }
+            },
+            syncAccessForm() {
+                const toEmail = this.item?.executiveSponsorEmail || '';
+                this.accessForm.to = toEmail;
+                this.accessForm.subject = 'Access Request';
+                this.accessForm.body = this.buildAccessBody();
+            },
+            buildAccessBody() {
+                const lines = [];
+                const title = this.item?.title || 'this asset';
+                const url = this.item?.url || '';
+                const sponsorName = this.item?.executiveSponsorName || 'Executive Sponsor';
+
+                lines.push(`Hello ${sponsorName},`);
+                lines.push('');
+                lines.push('I am requesting access to:');
+                lines.push(`        Name: ${title}`);
+                if (url) {
+                    lines.push(`        URL: ${url}`);
+                }
+                lines.push('Please grant access for the following user(s):');
+                lines.push(`        ${this.buildRequesterLine()}`);
+                lines.push('');
+                lines.push('Reason for access:');
+                lines.push('       [Add business justification here]');
+                lines.push('');
+                lines.push('Thank you.');
+                return lines.join('\n');
+            },
+            buildRequesterLine() {
+                const upn = this.accessForm.requesterUpn || '';
+                const name = this.accessForm.requesterName || '';
+                if (name && upn) return `${name} (${upn})`;
+                return name || upn || '[Add name and NT login]';
+            },
+            openAccessForm() {
+                this.showAccessForm = true;
+                this.accessForm.body = this.buildAccessBody();
+            },
+            closeAccessForm() {
+                this.showAccessForm = false;
+            },
+            openInOutlook() {
+                this.accessForm.body = this.buildAccessBody();
+                const to = (this.accessForm.to || '').trim();
+                const params = [];
+                const cc = (this.accessForm.cc || '').trim();
+                if (cc) params.push(`cc=${encodeURIComponent(cc)}`);
+                const subject = this.accessForm.subject || 'Access Request';
+                params.push(`subject=${encodeURIComponent(subject)}`);
+                const body = this.accessForm.body || '';
+                params.push(`body=${encodeURIComponent(body)}`);
+                const qs = params.join('&');
+                const mailto = `mailto:${to}${qs ? `?${qs}` : ''}`;
+                this.startOutlookSpinner();
+                window.location.href = mailto;
+            },
+            startOutlookSpinner() {
+                if (this.outlookOpening) return;
+                this.outlookOpening = true;
+                this.outlookDots = '\u00A0\u00A0\u00A0';
+                if (this._outlookTimer) clearInterval(this._outlookTimer);
+                if (this._outlookStopTimer) clearTimeout(this._outlookStopTimer);
+
+                const dotStates = [
+                    '\u00A0\u00A0\u00A0',
+                    '.\u00A0\u00A0',
+                    '..\u00A0',
+                    '...'
+                ];
+                let dotIndex = 0;
+                this._outlookTimer = setInterval(() => {
+                    dotIndex = (dotIndex + 1) % dotStates.length;
+                    this.outlookDots = dotStates[dotIndex];
+                }, 500);
+
+                this._outlookStopTimer = setTimeout(() => {
+                    this.outlookOpening = false;
+                    this.outlookDots = '';
+                    if (this._outlookTimer) clearInterval(this._outlookTimer);
+                    this._outlookTimer = null;
+                    this._outlookStopTimer = null;
+                }, 5000);
             },
             async toggleFavorite(item) {
                 if (!item) return;
@@ -669,6 +812,62 @@
         color: #d78418c7;
         background: #fff7ea;
         border-color: #ffad44c7;
+    }
+
+    .btn-outline-teal {
+        border-color: #00A89E;
+        color: #00A89E;
+    }
+    .btn-outline-teal:hover {
+        background-color: #00A89E;
+        color: #fff;
+    }
+
+    .action-btn {
+        min-width: 140px;
+    }
+
+    .request-access-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 5;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 1.5rem;
+    }
+
+    .request-access-card {
+        width: min(720px, 95%);
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+    }
+
+    .access-row {
+        display: grid;
+        grid-template-columns: 90px 1fr;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.35rem;
+    }
+
+    .access-label {
+        margin-bottom: 0;
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .access-body {
+        min-height: 360px;
+        resize: vertical;
+    }
+
+    .access-row-body {
+        align-items: flex-start;
     }
 
 </style>
