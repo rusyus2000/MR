@@ -14,7 +14,9 @@
                         <i :class="item.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'"></i>
                     </button>
                 </h5>
-                <div></div>
+                <div class="d-flex align-items-center">
+                    <button class="btn-close" @click="$emit('close')"></button>
+                </div>
             </div>
             <div class="modal-body" ref="modalBody">
                 <div v-if="showAccessForm" class="request-access-overlay">
