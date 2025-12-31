@@ -93,6 +93,21 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<EnsureUserExistsMiddleware>();
 
+// Warm up the Search API on startup (best-effort).
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            var httpFactory = app.Services.GetRequiredService<IHttpClientFactory>();
+            var client = httpFactory.CreateClient("SearchApi");
+            await client.GetAsync("stats");
+        }
+        catch { }
+    });
+});
+
 // Dev convenience: ensure Status lookup values exist
 using (var scope = app.Services.CreateScope())
 {

@@ -243,7 +243,8 @@ namespace SutterAnalyticsApi.Controllers
                     {
                         UserId = u.Id,
                         ItemId = i.Id,
-                        OpenedAt = DateTime.UtcNow
+                        OpenedAt = DateTime.UtcNow,
+                        ClickType = UserAssetOpenHistory.TypeDetails
                     });
                     await _db.SaveChangesAsync();
                 }
