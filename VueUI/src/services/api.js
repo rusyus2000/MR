@@ -187,6 +187,21 @@ export function recordOpen(itemId) {
     });
 }
 
+// Record that a user requested access (email opened)
+export function recordAccessRequest(itemId) {
+    return fetch(`${API_BASE_URL}/useractions/requestaccess/${itemId}`, {
+        method: 'POST',
+        credentials: 'include'
+    }).then(handleResponse);
+}
+
+// Fetch the last access request timestamp for this user + item
+export function fetchLastAccessRequest(itemId) {
+    return fetch(`${API_BASE_URL}/useractions/lastaccessrequest/${itemId}`, {
+        credentials: 'include'
+    }).then(handleResponse);
+}
+
 export async function fetchFavorites() {
     return fetch(`${API_BASE_URL}/useractions/favorites`, {
         credentials: 'include'

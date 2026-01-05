@@ -27,21 +27,32 @@
                         </div>
                         <div class="access-row">
                             <label class="form-label access-label">To</label>
-                            <input class="form-control" type="email" v-model="accessForm.to" readonly />
+                            <input class="form-control" type="email" v-model="accessForm.to" readonly required />
                         </div>
                         <div class="access-row">
                             <label class="form-label access-label">CC</label>
-                            <input class="form-control" type="text" v-model="accessForm.cc" placeholder="Optional" />
+                            <input class="form-control" :class="{ 'is-invalid': isAccessFieldInvalid('cc') }" type="text" v-model="accessForm.cc" placeholder="Enter email of Manager of the users needing access" required />
                         </div>
-                        <div class="access-row">
-                            <label class="form-label access-label">Subject</label>
-                            <input class="form-control" type="text" v-model="accessForm.subject" />
+                        <div class="access-row access-row-users">
+                            <label class="form-label access-label">
+                                <span class="info-icon-wrap me-1" data-tooltip="List all users who needs access in the following format:&#10;LName1, FName1 (NtLogin1); LName2, FName2 (NTlogin2);" aria-label="Users format" tabindex="0">
+                                    <i class="bi bi-info-circle info-icon"></i>
+                                </span>
+                                Users
+                            </label>
+                            <textarea class="form-control access-users" :class="{ 'is-invalid': isAccessFieldInvalid('users') }" rows="4" v-model="accessForm.users" required></textarea>
                         </div>
                         <div class="access-row access-row-body">
-                            <label class="form-label access-label">Body</label>
-                            <textarea class="form-control access-body" rows="12" v-model="accessForm.body"></textarea>
+                            <label class="form-label access-label">
+                                <span class="info-icon-wrap me-1" data-tooltip="Detailed reason why users need access and what specific information they need from this report" aria-label="Business reason" tabindex="0">
+                                    <i class="bi bi-info-circle info-icon"></i>
+                                </span>
+                                Business Reason
+                            </label>
+                            <textarea class="form-control access-body" :class="{ 'is-invalid': isAccessFieldInvalid('businessReason') }" rows="4" v-model="accessForm.businessReason" required></textarea>
                         </div>
                         <div class="d-flex justify-content-end">
+                            <div v-if="showAccessValidation" class="text-danger me-3 align-self-center access-required-note">All fields are required.</div>
                             <button class="btn btn-sm btn-primary" :disabled="outlookOpening" @click="openInOutlook">
                                 <span v-if="outlookOpening">Openning Outlook{{ outlookDots }}</span>
                                 <span v-else>Open in Outlook</span>
@@ -226,6 +237,9 @@
                 <i class="bi bi-arrow-down-circle-fill"></i>
             </div>
             <div v-if="!isLoading && item" class="d-flex justify-content-end mt-3 px-4 pb-3 gap-2">
+                <div v-if="lastAccessRequestedAt" class="access-request-note">
+                    Last access request made on {{ formatDateTime(lastAccessRequestedAt) }}
+                </div>
                 <button class="btn btn-sm btn-outline-teal action-btn" @click="openAccessForm">Request access</button>
                 <button class="btn btn-sm btn-outline-secondary action-btn" @click="$emit('close')">Close</button>
             </div>
@@ -234,7 +248,7 @@
 </template>
 
 <script>
-    import { toggleFavoriteApi } from '../services/api';
+    import { toggleFavoriteApi, fetchLastAccessRequest, recordAccessRequest } from '../services/api';
     import { FEATURE_FLAGS } from '../config';
     import { getCurrentUserCached } from '../services/api';
 
@@ -310,13 +324,16 @@
                 outlookDots: '',
                 _outlookTimer: null,
                 _outlookStopTimer: null,
+                lastAccessRequestedAt: null,
+                showAccessValidation: false,
                 accessForm: {
                     to: '',
                     cc: '',
                     subject: 'Access Request',
                     requesterName: '',
                     requesterUpn: '',
-                    body: ''
+                    users: '',
+                    businessReason: ''
                 }
             };
         },
@@ -329,6 +346,7 @@
                 this.maybeShowScrollHint();
                 this.scheduleUpdateDescriptionFit();
                 this.syncAccessForm();
+                this.loadLastAccessRequest();
             }
         },
         mounted() {
@@ -337,6 +355,7 @@
             window.addEventListener('resize', this.scheduleUpdateDescriptionFit, { passive: true });
             this.initCurrentUser();
             this.syncAccessForm();
+            this.loadLastAccessRequest();
         },
         beforeUnmount() {
             if (this._scrollHintTimer) clearTimeout(this._scrollHintTimer);
@@ -421,13 +440,18 @@
                 const toEmail = this.item?.executiveSponsorEmail || '';
                 this.accessForm.to = toEmail;
                 this.accessForm.subject = 'Access Request';
-                this.accessForm.body = this.buildAccessBody();
+                if (!this.accessForm.users) {
+                    this.accessForm.users = this.buildRequesterLineWithSuffix();
+                }
+                this.showAccessValidation = false;
             },
             buildAccessBody() {
                 const lines = [];
                 const title = this.item?.title || 'this asset';
                 const url = this.item?.url || '';
                 const sponsorName = this.item?.executiveSponsorName || 'Executive Sponsor';
+                const users = this.parseUsersList();
+                const reason = (this.accessForm.businessReason || '').trim();
 
                 lines.push(`Hello ${sponsorName},`);
                 lines.push('');
@@ -437,10 +461,14 @@
                     lines.push(`        URL: ${url}`);
                 }
                 lines.push('Please grant access for the following user(s):');
-                lines.push(`        ${this.buildRequesterLine()}`);
+                if (users.length > 0) {
+                    users.forEach(user => lines.push(`        ${user}`));
+                } else {
+                    lines.push(`        ${this.buildRequesterLine()}`);
+                }
                 lines.push('');
                 lines.push('Reason for access:');
-                lines.push('       [Add business justification here]');
+                lines.push(`       ${reason || '[Add business justification here]'}`);
                 lines.push('');
                 lines.push('Thank you.');
                 return lines.join('\n');
@@ -449,29 +477,89 @@
                 const upn = this.accessForm.requesterUpn || '';
                 const name = this.accessForm.requesterName || '';
                 if (name && upn) return `${name} (${upn})`;
-                return name || upn || '[Add name and NT login]';
+                return name || upn || '';
             },
             openAccessForm() {
                 this.showAccessForm = true;
-                this.accessForm.body = this.buildAccessBody();
+                this.showAccessValidation = false;
+                if (!this.accessForm.users) {
+                    this.accessForm.users = this.buildRequesterLineWithSuffix();
+                }
             },
             closeAccessForm() {
                 this.showAccessForm = false;
             },
+            buildRequesterLineWithSuffix() {
+                const line = this.buildRequesterLine();
+                return line ? `${line};` : '';
+            },
+            parseUsersList() {
+                const raw = this.accessForm.users || '';
+                return raw
+                    .split(/[\n;]+/)
+                    .map(part => part.trim())
+                    .filter(Boolean);
+            },
+            isAccessFormValid() {
+                const to = (this.accessForm.to || '').trim();
+                const cc = (this.accessForm.cc || '').trim();
+                const users = (this.accessForm.users || '').trim();
+                const reason = (this.accessForm.businessReason || '').trim();
+                return Boolean(to && cc && users && reason);
+            },
+            isAccessFieldInvalid(field) {
+                if (!this.showAccessValidation) return false;
+                const value = (this.accessForm[field] || '').trim();
+                return !value;
+            },
             openInOutlook() {
-                this.accessForm.body = this.buildAccessBody();
+                if (!this.isAccessFormValid()) {
+                    this.showAccessValidation = true;
+                    return;
+                }
+                this.showAccessValidation = false;
                 const to = (this.accessForm.to || '').trim();
                 const params = [];
                 const cc = (this.accessForm.cc || '').trim();
                 if (cc) params.push(`cc=${encodeURIComponent(cc)}`);
                 const subject = this.accessForm.subject || 'Access Request';
                 params.push(`subject=${encodeURIComponent(subject)}`);
-                const body = this.accessForm.body || '';
+                const body = this.buildAccessBody();
                 params.push(`body=${encodeURIComponent(body)}`);
                 const qs = params.join('&');
                 const mailto = `mailto:${to}${qs ? `?${qs}` : ''}`;
                 this.startOutlookSpinner();
+                this.recordAccessRequest();
                 window.location.href = mailto;
+            },
+            async loadLastAccessRequest() {
+                if (!this.item || !this.item.id) {
+                    this.lastAccessRequestedAt = null;
+                    return;
+                }
+                try {
+                    const res = await fetchLastAccessRequest(this.item.id);
+                    this.lastAccessRequestedAt = res?.requestedAt || null;
+                } catch {
+                    this.lastAccessRequestedAt = null;
+                }
+            },
+            async recordAccessRequest() {
+                if (!this.item || !this.item.id) return;
+                try {
+                    const res = await recordAccessRequest(this.item.id);
+                    this.lastAccessRequestedAt = res?.requestedAt || this.lastAccessRequestedAt;
+                } catch { }
+            },
+            formatDateTime(value) {
+                if (!value) return '';
+                const d = new Date(value);
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                const yy = String(d.getFullYear()).slice(-2);
+                const hh = String(d.getHours()).padStart(2, '0');
+                const min = String(d.getMinutes()).padStart(2, '0');
+                return `${mm}/${dd}/${yy} ${hh}:${min}`;
             },
             startOutlookSpinner() {
                 if (this.outlookOpening) return;
@@ -667,7 +755,7 @@
         color: #0b2b4a;
         font-size: 0.85rem;
         line-height: 1.25;
-        white-space: normal;
+        white-space: pre-line;
         box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
         opacity: 0;
         transform: translateY(-2px);
@@ -829,6 +917,12 @@
         min-width: 140px;
     }
 
+    .access-request-note {
+        color: #5a6b7c;
+        font-size: 0.85rem;
+        align-self: center;
+    }
+
     .request-access-overlay {
         position: absolute;
         inset: 0;
@@ -864,12 +958,25 @@
     }
 
     .access-body {
-        min-height: 360px;
+        min-height: 120px;
         resize: vertical;
     }
 
     .access-row-body {
         align-items: flex-start;
+    }
+
+    .access-users {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .access-row-users {
+        align-items: flex-start;
+    }
+
+    .access-required-note {
+        font-size: 0.85rem;
     }
 
 </style>

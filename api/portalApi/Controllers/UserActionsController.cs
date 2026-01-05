@@ -85,5 +85,42 @@ namespace SutterAnalyticsApi.Controllers
             return NoContent();
         }
 
+        // POST /api/useractions/requestaccess/{itemId}
+        [HttpPost("requestaccess/{itemId:int}")]
+        public async Task<IActionResult> RequestAccess(int itemId)
+        {
+            var user = CurrentUser;
+            if (user == null) return Unauthorized("User not found");
+
+            var item = await _db.Items.FindAsync(itemId);
+            if (item == null) return NotFound("Item not found");
+
+            var now = DateTime.UtcNow;
+            _db.UserAccessRequests.Add(new UserAccessRequest
+            {
+                UserId = user.Id,
+                ItemId = itemId,
+                RequestedAt = now
+            });
+            await _db.SaveChangesAsync();
+            return Ok(new { requestedAt = now });
+        }
+
+        // GET /api/useractions/lastaccessrequest/{itemId}
+        [HttpGet("lastaccessrequest/{itemId:int}")]
+        public async Task<IActionResult> LastAccessRequest(int itemId)
+        {
+            var user = CurrentUser;
+            if (user == null) return Unauthorized("User not found");
+
+            var last = await _db.UserAccessRequests
+                .Where(r => r.UserId == user.Id && r.ItemId == itemId)
+                .OrderByDescending(r => r.RequestedAt)
+                .Select(r => (DateTime?)r.RequestedAt)
+                .FirstOrDefaultAsync();
+
+            return Ok(new { requestedAt = last });
+        }
+
     }
 }

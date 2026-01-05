@@ -14,6 +14,7 @@ namespace SutterAnalyticsApi.Data
         public DbSet<UserAssetOpenHistory> UserAssetOpenHistories { get; set; }
         public DbSet<UserSearchHistory> UserSearchHistories { get; set; }
         public DbSet<UserLoginHistory> UserLoginHistories { get; set; }
+        public DbSet<UserAccessRequest> UserAccessRequests { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<ImportJob> ImportJobs { get; set; }
         // Removed: public DbSet<ItemDataConsumer> ItemDataConsumers { get; set; }
@@ -264,6 +265,10 @@ namespace SutterAnalyticsApi.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.UserPrincipalName)
                 .IsUnique();
+
+            // Access requests: allow quick lookup per user/item
+            modelBuilder.Entity<UserAccessRequest>()
+                .HasIndex(r => new { r.UserId, r.ItemId });
 
             // ImportJob: token unique for lookup
             modelBuilder.Entity<ImportJob>()
