@@ -132,7 +132,7 @@
                     domains: [],
                     divisions: [],
                     serviceLines: [],
-                    dataSources: [],
+                    biPlatforms: [],
                 }),
             },
             items: {
@@ -197,10 +197,10 @@
                     // Service line removed
 
                     // Data source
-                    if (f.dataSources && f.dataSources.length) {
-                        const arr = asStr(f.dataSources);
-                        const matchesId = item.dataSourceId != null && arr.includes(String(item.dataSourceId));
-                        const matchesName = arr.includes(String(item.dataSource || ''));
+                    if (f.biPlatforms && f.biPlatforms.length) {
+                        const arr = asStr(f.biPlatforms);
+                        const matchesId = item.biPlatformId != null && arr.includes(String(item.biPlatformId));
+                        const matchesName = arr.includes(String(item.biPlatform || ''));
                         if (!matchesId && !matchesName) return false;
                     }
 

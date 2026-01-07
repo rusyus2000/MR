@@ -11,7 +11,7 @@ export const FILTER_SECTIONS = {
   domain: true,
   division: false,
   // serviceLine removed
-  dataSource: true,
+  biPlatform: true,
 };
 
 // Toggle displaying counts next to filter values and whether

@@ -60,6 +60,7 @@ namespace SutterAnalyticsApi.Controllers
      [FromQuery] string? domain,
      [FromQuery] string? division,
      // ServiceLine removed
+     [FromQuery] string? biPlatform,
      [FromQuery] string? dataSource,
      [FromQuery] string? assetType,
      [FromQuery] int? assetTypeId,
@@ -67,6 +68,7 @@ namespace SutterAnalyticsApi.Controllers
      [FromQuery] string? domainIds,
      [FromQuery] string? divisionIds,
      // ServiceLine removed
+     [FromQuery] string? biPlatformIds,
      [FromQuery] string? dataSourceIds,
      [FromQuery] string? assetTypeIds,
      [FromQuery] bool? phi)
@@ -112,9 +114,9 @@ namespace SutterAnalyticsApi.Controllers
 
             // ServiceLine removed
 
-            var dataSourceIdList = ParseIds(dataSourceIds);
-            if (dataSourceIdList.Any())
-                query = query.Where(i => i.DataSourceId.HasValue && dataSourceIdList.Contains(i.DataSourceId.Value));
+            var biPlatformIdList = ParseIds(biPlatformIds ?? dataSourceIds);
+            if (biPlatformIdList.Any())
+                query = query.Where(i => i.BiPlatformId.HasValue && biPlatformIdList.Contains(i.BiPlatformId.Value));
 
             var assetTypeIdList = ParseIds(assetTypeIds);
             if (assetTypeIdList.Any())
@@ -135,10 +137,11 @@ namespace SutterAnalyticsApi.Controllers
                 else return Ok(new List<ItemDto>());
             }
             // ServiceLine filtering removed
-            if (!string.IsNullOrWhiteSpace(dataSource))
+            var biPlatformValue = !string.IsNullOrWhiteSpace(biPlatform) ? biPlatform : dataSource;
+            if (!string.IsNullOrWhiteSpace(biPlatformValue))
             {
-                var lv = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "DataSource" && l.Value == dataSource);
-                if (lv != null) query = query.Where(i => i.DataSourceId == lv.Id);
+                var lv = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "DataSource" && l.Value == biPlatformValue);
+                if (lv != null) query = query.Where(i => i.BiPlatformId == lv.Id);
                 else return Ok(new List<ItemDto>());
             }
             // AssetType filtering: accept numeric id or comma-separated names.
@@ -182,7 +185,7 @@ namespace SutterAnalyticsApi.Controllers
                  DomainId = i.DomainId,
                  DivisionId = i.DivisionId,
                  // ServiceLine removed
-                 DataSourceId = i.DataSourceId,
+                 BiPlatformId = i.BiPlatformId,
                 PrivacyPhi = i.PrivacyPhi,
                 IsFavorite = favoriteIds.Contains(i.Id)
             }).ToListAsync();
@@ -202,7 +205,7 @@ namespace SutterAnalyticsApi.Controllers
                 .Include(it => it.DomainLookup)
                 .Include(it => it.DivisionLookup)
                 // ServiceLine removed
-                .Include(it => it.DataSourceLookup)
+                .Include(it => it.BiPlatformLookup)
                 .Include(it => it.Owner)
                 .Include(it => it.ExecutiveSponsor)
                 .Include(it => it.StatusLookup)
@@ -276,11 +279,11 @@ namespace SutterAnalyticsApi.Controllers
                 DomainId = i.DomainId,
                 DivisionId = i.DivisionId,
                 // ServiceLine removed
-                DataSourceId = i.DataSourceId,
+                BiPlatformId = i.BiPlatformId,
                 Domain = i.DomainLookup != null ? i.DomainLookup.Value : null,
                 Division = i.DivisionLookup != null ? i.DivisionLookup.Value : null,
                 // ServiceLine removed
-                DataSource = i.DataSourceLookup != null ? i.DataSourceLookup.Value : null,
+                BiPlatform = i.BiPlatformLookup != null ? i.BiPlatformLookup.Value : null,
                 StatusId = i.StatusId,
                 Status = i.StatusLookup != null ? i.StatusLookup.Value : null,
                 OwnerId = i.OwnerId,
@@ -325,7 +328,7 @@ namespace SutterAnalyticsApi.Controllers
                 // DataConsumers already mapped
                 TechDeliveryManager = i.TechDeliveryManager,
                 RegulatoryComplianceContractual = i.RegulatoryComplianceContractual,
-                BiPlatform = i.BiPlatform,
+                DataSource = i.DataSource,
                 DbServer = i.DbServer,
                 DbDataMart = i.DbDataMart,
                 DatabaseTable = i.DatabaseTable,
@@ -403,7 +406,7 @@ namespace SutterAnalyticsApi.Controllers
                     Domain = i.DomainLookup != null ? i.DomainLookup.Value : null,
                     Division = i.DivisionLookup != null ? i.DivisionLookup.Value : null,
                     // ServiceLine removed
-                    DataSource = i.DataSourceLookup != null ? i.DataSourceLookup.Value : null,
+                    BiPlatform = i.BiPlatformLookup != null ? i.BiPlatformLookup.Value : null,
                     Status = i.StatusLookup != null ? i.StatusLookup.Value : null,
                     OwnerName = i.Owner != null ? i.Owner.Name : null,
                     OwnerEmail = i.Owner != null ? i.Owner.Email : null,
@@ -427,7 +430,7 @@ namespace SutterAnalyticsApi.Controllers
                     DataConsumers = i.DataConsumers,
                     i.TechDeliveryManager,
                     i.RegulatoryComplianceContractual,
-                    i.BiPlatform,
+                    i.DataSource,
                     i.DbServer,
                     i.DbDataMart,
                     i.DatabaseTable,
@@ -599,11 +602,12 @@ namespace SutterAnalyticsApi.Controllers
                 // tags will be attached via ItemTags below
                 DomainId = null,
                 DivisionId = null,
-                DataSourceId = null,
+                BiPlatformId = null,
                 PrivacyPhi = dto.PrivacyPhi,
                  PrivacyPii = dto.PrivacyPii,
                  HasRls = dto.HasRls,
                  DateAdded = DateTime.UtcNow,
+                 DataSource = string.IsNullOrWhiteSpace(dto.DataSource) ? null : dto.DataSource.Trim(),
                  Dependencies = string.IsNullOrWhiteSpace(dto.Dependencies) ? null : dto.Dependencies,
                  DefaultAdGroupNames = string.IsNullOrWhiteSpace(dto.DefaultAdGroupNames) ? null : dto.DefaultAdGroupNames,
                  LastModifiedDate = dto.LastModifiedDate
@@ -664,21 +668,21 @@ namespace SutterAnalyticsApi.Controllers
 
             // ServiceLine removed
 
-            if (dto.DataSourceId.HasValue)
+            if (dto.BiPlatformId.HasValue)
             {
-                var lookup = await _db.LookupValues.FindAsync(dto.DataSourceId.Value);
-                if (lookup != null) { i.DataSourceId = lookup.Id; }
+                var lookup = await _db.LookupValues.FindAsync(dto.BiPlatformId.Value);
+                if (lookup != null) { i.BiPlatformId = lookup.Id; }
             }
-            else if (!string.IsNullOrWhiteSpace(dto.DataSource))
+            else if (!string.IsNullOrWhiteSpace(dto.BiPlatform))
             {
-                var lookup = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "DataSource" && l.Value == dto.DataSource);
+                var lookup = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "DataSource" && l.Value == dto.BiPlatform);
                 if (lookup == null)
                 {
-                    lookup = new LookupValue { Type = "DataSource", Value = dto.DataSource };
+                    lookup = new LookupValue { Type = "DataSource", Value = dto.BiPlatform };
                     _db.LookupValues.Add(lookup);
                     await _db.SaveChangesAsync();
                 }
-                i.DataSourceId = lookup.Id;
+                i.BiPlatformId = lookup.Id;
             }
 
             if (dto.AssetTypeId.HasValue)
@@ -852,7 +856,7 @@ namespace SutterAnalyticsApi.Controllers
                 }
             }
             if (dto.AssetTypeId.HasValue) i.AssetTypeId = dto.AssetTypeId;
-            // Map domain/division/dataSource to lookup ids when provided
+            // Map domain/division/biPlatform to lookup ids when provided
             if (dto.DomainId.HasValue)
                 i.DomainId = dto.DomainId;
             else if (!string.IsNullOrWhiteSpace(dto.Domain))
@@ -883,18 +887,18 @@ namespace SutterAnalyticsApi.Controllers
 
             // ServiceLine removed
 
-            if (dto.DataSourceId.HasValue)
-                i.DataSourceId = dto.DataSourceId;
-            else if (!string.IsNullOrWhiteSpace(dto.DataSource))
+            if (dto.BiPlatformId.HasValue)
+                i.BiPlatformId = dto.BiPlatformId;
+            else if (!string.IsNullOrWhiteSpace(dto.BiPlatform))
             {
-                var lookup = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "DataSource" && l.Value == dto.DataSource);
+                var lookup = await _db.LookupValues.FirstOrDefaultAsync(l => l.Type == "DataSource" && l.Value == dto.BiPlatform);
                 if (lookup == null)
                 {
-                    lookup = new LookupValue { Type = "DataSource", Value = dto.DataSource };
+                    lookup = new LookupValue { Type = "DataSource", Value = dto.BiPlatform };
                     _db.LookupValues.Add(lookup);
                     await _db.SaveChangesAsync();
                 }
-                i.DataSourceId = lookup.Id;
+                i.BiPlatformId = lookup.Id;
             }
             // Owner update
             if (dto.OwnerId.HasValue)
@@ -1006,6 +1010,7 @@ namespace SutterAnalyticsApi.Controllers
             i.PrivacyPhi = dto.PrivacyPhi;
             i.PrivacyPii = dto.PrivacyPii;
             i.HasRls = dto.HasRls;
+            i.DataSource = string.IsNullOrWhiteSpace(dto.DataSource) ? null : dto.DataSource.Trim();
             i.Dependencies = string.IsNullOrWhiteSpace(dto.Dependencies) ? null : dto.Dependencies;
             i.DefaultAdGroupNames = string.IsNullOrWhiteSpace(dto.DefaultAdGroupNames) ? null : dto.DefaultAdGroupNames;
             i.LastModifiedDate = dto.LastModifiedDate;

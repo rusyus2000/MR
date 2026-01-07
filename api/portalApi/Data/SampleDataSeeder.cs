@@ -28,7 +28,7 @@ namespace SutterAnalyticsApi.Data
             var domains = all.Where(x => x.Type == "Domain").Select(x => x.Value).ToArray();
             var divisions = all.Where(x => x.Type == "Division").Select(x => x.Value).ToArray();
             var serviceLines = all.Where(x => x.Type == "ServiceLine").Select(x => x.Value).ToArray();
-            var dataSources = all.Where(x => x.Type == "DataSource").Select(x => x.Value).ToArray();
+            var biPlatforms = all.Where(x => x.Type == "DataSource").Select(x => x.Value).ToArray();
             var assetTypes = all.Where(x => x.Type == "AssetType").Select(x => x.Value).ToArray();
             var publishedId = L("Status", "Published");
 
@@ -78,7 +78,7 @@ namespace SutterAnalyticsApi.Data
                     DomainId = L("Domain", domains[rnd.Next(domains.Length)]),
                     DivisionId = L("Division", divisions[rnd.Next(divisions.Length)]),
                     OperatingEntityId = L("OperatingEntity", serviceLines[rnd.Next(serviceLines.Length)]),
-                    DataSourceId = L("DataSource", dataSources[rnd.Next(dataSources.Length)]),
+                    BiPlatformId = L("DataSource", biPlatforms[rnd.Next(biPlatforms.Length)]),
                     StatusId = publishedId,
                     PrivacyPhi = rnd.NextDouble() < 0.3,
                     DateAdded = now.AddDays(-rnd.Next(0, 120))

@@ -38,7 +38,7 @@
                 domains: [],
                 divisions: [],
                 serviceLines: [],
-                dataSources: [],
+                biPlatforms: [],
             });
 
             const domainNameFormatted = computed(() =>
@@ -77,8 +77,8 @@
                     )
                         return false;
                     if (
-                        f.dataSources.length &&
-                        !f.dataSources.includes(item.dataSource)
+                        f.biPlatforms.length &&
+                        !f.biPlatforms.includes(item.biPlatformId)
                     )
                         return false;
                     return true;

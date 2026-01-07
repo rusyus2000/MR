@@ -20,7 +20,7 @@ async function handleResponse(res) {
 
 /**
  * Fetch all items, with optional query parameters:
- *   q, domain, division, serviceLine, dataSource, assetType, phi (boolean), top (number)
+ *   q, domain, division, serviceLine, biPlatform, assetType, phi (boolean), top (number)
  */
 export function fetchItems(params = {}) {
     const usp = new URLSearchParams();
@@ -126,7 +126,7 @@ export function deleteItem(id) {
 /**
  * Fetch lookup values for dropdowns.
  * type should be one of:
- *   "Domain", "Division", "ServiceLine", "DataSource", "AssetType"
+ *   "Domain", "Division", "ServiceLine", "DataSource" (BI Platform), "AssetType"
  */
 export function fetchLookup(type) {
     return fetch(`${API_BASE_URL}/lookups/${type}`, { credentials: 'include' }).then(handleResponse);

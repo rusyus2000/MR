@@ -9,11 +9,11 @@ public class CreateItemDto
     public int? DomainId { get; set; }
     public int? DivisionId { get; set; }
     // ServiceLine removed
-    public int? DataSourceId { get; set; }
+    public int? BiPlatformId { get; set; }
     public string Domain { get; set; }
     public string Division { get; set; }
     // ServiceLine removed
-    public string DataSource { get; set; }
+    public string? BiPlatform { get; set; }
     public bool? PrivacyPhi { get; set; }
     public bool? PrivacyPii { get; set; }
     public bool? HasRls { get; set; }
@@ -57,7 +57,7 @@ public class CreateItemDto
     public string? DataConsumersText { get; set; }
     public string? TechDeliveryManager { get; set; }
     public string? RegulatoryComplianceContractual { get; set; }
-    public string? BiPlatform { get; set; }
+    public string? DataSource { get; set; }
     public string? DbServer { get; set; }
     public string? DbDataMart { get; set; }
     public string? DatabaseTable { get; set; }

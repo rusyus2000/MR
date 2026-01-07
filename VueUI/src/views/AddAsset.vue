@@ -65,12 +65,16 @@
                             </div>
 
                             <div class="col mb-3">
-                                <label class="form-label fw-bold">Data Source</label>
-                                <select v-model.number="form.dataSourceId" @change="onLookupChange('dataSources','dataSourceId','dataSource')" class="form-select w-100" required>
-                                    <option v-for="opt in lookup.dataSources" :key="opt.id" :value="opt.id">
+                                <label class="form-label fw-bold">BI Platform</label>
+                                <select v-model.number="form.biPlatformId" @change="onLookupChange('biPlatforms','biPlatformId','biPlatform')" class="form-select w-100" required>
+                                    <option v-for="opt in lookup.biPlatforms" :key="opt.id" :value="opt.id">
                                         {{ opt.value }}
                                     </option>
                                 </select>
+                            </div>
+                            <div class="col mb-3">
+                                <label class="form-label fw-bold">Data Source</label>
+                                <input v-model="form.dataSource" type="text" class="form-control" placeholder="Database, server, schema, etc." />
                             </div>
 
                             <div class="col-12 mb-3">
@@ -189,6 +193,8 @@
                  domain: '',
                  division: '',
                  serviceLine: '',
+                 biPlatformId: null,
+                 biPlatform: '',
                 dataSource: '',
                 privacyPhi: false,
                 privacyPii: false,
@@ -210,7 +216,7 @@
                 domains: [],
                 divisions: [],
                 serviceLines: [],
-                dataSources: [],
+                biPlatforms: [],
                 assetTypes: [],
                 operatingEntities: [],
                 refreshFrequencies: [],
@@ -221,7 +227,7 @@
                 lookup.value.domains = await fetchLookup('Domain');
                 lookup.value.divisions = await fetchLookup('Division');
                 lookup.value.serviceLines = await fetchLookup('ServiceLine');
-                lookup.value.dataSources = await fetchLookup('DataSource');
+                lookup.value.biPlatforms = await fetchLookup('DataSource');
                 lookup.value.assetTypes = (await fetchLookup('AssetType'))
                     .filter(x => x.value !== 'Featured'); // remove Featured from asset type options
                 lookup.value.operatingEntities = await fetchLookup('OperatingEntity');

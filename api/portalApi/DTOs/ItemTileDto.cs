@@ -12,7 +12,7 @@ namespace SutterAnalyticsApi.DTOs
 
         public int? DomainId { get; set; }
         public int? DivisionId { get; set; }
-        public int? DataSourceId { get; set; }
+        public int? BiPlatformId { get; set; }
 
         public bool? PrivacyPhi { get; set; }
         public bool IsFavorite { get; set; }

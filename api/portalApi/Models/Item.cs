@@ -41,8 +41,8 @@ namespace SutterAnalyticsApi.Models
 
         // ServiceLine removed; use OperatingEntity instead
 
-        public int? DataSourceId { get; set; }
-        public LookupValue DataSourceLookup { get; set; }
+        public int? BiPlatformId { get; set; }
+        public LookupValue BiPlatformLookup { get; set; }
 
         // Status (e.g., Published, Offline) via LookupValue of Type="Status"
         public int? StatusId { get; set; }
@@ -64,7 +64,7 @@ namespace SutterAnalyticsApi.Models
         // Removed ServiceLine computed property
 
         [NotMapped]
-        public string DataSource => DataSourceLookup?.Value;
+        public string BiPlatform => BiPlatformLookup?.Value;
 
         [NotMapped]
         public string Status => StatusLookup?.Value;
@@ -120,7 +120,7 @@ namespace SutterAnalyticsApi.Models
         public string? RegulatoryComplianceContractual { get; set; }
 
         [MaxLength(100)]
-        public string? BiPlatform { get; set; }
+        public string? DataSource { get; set; }
 
         [MaxLength(100)]
         public string? DbServer { get; set; }

@@ -91,13 +91,13 @@
 
         <!-- Service Line removed -->
 
-        <!-- Data Source -->
-        <div v-if="filterSections.dataSource" class="filter-category">
-            <h6>Data Source</h6>
-            <div v-for="(source, idx) in dataSources"
+        <!-- BI Platform -->
+        <div v-if="filterSections.biPlatform" class="filter-category">
+            <h6>BI Platform</h6>
+            <div v-for="(source, idx) in biPlatforms"
                  :key="source.id"
                  class="form-check"
-                 v-show="dataSourcesShowAll || idx < 5">
+                 v-show="biPlatformsShowAll || idx < 5">
                 <input class="form-check-input"
                        type="checkbox"
                        :id="'source-'+source.id"
@@ -107,8 +107,8 @@
                     {{ source.name }}<span v-if="showCounts"> ({{ source.count ?? 0 }})</span>
                 </label>
             </div>
-            <a v-if="dataSources.length > 5" href="#" class="text-teal small" @click.prevent="dataSourcesShowAll = !dataSourcesShowAll">
-                {{ dataSourcesShowAll ? 'Show less' : 'Show more' }}
+            <a v-if="biPlatforms.length > 5" href="#" class="text-teal small" @click.prevent="biPlatformsShowAll = !biPlatformsShowAll">
+                {{ biPlatformsShowAll ? 'Show less' : 'Show more' }}
             </a>
         </div>
     </div>
@@ -133,12 +133,12 @@
                 domains: [],
                 divisions: [],
                 // serviceLines removed
-                dataSources: [],
+                biPlatforms: [],
                 assetTypesShowAll: false,
                 domainsShowAll: false,
                 divisionsShowAll: false,
                 // serviceLinesShowAll removed
-                dataSourcesShowAll: false,
+                biPlatformsShowAll: false,
                 _initialDomain: null
             };
         },
@@ -152,7 +152,7 @@
                 d: this.domains.length,
                 v: this.divisions.length,
                 s: 0,
-                ds: this.dataSources.length
+                ds: this.biPlatforms.length
             }), () => this.emitFilters());
         },
         methods: {
@@ -166,7 +166,7 @@
                         this.assetTypes = mapArr(bulk.AssetType);
                         this.domains = mapArr(bulk.Domain);
                         this.divisions = mapArr(bulk.Division);
-                        this.dataSources = mapArr(bulk.DataSource);
+                        this.biPlatforms = mapArr(bulk.DataSource);
                     } else {
                         const bulk = await api.fetchLookupsBulk(['AssetType','Domain','Division','DataSource']);
                         const norm = x => ({ id: x.id ?? x.Id, name: x.value ?? x.Value });
@@ -174,7 +174,7 @@
                         this.assetTypes = mapArr(bulk.AssetType);
                         this.domains = mapArr(bulk.Domain);
                         this.divisions = mapArr(bulk.Division);
-                        this.dataSources = mapArr(bulk.DataSource);
+                        this.biPlatforms = mapArr(bulk.DataSource);
                     }
 
                     if (this._initialDomain) {
@@ -195,7 +195,7 @@
                     domains: this.domains.filter(d => d.checked).map(d => d.id),
                     divisions: this.divisions.filter(d => d.checked).map(d => d.id),
                     // serviceLines removed
-                    dataSources: this.dataSources.filter(ds => ds.checked).map(ds => ds.id),
+                    biPlatforms: this.biPlatforms.filter(ds => ds.checked).map(ds => ds.id),
                 };
                 this.$emit('update:filters', out);
             },
@@ -206,7 +206,7 @@
                 this.domains.forEach(d => (d.checked = false));
                 this.divisions.forEach(d => (d.checked = false));
                 this.serviceLines.forEach(s => (s.checked = false));
-                this.dataSources.forEach(ds => (ds.checked = false));
+                this.biPlatforms.forEach(ds => (ds.checked = false));
                 this.emitFilters();
             },
 
@@ -218,7 +218,7 @@
                         case 'domain': return item.domain === val;
                         case 'division': return item.division === val;
                         case 'serviceLine': return item.serviceLine === val;
-                        case 'dataSource': return item.dataSource === val;
+                        case 'biPlatform': return item.biPlatform === val;
                     }
                 }).length;
             }

@@ -14,11 +14,11 @@ namespace SutterAnalyticsApi.DTOs
         public int? DomainId { get; set; }
         public int? DivisionId { get; set; }
         // ServiceLine removed; use OperatingEntity
-        public int? DataSourceId { get; set; }
+        public int? BiPlatformId { get; set; }
         public string Domain { get; set; }
         public string Division { get; set; }
         // ServiceLine removed
-        public string DataSource { get; set; }
+        public string BiPlatform { get; set; }
         public bool? PrivacyPhi { get; set; }
         public bool? PrivacyPii { get; set; }
         public bool? HasRls { get; set; }
@@ -65,7 +65,7 @@ namespace SutterAnalyticsApi.DTOs
         // Deprecated: DataConsumersText
         public string? TechDeliveryManager { get; set; }
         public string? RegulatoryComplianceContractual { get; set; }
-        public string? BiPlatform { get; set; }
+        public string? DataSource { get; set; }
         public string? DbServer { get; set; }
         public string? DbDataMart { get; set; }
         public string? DatabaseTable { get; set; }

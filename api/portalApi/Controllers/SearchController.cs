@@ -42,7 +42,7 @@ namespace SutterAnalyticsApi.Controllers
         //            Domain = i.Domain,
         //            Division = i.Division,
         //            ServiceLine = i.ServiceLine,
-        //            DataSource = i.DataSource,
+        //            BiPlatform = i.BiPlatform,
         //            PrivacyPhi = i.PrivacyPhi
         //        })
         //        .ToListAsync();
@@ -137,7 +137,7 @@ namespace SutterAnalyticsApi.Controllers
                         AssetTypeName = i.AssetType != null ? i.AssetType.Value : null,
                         DomainId = i.DomainId,
                         DivisionId = i.DivisionId,
-                        DataSourceId = i.DataSourceId,
+                        BiPlatformId = i.BiPlatformId,
                         PrivacyPhi = i.PrivacyPhi,
                         DateAdded = i.DateAdded,
                         Score = 0

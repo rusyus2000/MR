@@ -77,9 +77,9 @@ namespace SutterAnalyticsApi.Data
             // Removed ServiceLine; use OperatingEntity instead
 
             modelBuilder.Entity<Item>()
-                .HasOne(i => i.DataSourceLookup)
+                .HasOne(i => i.BiPlatformLookup)
                 .WithMany()
-                .HasForeignKey(i => i.DataSourceId)
+                .HasForeignKey(i => i.BiPlatformId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             // Item -> OperatingEntity (LookupValue Type="OperatingEntity")
@@ -130,7 +130,7 @@ namespace SutterAnalyticsApi.Data
             // Removed ServiceLine index
 
             modelBuilder.Entity<Item>()
-                .HasIndex(i => i.DataSourceId);
+                .HasIndex(i => i.BiPlatformId);
 
             modelBuilder.Entity<Item>()
                 .HasIndex(i => i.StatusId);

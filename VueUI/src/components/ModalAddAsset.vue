@@ -138,13 +138,17 @@
                             </select>
                         </div>
 
-                        <div class="label">Data Source:</div>
+                        <div class="label">BI Platform:</div>
                         <div>
-                            <select v-model.number="form.dataSourceId" @change="() => onLookupChange('dataSources','dataSourceId','dataSource')" class="form-select" required>
-                                <option v-for="opt in lookup.dataSources" :key="opt.id" :value="opt.id">
+                            <select v-model.number="form.biPlatformId" @change="() => onLookupChange('biPlatforms','biPlatformId','biPlatform')" class="form-select" required>
+                                <option v-for="opt in lookup.biPlatforms" :key="opt.id" :value="opt.id">
                                     {{ opt.value }}
                                 </option>
                             </select>
+                        </div>
+                        <div class="label">Data Source:</div>
+                        <div>
+                            <input v-model="form.dataSource" type="text" class="form-control" placeholder="Database, server, schema, etc." />
                         </div>
 
                         <div class="label">Tags:</div>
@@ -195,11 +199,12 @@
         domain: '',
         division: '',
         serviceLine: '',
+        biPlatform: '',
         dataSource: '',
         domainId: null,
         divisionId: null,
         serviceLineId: null,
-        dataSourceId: null,
+        biPlatformId: null,
         privacyPhi: false,
         privacyPii: false,
         hasRls: false,
@@ -224,7 +229,7 @@
         domains: [],
         divisions: [],
         serviceLines: [],
-        dataSources: [],
+        biPlatforms: [],
         assetTypes: [],
         statuses: [],
         operatingEntities: [],
@@ -244,7 +249,7 @@
         lookup.value.domains = norm(bulk.Domain)
         lookup.value.divisions = norm(bulk.Division)
         lookup.value.serviceLines = norm(bulk.ServiceLine)
-        lookup.value.dataSources = norm(bulk.DataSource)
+        lookup.value.biPlatforms = norm(bulk.DataSource)
         lookup.value.assetTypes = norm(bulk.AssetType).filter(x => (x.value) !== 'Featured')
         lookup.value.statuses = norm(bulk.Status)
         lookup.value.operatingEntities = norm(bulk.OperatingEntity)
@@ -260,11 +265,12 @@
             form.value.domain = it.domain || ''
             form.value.division = it.division || ''
             form.value.serviceLine = it.serviceLine || ''
+            form.value.biPlatform = it.biPlatform || ''
             form.value.dataSource = it.dataSource || ''
             form.value.domainId = it.domainId || null
             form.value.divisionId = it.divisionId || null
             form.value.serviceLineId = it.serviceLineId || null
-            form.value.dataSourceId = it.dataSourceId || null
+            form.value.biPlatformId = it.biPlatformId || null
             form.value.privacyPhi = !!it.privacyPhi
             form.value.statusId = it.statusId || null
             form.value.ownerId = it.ownerId || null

@@ -59,7 +59,7 @@
                     f.domains.length ||
                     f.divisions.length ||
                     // serviceLines removed
-                    f.dataSources.length
+                    f.biPlatforms.length
                 );
             });
 
@@ -79,7 +79,7 @@
                 domains: [],
                 divisions: [],
                 // serviceLines removed
-                dataSources: []
+                biPlatforms: []
             });
 
             const loadItems = async () => {
@@ -149,7 +149,7 @@
                 // Otherwise request filtered items from the API using ID-based query params.
                 try {
                     const flattened = flattenFilters(filters);
-                    const isEmpty = !flattened.assetTypeIds && !flattened.domainIds && !flattened.divisionIds && !flattened.serviceLineIds && !flattened.dataSourceIds && !flattened.phi;
+                    const isEmpty = !flattened.assetTypeIds && !flattened.domainIds && !flattened.divisionIds && !flattened.serviceLineIds && !flattened.biPlatformIds && !flattened.phi;
                     if (isEmpty) {
                         // If filters were previously active and now cleared, reload full list
                         if (hadActive) {
@@ -174,7 +174,7 @@
                     domains: [],
                     divisions: [],
                     serviceLines: [],
-                    dataSources: []
+                    biPlatforms: []
                 };
                 // When a search is active, prefer 'Most Relevant' as the default
                 // sort; otherwise, fall back to 'Favorites'. Clearing filters
@@ -197,7 +197,7 @@
                 if (f.domains && f.domains.length) p.domainIds = f.domains.join(',');
                 if (f.divisions && f.divisions.length) p.divisionIds = f.divisions.join(',');
                 // serviceLines removed
-                if (f.dataSources && f.dataSources.length) p.dataSourceIds = f.dataSources.join(',');
+                if (f.biPlatforms && f.biPlatforms.length) p.biPlatformIds = f.biPlatforms.join(',');
                 return p;
             }
 

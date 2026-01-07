@@ -280,7 +280,7 @@ namespace SutterAnalyticsApi.Controllers
                 .Include(i => i.DomainLookup)
                 .Include(i => i.DivisionLookup)
                 // ServiceLine removed
-                .Include(i => i.DataSourceLookup)
+                .Include(i => i.BiPlatformLookup)
                 .Include(i => i.StatusLookup)
                 .Include(i => i.Owner)
                 .Include(i => i.ExecutiveSponsor)
@@ -297,7 +297,7 @@ namespace SutterAnalyticsApi.Controllers
                     OperatingEntity = i.OperatingEntityLookup != null ? i.OperatingEntityLookup.Value : string.Empty,
                     RefreshFrequency = i.RefreshFrequencyLookup != null ? i.RefreshFrequencyLookup.Value : string.Empty,
                     // ServiceLine removed
-                    DataSource = i.DataSourceLookup != null ? i.DataSourceLookup.Value : string.Empty,
+                    BiPlatform = i.BiPlatformLookup != null ? i.BiPlatformLookup.Value : string.Empty,
                     Status = i.StatusLookup != null ? i.StatusLookup.Value : string.Empty,
                     OwnerName = i.Owner != null ? i.Owner.Name : string.Empty,
                     OwnerEmail = i.Owner != null ? i.Owner.Email : string.Empty,
@@ -313,7 +313,7 @@ namespace SutterAnalyticsApi.Controllers
                     i.DataConsumers,
                     i.TechDeliveryManager,
                     i.RegulatoryComplianceContractual,
-                    i.BiPlatform,
+                    i.DataSource,
                     i.DbServer,
                     i.DbDataMart,
                     i.DatabaseTable,
@@ -504,6 +504,7 @@ namespace SutterAnalyticsApi.Controllers
                                  && string.IsNullOrEmpty(row.Domain)
                                  && string.IsNullOrEmpty(row.Division)
                                  && string.IsNullOrEmpty(row.DataSource)
+                                 && string.IsNullOrEmpty(row.BiPlatform)
                                  && string.IsNullOrEmpty(row.Status)
                                   && string.IsNullOrEmpty(row.OwnerName)
                                   && string.IsNullOrEmpty(row.OwnerEmail)
@@ -523,7 +524,7 @@ namespace SutterAnalyticsApi.Controllers
                     else if (!ok("Domain", row.Domain)) missing = "Domain";
                     else if (!ok("Division", row.Division)) missing = "Division";
                     // ServiceLine removed from validation
-                    else if (!ok("DataSource", row.DataSource)) missing = "DataSource";
+                    else if (!ok("DataSource", row.BiPlatform)) missing = "BI Platform";
                     else if (!ok("Status", row.Status)) missing = "Status";
                     else if (!ok("OperatingEntity", row.OperatingEntity)) missing = "OperatingEntity";
                     else if (!ok("RefreshFrequency", row.RefreshFrequency)) missing = "RefreshFrequency";
@@ -543,7 +544,7 @@ namespace SutterAnalyticsApi.Controllers
                         row.Domain,
                         row.Division,
                         // ServiceLine removed
-                        row.DataSource,
+                        row.BiPlatform,
                         row.Status,
                         row.OwnerName,
                         row.OwnerEmail,
@@ -561,7 +562,7 @@ namespace SutterAnalyticsApi.Controllers
                         row.ProductStatusNotes,
                         row.TechDeliveryManager,
                         row.RegulatoryComplianceContractual,
-                        row.BiPlatform,
+                        row.DataSource,
                         row.DbServer,
                         row.DbDataMart,
                         row.DatabaseTable,
@@ -607,7 +608,7 @@ namespace SutterAnalyticsApi.Controllers
                                 Normalize(exById.AssetType),
                                 Normalize(exById.Domain),
                                 Normalize(exById.Division),
-                                Normalize(exById.DataSource),
+                                Normalize(exById.BiPlatform),
                                 Normalize(exById.Status),
                                 Normalize(exById.OwnerName),
                                 Normalize(exById.OwnerEmail),
@@ -625,7 +626,7 @@ namespace SutterAnalyticsApi.Controllers
                                 Normalize(exById.ProductStatusNotes),
                                 Normalize(exById.TechDeliveryManager),
                                 Normalize(exById.RegulatoryComplianceContractual),
-                                Normalize(exById.BiPlatform),
+                                Normalize(exById.DataSource),
                                 Normalize(exById.DbServer),
                                 Normalize(exById.DbDataMart),
                                 Normalize(exById.DatabaseTable),
@@ -851,7 +852,8 @@ namespace SutterAnalyticsApi.Controllers
                     string at = row.GetProperty("AssetType").GetString() ?? string.Empty;
                     string dm = row.GetProperty("Domain").GetString() ?? string.Empty;
                     string dv = row.GetProperty("Division").GetString() ?? string.Empty;
-                    string ds = row.GetProperty("DataSource").GetString() ?? string.Empty;
+                    string biPlatform = row.TryGetProperty("BiPlatform", out var bpEl) ? (bpEl.GetString() ?? string.Empty) : string.Empty;
+                    string dataSourceText = row.TryGetProperty("DataSource", out var dsEl) ? (dsEl.GetString() ?? string.Empty) : string.Empty;
                     string st = row.GetProperty("Status").GetString() ?? string.Empty;
                     string oe = row.TryGetProperty("OperatingEntity", out var oeEl) ? (oeEl.GetString() ?? string.Empty) : string.Empty;
                     string rf = row.TryGetProperty("RefreshFrequency", out var rfEl) ? (rfEl.GetString() ?? string.Empty) : string.Empty;
@@ -867,7 +869,7 @@ namespace SutterAnalyticsApi.Controllers
                     string resPlat = row.TryGetProperty("ResourcesPlatform", out var rplEl) ? (rplEl.GetString() ?? string.Empty) : string.Empty;
                     string resDE = row.TryGetProperty("ResourcesDataEngineering", out var rdeEl) ? (rdeEl.GetString() ?? string.Empty) : string.Empty;
                     string pic = row.TryGetProperty("ProductImpactCategory", out var picEl) ? (picEl.GetString() ?? string.Empty) : string.Empty;
-                    int? atId = L("AssetType", at), dmId = L("Domain", dm), dvId = L("Division", dv), dsId = L("DataSource", ds), stId = L("Status", st);
+                    int? atId = L("AssetType", at), dmId = L("Domain", dm), dvId = L("Division", dv), dsId = L("DataSource", biPlatform), stId = L("Status", st);
                     int? oeId = L("OperatingEntity", oe), rfId = L("RefreshFrequency", rf);
                     int? plcId = L("PotentialToConsolidate", plc), plaId = L("PotentialToAutomate", pla), sbvId = L("SponsorBusinessValue", sbv);
                     int? devEffId = L("DevelopmentEffort", devEff), estHrsId = L("EstimatedDevHours", estHrs), resDevId = L("ResourcesDevelopment", resDev), resAnaId = L("ResourcesAnalysts", resAna), resPlatId = L("ResourcesPlatform", resPlat), resDEId = L("ResourcesDataEngineering", resDE);
@@ -901,7 +903,7 @@ namespace SutterAnalyticsApi.Controllers
                     picId = await EnsureLookupAsync("ProductImpactCategory", pic, picId);
                     if ((atId == null && !string.IsNullOrEmpty(at)) || (dmId == null && !string.IsNullOrEmpty(dm)) ||
                         (dvId == null && !string.IsNullOrEmpty(dv)) ||
-                        (dsId == null && !string.IsNullOrEmpty(ds)) || (stId == null && !string.IsNullOrEmpty(st)) ||
+                        (dsId == null && !string.IsNullOrEmpty(biPlatform)) || (stId == null && !string.IsNullOrEmpty(st)) ||
                         (oeId == null && !string.IsNullOrEmpty(oe)) || (rfId == null && !string.IsNullOrEmpty(rf)))
                     {
                         skipped++; skippedList.Add(new { index = idx, reason = "unknown lookup value" }); continue;
@@ -912,7 +914,7 @@ namespace SutterAnalyticsApi.Controllers
                     if (string.IsNullOrEmpty(dm)) dmId = await MissingLookupIdAsync("Domain");
                     if (string.IsNullOrEmpty(dv)) dvId = await MissingLookupIdAsync("Division");
                     // ServiceLine removed
-                    if (string.IsNullOrEmpty(ds)) dsId = await MissingLookupIdAsync("DataSource");
+                    if (string.IsNullOrEmpty(biPlatform)) dsId = await MissingLookupIdAsync("DataSource");
                     if (string.IsNullOrEmpty(st)) stId = await MissingLookupIdAsync("Status");
                     if (string.IsNullOrEmpty(oe)) oeId = await MissingLookupIdAsync("OperatingEntity");
                     if (string.IsNullOrEmpty(rf)) rfId = await MissingLookupIdAsync("RefreshFrequency");
@@ -954,7 +956,6 @@ namespace SutterAnalyticsApi.Controllers
                     string dataConsumersText = row.TryGetProperty("DataConsumers", out var dct) ? (dct.GetString() ?? string.Empty) : string.Empty;
                     string techDeliveryManager = row.TryGetProperty("TechDeliveryManager", out var tdm) ? (tdm.GetString() ?? string.Empty) : string.Empty;
                     string regulatoryComplianceContractual = row.TryGetProperty("RegulatoryComplianceContractual", out var rcc) ? (rcc.GetString() ?? string.Empty) : string.Empty;
-                    string biPlatform = row.TryGetProperty("BiPlatform", out var bip) ? (bip.GetString() ?? string.Empty) : string.Empty;
                     string dbServer = row.TryGetProperty("DbServer", out var dbs) ? (dbs.GetString() ?? string.Empty) : string.Empty;
                     string dbDataMart = row.TryGetProperty("DbDataMart", out var dbm) ? (dbm.GetString() ?? string.Empty) : string.Empty;
                     string databaseTable = row.TryGetProperty("DatabaseTable", out var dbt) ? (dbt.GetString() ?? string.Empty) : string.Empty;
@@ -979,7 +980,7 @@ namespace SutterAnalyticsApi.Controllers
                         at,
                         dm,
                         dv,
-                        ds,
+                        biPlatform,
                         st,
                         ownerName,
                         ownerEmail,
@@ -997,7 +998,7 @@ namespace SutterAnalyticsApi.Controllers
                         Normalize(productStatusNotes),
                         Normalize(techDeliveryManager),
                         Normalize(regulatoryComplianceContractual),
-                        Normalize(biPlatform),
+                        Normalize(dataSourceText),
                         Normalize(dbServer),
                         Normalize(dbDataMart),
                         Normalize(databaseTable),
@@ -1037,7 +1038,7 @@ namespace SutterAnalyticsApi.Controllers
                         item.AssetTypeId = atId;
                         item.DomainId = dmId;
                         item.DivisionId = dvId;
-                        item.DataSourceId = dsId;
+                        item.BiPlatformId = dsId;
                         item.StatusId = stId;
                         item.OwnerId = ownerId;
                         item.ExecutiveSponsorId = execId;
@@ -1054,7 +1055,7 @@ namespace SutterAnalyticsApi.Controllers
                         item.DataConsumers = NullIfEmpty(dataConsumersText);
                         item.TechDeliveryManager = NullIfEmpty(techDeliveryManager);
                         item.RegulatoryComplianceContractual = NullIfEmpty(regulatoryComplianceContractual);
-                        item.BiPlatform = NullIfEmpty(biPlatform);
+                        item.DataSource = NullIfEmpty(dataSourceText);
                         item.DbServer = NullIfEmpty(dbServer);
                         item.DbDataMart = NullIfEmpty(dbDataMart);
                         item.DatabaseTable = NullIfEmpty(databaseTable);
@@ -1106,7 +1107,7 @@ namespace SutterAnalyticsApi.Controllers
                             AssetTypeId = atId,
                             DomainId = dmId,
                             DivisionId = dvId,
-                            DataSourceId = dsId,
+                            BiPlatformId = dsId,
                             StatusId = stId,
                             OwnerId = ownerId,
                             ExecutiveSponsorId = execId,
@@ -1123,7 +1124,7 @@ namespace SutterAnalyticsApi.Controllers
                             DataConsumers = NullIfEmpty(dataConsumersText),
                             TechDeliveryManager = NullIfEmpty(techDeliveryManager),
                             RegulatoryComplianceContractual = NullIfEmpty(regulatoryComplianceContractual),
-                            BiPlatform = NullIfEmpty(biPlatform),
+                            DataSource = NullIfEmpty(dataSourceText),
                             DbServer = NullIfEmpty(dbServer),
                             DbDataMart = NullIfEmpty(dbDataMart),
                             DatabaseTable = NullIfEmpty(databaseTable),

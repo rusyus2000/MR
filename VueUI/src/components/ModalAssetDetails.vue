@@ -151,7 +151,7 @@
                     <div>{{ item.status || '-' }}</div>
 
                     <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Data Source *'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Data Source:</div>
-                    <div>{{ item.dataSource }}</div>
+                    <div>{{ item.dataSource || 'Missing Data' }}</div>
                     <div class="label"><span class="info-icon-wrap" :data-tooltip="FIELD_DEFINITIONS['Product Status Notes'] || ''" aria-label="Field definition" tabindex="0"><i class="bi bi-info-circle info-icon"></i></span>Product Status Notes:</div>
                     <div>{{ item.productStatusNotes || '-' }}</div>
 

@@ -56,7 +56,7 @@ namespace SutterAnalyticsApi.Controllers
                         break;
                     // ServiceLine removed
                     case "DataSource":
-                        count = await _db.Items.CountAsync(i => i.DataSourceId == lv.Id);
+                        count = await _db.Items.CountAsync(i => i.BiPlatformId == lv.Id);
                         break;
                     case "Status":
                         count = await _db.Items.CountAsync(i => i.StatusId == lv.Id);
@@ -128,7 +128,7 @@ namespace SutterAnalyticsApi.Controllers
                         "Domain" => _db.Items.Count(i => i.DomainId == lv.Id),
                         "Division" => _db.Items.Count(i => i.DivisionId == lv.Id),
                         // ServiceLine removed
-                        "DataSource" => _db.Items.Count(i => i.DataSourceId == lv.Id),
+                        "DataSource" => _db.Items.Count(i => i.BiPlatformId == lv.Id),
                         "Status" => _db.Items.Count(i => i.StatusId == lv.Id),
                         _ => 0
                     };
